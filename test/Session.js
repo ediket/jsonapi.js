@@ -56,8 +56,6 @@ describe('Session', function () {
 
       var res = new ResourceCollection();
 
-
-
       var session = new Session(res, '/api/foo/', {
         syncronizer: syncronizer
       });
@@ -101,6 +99,15 @@ describe('Session', function () {
         name: 'hello'
       });
 
+
+      res.first().addLink('baz',
+        new ResourceCollection());
+
+      res.first().getLink('baz').create({
+        id: 1,
+        type: 'baz'
+      });
+
       session.commit();
 
       expect(syncronizer.patch.called).to.be.true;
@@ -112,6 +119,18 @@ describe('Session', function () {
               id: 1,
               type: 'foo',
               name: 'hello'
+            }]
+          })
+        );
+
+      expect(syncronizer.post.called).to.be.true;
+      expect(syncronizer.post.getCall(0).args[0]).to.equal('/api/foo/links/baz/');
+      expect(syncronizer.post.getCall(0).args[1])
+        .to.satisfy(
+          _.partialRight(_.isMatch, {
+            data: [{
+              id: 1,
+              type: 'baz'
             }]
           })
         );

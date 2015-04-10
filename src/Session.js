@@ -12,7 +12,7 @@ var JSONCamera = require('./lib/JSONCamera');
 var diffJSON = require('./lib/diffJSON');
 
 
-var ResourceSession = function (resources, url, options) {
+var ResourceSession = function ResourceSession (resources, url, options) {
 
   if (!resources || !url) {
     throw new Error('unenough arguments');
@@ -31,6 +31,7 @@ var ResourceSession = function (resources, url, options) {
   this.changed = [];
   this.resources = resources;
   this.syncronizer = options.syncronizer;
+  this.linkSessions = [];
 
   this.resources.each(function (resource) {
 
@@ -67,6 +68,38 @@ var ResourceSession = function (resources, url, options) {
 
     this.changed.push(resource);
     this._getCamera(resource).capture();
+
+  });
+
+  this.resources.each(function (resource) {
+
+    _.each(resource.getLinks(), function (resource, referKey) {
+
+      this.linkSessions.push(
+        new ResourceSession(resource,
+          url + 'links/' + referKey + '/', options)
+      );
+
+    }, this);
+
+  }, this);
+
+
+  this.listenTo(this.resources, 'add:link', function (resource, referKey) {
+
+    this.linkSessions.push(
+      new ResourceSession(resource,
+        url + 'links/' + referKey + '/', options)
+    );
+
+  });
+
+  this.listenTo(this.resources, 'remove:link', function (resource, referKey) {
+
+    var session = _.find(this.linkSessions, function (session) {
+      return session.resources === resource;
+    });
+    _.pull(this.linkSessions, session);
 
   });
 
@@ -159,6 +192,10 @@ _.extend(ResourceSession.prototype, Events, {
     this.addad = [];
     this.removed = [];
     this.changed = [];
+
+    _.each(this.linkSessions, function (session) {
+      return session.commit();
+    });
 
   }
 

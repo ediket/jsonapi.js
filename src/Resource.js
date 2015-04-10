@@ -34,6 +34,7 @@ module.exports = Model.extend(_.extend({}, SerializeMixin, {
     }
 
     this.links[key] = otherResource;
+    this.trigger('add:link', otherResource, key);
 
     return this;
 
@@ -41,6 +42,7 @@ module.exports = Model.extend(_.extend({}, SerializeMixin, {
 
   removeLink: function (key) {
 
+    this.trigger('remove:link', this.links[key], key);
     delete this.links[key];
 
     return this;
