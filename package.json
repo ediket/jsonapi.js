@@ -1,7 +1,10 @@
 {
-  "name": "jsonapi",
+  "name": "backbone.resource",
   "version": "1.0.0",
   "description": "Resource for JSONAPI. Based on Backbone.",
+  "keywords": [
+    "jsonapi", "backbone", "resource", "restful", "model", "linkage"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "mocha test"
@@ -17,5 +20,9 @@
   "devDependencies": {
     "chai": "^2.2.0",
     "sinon": "^1.14.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ironhee/backbone.resource.git"
   }
 }
