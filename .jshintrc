@@ -1,0 +1,21 @@
+{
+  "boss": true,
+  "node": true,
+  "strict": true,
+  "newcap": false,
+  "undef": true,
+  "unused": false,
+  "lastsemic": true,
+  "indent": 2,
+  "browser": true,
+  "sub": true,
+  "expr": true,
+  "globals" : {
+    "afterEach": false,
+    "beforeEach": false,
+    "before": false,
+    "after": false,
+    "describe": false,
+    "it": false
+  }
+}
