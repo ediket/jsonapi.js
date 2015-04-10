@@ -12,23 +12,41 @@ var ResourceCollection = JSONAPI.ResourceCollection;
 
 describe('Session', function () {
 
-  describe('#track', function () {
+  var syncronizer;
 
-    it('should track ResourceCollection', function () {
+  beforeEach(function () {
 
-      expect(function () {
+    syncronizer = {
+      post: sinon.spy(),
+      get: sinon.spy(),
+      delete: sinon.spy(),
+      patch: sinon.spy()
+    };
 
-        var res = new ResourceCollection();
-        res.create({
-          type: 'foo',
-          name: 'bar'
-        });
+  });
 
-        var session = new Session(res, '/api/foo/');
+  afterEach(function () {
 
-      }).to.not.throw();
+    syncronizer.post.reset();
+    syncronizer.get.reset();
+    syncronizer.delete.reset();
+    syncronizer.patch.reset();
 
-    });
+  });
+
+  it('should track ResourceCollection', function () {
+
+    expect(function () {
+
+      var res = new ResourceCollection();
+      res.create({
+        type: 'foo',
+        name: 'bar'
+      });
+
+      var session = new Session(res, '/api/foo/');
+
+    }).to.not.throw();
 
   });
 
@@ -36,14 +54,12 @@ describe('Session', function () {
 
     it('should make POST request if new Resource was created', function () {
 
-      var postSpy = sinon.spy();
-
       var res = new ResourceCollection();
 
+
+
       var session = new Session(res, '/api/foo/', {
-        syncronizer: {
-          post: postSpy
-        }
+        syncronizer: syncronizer
       });
 
       res.create({
@@ -53,18 +69,21 @@ describe('Session', function () {
 
       session.commit();
 
-      expect(postSpy.called).to.be.true;
-      expect(postSpy.getCall(0).args[0]).to.equal('/api/foo/');
-      expect(postSpy.getCall(0).args[1])
+      expect(syncronizer.post.called).to.be.true;
+      expect(syncronizer.post.getCall(0).args[0]).to.equal('/api/foo/');
+      expect(syncronizer.post.getCall(0).args[1])
         .to.satisfy(
-          _.partialRight(_.isMatch, serializer.serialize(res.first()))
+          _.partialRight(_.isMatch, {
+            data: [{
+              type: 'foo',
+              name: 'bar'
+            }]
+          })
         );
 
     });
 
     it('should make PATCH request if Resource was changed', function () {
-
-      var patchSpy = sinon.spy();
 
       var res = new ResourceCollection();
 
@@ -75,9 +94,7 @@ describe('Session', function () {
       });
 
       var session = new Session(res, '/api/foo/', {
-        syncronizer: {
-          patch: patchSpy
-        }
+        syncronizer: syncronizer
       });
 
       res.first().set({
@@ -86,18 +103,22 @@ describe('Session', function () {
 
       session.commit();
 
-      expect(patchSpy.called).to.be.true;
-      expect(patchSpy.getCall(0).args[0]).to.equal('/api/foo/1');
-      expect(patchSpy.getCall(0).args[1])
+      expect(syncronizer.patch.called).to.be.true;
+      expect(syncronizer.patch.getCall(0).args[0]).to.equal('/api/foo/');
+      expect(syncronizer.patch.getCall(0).args[1])
         .to.satisfy(
-          _.partialRight(_.isMatch, serializer.serialize(res.first()))
+          _.partialRight(_.isMatch, {
+            data: [{
+              id: 1,
+              type: 'foo',
+              name: 'hello'
+            }]
+          })
         );
 
     });
 
     it('should make DELETE request if Resource was deleted', function () {
-
-      var spy = sinon.spy();
 
       var res = new ResourceCollection();
 
@@ -108,17 +129,24 @@ describe('Session', function () {
       });
 
       var session = new Session(res, '/api/foo/', {
-        syncronizer: {
-          delete: spy
-        }
+        syncronizer: syncronizer
       });
 
       res.first().destroy();
 
       session.commit();
 
-      expect(spy.called).to.be.true;
-      expect(spy.getCall(0).args[0]).to.equal('/api/foo/1');
+      expect(syncronizer.delete.called).to.be.true;
+      expect(syncronizer.delete.getCall(0).args[0]).to.equal('/api/foo/');
+      expect(syncronizer.delete.getCall(0).args[1])
+        .to.satisfy(
+          _.partialRight(_.isMatch, {
+            data: [{
+              id: 1,
+              type: 'foo'
+            }]
+          })
+        );
 
     });
 

@@ -3,6 +3,7 @@
 
 
 var _ = require('lodash');
+var Q = require('q');
 var Backbone = require('backbone');
 var Events = Backbone.Events;
 var ResourceCollection = require('./ResourceCollection');
@@ -25,36 +26,52 @@ var ResourceSession = function (resources, url, options) {
 
   this.url = url;
   this.cameras = {};
+  this.added = [];
+  this.removed = [];
+  this.changed = [];
   this.resources = resources;
   this.syncronizer = options.syncronizer;
 
   this.resources.each(function (resource) {
 
-    this._createCamera(resource).capture();
+    if (resource.id) {
+      this._createCamera(resource).capture();
+    }
+    else {
+      this.added.push(resource);
+    }
 
   }, this);
 
   this.listenTo(this.resources, 'add', function (resource) {
 
-    this._createCamera(resource).capture();
+    if (_.contains(this.removed, resource)) {
+      _.pull(this.removed, resources);
+      return;
+    }
+    this.added.push(resource);
 
   });
 
-  this.listenTo(this.resources, 'destroy', function (resource) {
+  this.listenTo(this.resources, 'remove', function (resource) {
 
-    this._getCamera(resource).capture({
-      _deleted: true
-    });
+    if (_.contains(this.added, resource)) {
+      _.pull(this.added, resources);
+      return;
+    }
+    this.removed.push(resource);
 
   });
 
   this.listenTo(this.resources, 'change', function (resource) {
 
+    this.changed.push(resource);
     this._getCamera(resource).capture();
 
   });
 
 };
+
 
 _.extend(ResourceSession.prototype, Events, {
 
@@ -71,55 +88,79 @@ _.extend(ResourceSession.prototype, Events, {
 
   },
 
+  _removeCamera: function (resource) {
+
+    delete this.cameras[resource.cid];
+
+  },
+
   _getCamera: function (resource) {
 
     return this.cameras[resource.cid];
 
   },
 
-  _removeCamera: function (resource) {
-
-    var camera = this.cameras[resource.cid];
-    delete this.cameras[resource.cid];
-    return camera;
-
-  },
-
-  _getCameras: function () {
-
-    return _.values(this.cameras);
-
-  },
-
   commit: function () {
 
-    _.each(this._getCameras(), function (camera) {
+    // CHANGED
+    var patchData = _.chain(this.changed)
+      .filter(function (resource) {
+        var camera = this._getCamera(resource);
+        return !_.isEqual(camera.first(), camera.last());
+      }.bind(this))
+      .map(function (resource) {
+        return serializer.serialize(resource, { include: [] }).data;
+      })
+      .value();
 
-      var resource = camera.target;
+    if (!_.isEmpty(patchData)) {
+      this.syncronizer.patch(this.url, {
+        data: patchData
+      });
+    }
 
-      if (resource.id) {
-        if (camera.last()._deleted) {
-          this.syncronizer.delete(this.url + resource.id);
-          this._removeCamera(resource);
-        }
-        else {
-          if (!_.isEqual(camera.first(), camera.last())) {
-            this.syncronizer.patch(this.url + resource.id,
-              serializer.serialize(resource, { include: [] }));
-          }
-        }
-      }
-      else {
-        this.syncronizer.post(this.url,
-          serializer.serialize(resource, { include: [] }));
-      }
+    // ADDED
+    var postData = _.map(this.added, function (resource) {
+      return serializer.serialize(resource, { include: [] }).data;
+    });
 
+    if (!_.isEmpty(postData)) {
+      this.syncronizer.post(this.url, {
+        data: postData
+      });
+    }
+
+    // REMOVED
+    var deleteData = _.map(this.removed, function (resource) {
+      return resource.toLinkage();
+    });
+
+    if (!_.isEmpty(deleteData)) {
+      this.syncronizer.delete(this.url, {
+        data: deleteData
+      });
+    }
+
+    // Reset Camera
+    _.each(this.changed, function (resource) {
+      var camera = this._getCamera(resource);
       camera.snapshots = camera.snapshots.slice(-1);
-
     }, this);
 
-  }
+    _.each(this.added, function (resource) {
+      this._createCamera(resource).capture();
+    }, this);
 
+    _.each(this.removed, function (resource) {
+      this._removeCamera(resource);
+    }, this);
+
+    // Reset change log
+    this.addad = [];
+    this.removed = [];
+    this.changed = [];
+
+  }
 
 });
 
