@@ -118,19 +118,15 @@ describe('Session', function () {
             data: [{
               id: 1,
               type: 'foo',
-              name: 'hello'
-            }]
-          })
-        );
-
-      expect(syncronizer.post.called).to.be.true;
-      expect(syncronizer.post.getCall(0).args[0]).to.equal('/api/foo/links/baz/');
-      expect(syncronizer.post.getCall(0).args[1])
-        .to.satisfy(
-          _.partialRight(_.isMatch, {
-            data: [{
-              id: 1,
-              type: 'baz'
+              name: 'hello',
+              links: {
+                baz: {
+                  linkage: [{
+                    id: 1,
+                    type: 'baz'
+                  }]
+                }
+              }
             }]
           })
         );

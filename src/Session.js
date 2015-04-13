@@ -38,7 +38,6 @@ var ResourceSession = function ResourceSession (resources, url, options) {
   this.changed = [];
   this.resources = resources;
   this.syncronizer = options.syncronizer;
-  this.linkSessions = [];
 
   this.resources.each(function (resource) {
 
@@ -51,22 +50,9 @@ var ResourceSession = function ResourceSession (resources, url, options) {
 
   }, this);
 
-  this.resources.each(function (resource) {
-
-    _.each(resource.getLinks(), function (resource, referKey) {
-
-      this._createLinkSession(resource, referKey, options);
-
-    }, this);
-
-  }, this);
-
   this.listenTo(this.resources, 'add', this._trackAdded);
   this.listenTo(this.resources, 'remove', this._trackRemoved);
   this.listenTo(this.resources, 'change', this._trackChanged);
-
-  this.listenTo(this.resources, 'add:link', this._trackLinkAdded);
-  this.listenTo(this.resources, 'remove:link', this._trackLinkRemoved);
 
 };
 
@@ -78,16 +64,6 @@ _.extend(ResourceSession.prototype, Events, {
     this._syncResources();
     this._resetCameras();
     this._resetTrackers();
-
-    this._commitLinkSessions();
-
-  },
-
-  _commitLinkSessions: function () {
-
-    _.each(this.linkSessions, function (session) {
-      return session.commit();
-    });
 
   },
 
@@ -199,20 +175,6 @@ _.extend(ResourceSession.prototype, Events, {
 
   },
 
-  _trackLinkAdded: function (resource, referKey) {
-
-    this._createLinkSession(resource, referKey, {
-      syncronizer: this.syncronizer
-    });
-
-  },
-
-  _trackLinkRemoved: function (resource) {
-
-    this._removeLinkSession(resource);
-
-  },
-
   _createCamera: function (resource) {
 
     var camera = new JSONCamera(resource, function (resource) {
@@ -236,25 +198,7 @@ _.extend(ResourceSession.prototype, Events, {
 
     return this.cameras[resource.cid];
 
-  },
-
-  _createLinkSession: function (resource, key, options) {
-
-    this.linkSessions.push(
-      new ResourceSession(resource,
-        this.url + 'links/' + key + '/', options)
-    );
-
-  },
-
-  _removeLinkSession: function (resource) {
-
-    var session = _.find(this.linkSessions, function (session) {
-      return session.resources === resource;
-    });
-    _.pull(this.linkSessions, session);
-
-  },
+  }
 
 });
 
