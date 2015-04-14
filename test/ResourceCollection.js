@@ -69,4 +69,42 @@ describe('ResourceCollection', function () {
 
   });
 
+  describe('#merge', function () {
+
+    it('should return merged data', function () {
+
+      var resCollection = new ResourceCollection([
+        new Resource({
+          id: 1,
+          type: 'foo',
+          content: 'hello'
+        }),
+        new Resource({
+          id: 2,
+          type: 'bar',
+          content: 'world'
+        })
+      ]);
+
+      var margeRes = new Resource({
+        id: 2,
+        type: 'bar',
+        content: 'good bye'
+      });
+
+      expect(resCollection.merge([margeRes]).toJSON())
+        .to.deep.equal([
+          {
+            id: 1,
+            type: 'foo',
+            content: 'hello'
+          },
+          {
+            id: 2,
+            type: 'bar',
+            content: 'good bye'
+          }
+        ]);
+      });
+    });
 });

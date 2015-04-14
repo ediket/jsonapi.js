@@ -61,6 +61,12 @@ module.exports = Model.extend(_.extend({}, SerializeMixin, {
 
   },
 
+  setLinks: function (links) {
+
+    this.links = links;
+
+  },
+
   toJSON: function (options) {
 
     options = _.defaults(options || {}, {
@@ -72,7 +78,7 @@ module.exports = Model.extend(_.extend({}, SerializeMixin, {
 
     if (options.recursive) {
       _.extend(result,
-        _.mapValues(this.links, function (resource, key) {
+        _.mapValues(this.getLinks(), function (resource, key) {
           return resource.toJSON();
         })
       );
@@ -91,9 +97,17 @@ module.exports = Model.extend(_.extend({}, SerializeMixin, {
 
   },
 
-  fromJSONResponse: function (JSONResponse) {
+  merge: function (resource) {
 
-    return _.omit(JSONResponse, 'links');
+    if (resource.get("id") !== this.get("id") ||
+      resource.get("type") !== this.get("type")) {
+      throw new Error("type, id doesn't match ");
+    }
+
+    this.set(resource.toJSON());
+    this.setLinks(resource.getLinks());
+
+    return this;
 
   }
 

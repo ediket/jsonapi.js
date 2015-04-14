@@ -193,4 +193,32 @@ describe('Resource', function () {
 
   });
 
+  describe('#merge', function () {
+
+    it('should return merged data', function () {
+
+      var res1 = new Resource({
+        id: 1,
+        type: 'foo',
+        content: 'hello'
+      });
+
+      var res2 = new Resource({
+        id: 1,
+        type: 'foo',
+        content: 'world'
+      });
+
+      expect(res1.merge(res2).toJSON())
+        .to.deep.equal({
+          id: 1,
+          type: 'foo',
+          content: 'world'
+        });
+
+    });
+
+  });
+
+
 });

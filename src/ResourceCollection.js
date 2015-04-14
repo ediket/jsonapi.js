@@ -27,6 +27,26 @@ module.exports = Collection.extend(_.extend({}, SerializeMixin, {
       return resource.toLinkage();
     });
 
+  },
+
+  merge: function (resources) {
+
+    if (!_.isArray(resources)) {
+      throw new Error('merged resources should be a array');
+    }
+
+    _.map(resources, function(resource) {
+
+      if (!resource instanceof Resource) {
+        throw new Error('resource should be a resource');
+      }
+
+    });
+
+    this.set(resources, { remove: false });
+
+    return this;
+
   }
 
 }));
