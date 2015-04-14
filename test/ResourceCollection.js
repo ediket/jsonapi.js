@@ -143,18 +143,22 @@ describe('ResourceCollection', function () {
         }),
         new Resource({
           id: 2,
-          type: 'bar',
+          type: 'foo',
           content: 'world'
         })
-      ]);
+      ], { type:'foo' });
 
       var margeRes = new Resource({
         id: 2,
-        type: 'bar',
+        type: 'foo',
         content: 'good bye'
       });
 
-      expect(resCollection.merge([margeRes]).toJSON())
+      resCollection.merge(
+        new ResourceCollection([margeRes], { type: 'foo' })
+      );
+
+      expect(resCollection.toJSON())
         .to.deep.equal([
           {
             id: 1,
@@ -163,7 +167,7 @@ describe('ResourceCollection', function () {
           },
           {
             id: 2,
-            type: 'bar',
+            type: 'foo',
             content: 'good bye'
           }
         ]);

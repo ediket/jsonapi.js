@@ -59,19 +59,11 @@ module.exports = Collection.extend(_.extend({}, SerializeMixin, {
 
   merge: function (resources) {
 
-    if (!_.isArray(resources)) {
-      throw new Error('merged resources should be a array');
+    if (!resources instanceof this.constructor) {
+      throw new Error('merged resources should be a ResourceCollection');
     }
 
-    _.map(resources, function(resource) {
-
-      if (!resource instanceof Resource) {
-        throw new Error('resource should be a resource');
-      }
-
-    });
-
-    this.set(resources, { remove: false });
+    this.set(resources.models, { remove: false });
 
     return this;
 
