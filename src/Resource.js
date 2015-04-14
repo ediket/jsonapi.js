@@ -8,21 +8,17 @@ var Model = Backbone.Model;
 var SerializeMixin = require('./SerializeMixin');
 
 
-var optionKeys = ['type'];
-
-
 module.exports = Model.extend(_.extend({}, SerializeMixin, {
 
   sync: function () { return false; },
 
   initialize: function (options) {
 
-    _.extend(this, _.pick(options || {}, optionKeys));
-
-    if (!this.type) {
+    if (!options || !options.type) {
       throw new Error('type is required');
     }
 
+    this.type = options.type;
     this.links = {};
 
   },
