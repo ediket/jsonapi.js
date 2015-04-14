@@ -52,7 +52,7 @@ describe('Session', function () {
 
   });
 
-  describe('#commit', function () {
+  describe('#fetch', function () {
 
     it('should make GET request if fetch single Resource', function () {
 
@@ -111,6 +111,10 @@ describe('Session', function () {
         });
 
     });
+
+  });
+
+  describe('#commit', function () {
 
     it('should make POST request if new Resource was created', function () {
 
