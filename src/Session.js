@@ -59,6 +59,48 @@ var ResourceSession = function ResourceSession (resources, url, options) {
 
 _.extend(ResourceSession.prototype, Events, {
 
+  fetch: function (id) {
+
+    if (!id) { throw new Error('id required'); }
+
+    if (_.isNumber(id)) {
+      return this._fetchResourceByID(id);
+    }
+    else if (_.isArray(id)) {
+      return this._fetchResourcesByIDs(id);
+    }
+    else {
+      throw new Error('invalid type');
+    }
+
+  },
+
+  _fetchResourceByID: function (id) {
+
+    return this.syncronizer.get(this.url + id + '/')
+      .then(function (res) {
+        var resource = res.resource;
+        this.resources.add(resource, { merge: true });
+        return resource;
+      }.bind(this));
+
+  },
+
+  _fetchResourcesByIDs: function (ids) {
+
+    return this.syncronizer.get(this.url, {
+        filter: {
+          id: ids
+        }
+      })
+      .then(function (res) {
+        var resource = res.resource;
+        this.resources.add(resource.models, { merge: true });
+        return resource;
+      }.bind(this));
+
+  },
+
   commit: function () {
 
     this._syncResources();

@@ -8,6 +8,64 @@ var ResourceCollection = JSONAPI.ResourceCollection;
 
 describe('ResourceCollection', function () {
 
+  it('should set type', function () {
+
+    var resources = new ResourceCollection([], {
+      type: 'foo'
+    });
+
+    expect(resources.type).to.equal('foo');
+
+  });
+
+  it('should check type is given', function () {
+
+    expect(function () {
+      new ResourceCollection([], {
+        type: 'foo'
+      });
+    }).to.not.throw(Error);
+
+    expect(function () {
+      new ResourceCollection();
+    }).to.throw(Error);
+
+  });
+
+  it('should check child type', function () {
+
+    var res = new ResourceCollection([], {
+      type: 'foo'
+    });
+
+    expect(function () {
+      res.add(new Resource({
+        type: 'foo'
+      }));
+    }).to.not.throw(Error);
+
+    expect(function () {
+      res.add(new Resource({
+        type: 'bar'
+      }));
+    }).to.throw(Error);
+
+  });
+
+  it('should create same type resource', function () {
+
+    var resources = new ResourceCollection([], {
+      type: 'foo'
+    });
+
+    var newRes = resources.create({
+      'content': 'hello'
+    });
+
+    expect(newRes.type).to.equal('foo');
+
+  });
+
   describe('#toJSON', function () {
 
     it('should return valid data', function () {
@@ -23,7 +81,9 @@ describe('ResourceCollection', function () {
             type: 'bar',
             content: 'world'
           }))
-      ]);
+      ], {
+        type: "foo"
+      });
 
       expect(res.toJSON()).to.deep.equal([{
         id: 1,
@@ -56,7 +116,9 @@ describe('ResourceCollection', function () {
           type: 'foo',
           content: 'hello'
         }
-      ]);
+      ], {
+        type: "foo"
+      });
 
       expect(res1.toLinkage()).to.deep.equal([
         {

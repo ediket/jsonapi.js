@@ -206,7 +206,7 @@ describe('serializer', function () {
           type: 'foo',
           content: 'hello'
         }
-      ]);
+      ], { type: 'foo' });
 
       expect(serializer.serialize(res1))
         .to.satisfy(
@@ -234,7 +234,7 @@ describe('serializer', function () {
             type: 'bar',
             content: 'world'
           }))
-      ]);
+      ], { type: 'foo' });
 
       expect(serializer.serialize(res))
         .to.satisfy(
@@ -290,9 +290,9 @@ describe('serializer', function () {
                 type: 'bar',
                 content: 'world'
               })
-            ])
+            ], { type: 'bar' })
           )
-      ]);
+      ], { type: 'foo' });
 
       expect(serializer.serialize(res, { include: ['barlink'] }))
         .to.satisfy(
