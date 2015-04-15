@@ -21,14 +21,20 @@ var ResourceProxy = function (options) {
   this.options = _.omit(options, 'data', 'links', 'url');
   this.syncronizer = options.syncronizer;
   this.pool = options.pool || new ResourcePool([this]);
-  if (!this.pool.get(this.url)) {
-    this.pool.add(this);
-  }
+  this._addResourceToPool(this);
 
 };
 
 
 _.extend(ResourceProxy.prototype, {
+
+  _addResourceToPool: function (resource) {
+
+    if (!this.pool.get(resource.url)) {
+      this.pool.add(resource);
+    }
+
+  },
 
   _createNeighbor: function (options) {
 
@@ -71,6 +77,15 @@ _.extend(ResourceProxy.prototype, {
 
   },
 
+  setLink: function (key, resource) {
+
+    this.links[key] = {
+      related: resource.url
+    };
+    this.pool.merge(resource.pool);
+
+  },
+
   getLink: function (key) {
 
     var deferred = Q.defer();
@@ -98,9 +113,6 @@ _.extend(ResourceProxy.prototype, {
       .then(function (links) {
         var related = this.pool.get(links.related);
         return related || this._createNeighbor({ url: links.related });
-      }.bind(this))
-      .catch(function () {
-        console.log(arguments[0].stack);
       }.bind(this));
 
   }

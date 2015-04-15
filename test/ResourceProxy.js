@@ -70,6 +70,49 @@ describe('ResourceProxy', function () {
 
   describe('#getRelated', function () {
 
+    it('should not make ajax request when resource already in pool.', function () {
+
+      var foo = new ResourceProxy({
+        data: {
+          content: 'foo'
+        },
+        links: {
+          self: '/api/foo/',
+          children: {
+            self: '/api/foo/links/children/',
+            related: '/api/foo/children/',
+            linkage: [{
+              type: 'foo',
+              id: 1
+            }]
+          }
+        },
+        syncronizer: syncronizer
+      });
+
+      var bar = new ResourceProxy({
+        data: {
+          content: 'bar'
+        },
+        links: {
+          self: '/api/bar/'
+        },
+        syncronizer: syncronizer
+      });
+
+      foo.setLink('barlink', bar);
+
+      return foo.getRelated('barlink')
+        .then(function (bar) {
+          return bar.getData();
+        })
+        .then(function (json) {
+          expect(syncronizer.get.called).to.be.false;
+          expect(json.content).to.equal('bar');
+        });
+
+    });
+
     it('should be promised to get related resource', function () {
 
       syncronizer.get.withArgs('/api/foo/children/').returns(

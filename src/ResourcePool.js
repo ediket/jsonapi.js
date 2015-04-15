@@ -25,6 +25,13 @@ _.extend(ResourcePool.prototype, {
 
     return this.pool[url];
 
+  },
+
+  merge: function (anotherPool) {
+
+    _.extend(this.pool, anotherPool.pool);
+    anotherPool.pool = this.pool;
+
   }
 
 });
