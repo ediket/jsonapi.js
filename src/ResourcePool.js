@@ -18,6 +18,9 @@ _.extend(ResourcePool.prototype, {
   add: function (resource) {
 
     this.pool[resource.url] = resource;
+    if (resource.pool && resource.pool !== this) {
+      this.merge(resource.pool);
+    }
 
   },
 
