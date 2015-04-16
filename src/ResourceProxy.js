@@ -37,36 +37,22 @@ _.extend(ResourceProxy.prototype, {
 
   fetch: function () {
 
-    return this.syncronizer.get(this.url)
-      .then(function (res) {
-        if (!isValidResponse(res)) {
-          throw new Error('invalid response!');
-        }
-        this.data = _.omit(res.data, 'links');
-        this.links = res.links || res.data.links;
-        return this;
-      }.bind(this));
+    return Q.when(this.syncronizer.get(this.url), function (res) {
+      if (!isValidResponse(res)) {
+        throw new Error('invalid response!');
+      }
+      this.data = _.omit(res.data, 'links');
+      this.links = res.links || res.data.links;
+      return this;
+    }.bind(this));
 
   },
 
   getData: function () {
 
-    var deferred = Q.defer();
-
-    var data = this.data;
-
-    if (data) {
-      deferred.resolve(data);
-    }
-    else {
-      this.fetch()
-        .then(function () {
-          data = this.data;
-          data ? deferred.resolve(data) : deferred.reject();
-        }.bind(this));
-    }
-
-    return deferred.promise;
+    return Q.when(this.data ? this : this.fetch(), function () {
+      return this.data;
+    }.bind(this));
 
   },
 
@@ -80,32 +66,18 @@ _.extend(ResourceProxy.prototype, {
 
   getLink: function (key) {
 
-    var deferred = Q.defer();
-
-    var links = this.links[key];
-
-    if (links) {
-      deferred.resolve(links);
-    }
-    else {
-      this.fetch()
-        .then(function () {
-          links = this.links[key];
-          links ? deferred.resolve(links) : deferred.reject();
-        }.bind(this));
-    }
-
-    return deferred.promise;
+    return Q.when(this.links[key] ? this : this.fetch(), function () {
+      return this.links[key];
+    }.bind(this));
 
   },
 
   getRelated: function (key) {
 
-    return this.getLink(key)
-      .then(function (links) {
-        var related = this.pool.get(links.related);
-        return related || this._createNeighbor({ url: links.related });
-      }.bind(this));
+    return Q.when(this.getLink(key), function (links) {
+      return this.pool.get(links.related) ||
+        this._createNeighbor({ url: links.related });
+    }.bind(this));
 
   }
 
