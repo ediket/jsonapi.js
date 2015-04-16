@@ -3,14 +3,11 @@
 
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var Q = require('q');
 var _ = require('lodash');
 var JSONAPI = require('../index');
 var stubPromise = require('./lib/stubPromise');
 var promiseValue = require('./lib/promiseValue');
-var ResourcePool = JSONAPI.ResourcePool;
 var ResourceProxy = JSONAPI.ResourceProxy;
-var Resource = JSONAPI.Resource;
 
 describe('ResourceProxy', function () {
 

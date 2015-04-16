@@ -5,6 +5,7 @@
 var _ = require('lodash');
 var Q = require('q');
 var ResourcePool = require('./ResourcePool');
+var singletons = require('./singletons');
 
 
 var isValidResponse = function (res) {
@@ -20,21 +21,13 @@ var ResourceProxy = function (options) {
 
   this.options = _.omit(options, 'data', 'links', 'url');
   this.syncronizer = options.syncronizer;
-  this.pool = options.pool || new ResourcePool([this]);
-  this._addResourceToPool(this);
+  this.pool = options.pool || singletons.pool;
+  this.pool.add(this);
 
 };
 
 
 _.extend(ResourceProxy.prototype, {
-
-  _addResourceToPool: function (resource) {
-
-    if (!this.pool.get(resource.url)) {
-      this.pool.add(resource);
-    }
-
-  },
 
   _createNeighbor: function (options) {
 
@@ -82,7 +75,6 @@ _.extend(ResourceProxy.prototype, {
     this.links[key] = {
       related: resource.url
     };
-    this.pool.merge(resource.pool);
 
   },
 
