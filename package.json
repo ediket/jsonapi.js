@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "description": "Resource for JSONAPI. Based on Backbone.",
   "keywords": [
-    "jsonapi", "backbone", "resource", "restful", "model", "linkage"
+    "jsonapi",
+    "backbone",
+    "resource",
+    "restful",
+    "model",
+    "linkage"
   ],
   "main": "index.js",
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test -w --compilers js:babel/register",
+    "src": "babel -w ./src -d ./build -s inline"
   },
   "author": "ironhee",
   "license": "MIT",
@@ -18,6 +24,7 @@
     "q": "^1.2.0"
   },
   "devDependencies": {
+    "babel": "^5.1.10",
     "chai": "^2.2.0",
     "sinon": "^1.14.1"
   },

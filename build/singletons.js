@@ -1,0 +1,9 @@
+
+'use strict';
+
+var ResourcePool = require('./ResourcePool');
+
+module.exports = {
+  pool: new ResourcePool()
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9zaW5nbGV0b25zLmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7QUFDQSxZQUFZLENBQUM7O0FBRWIsSUFBSSxZQUFZLEdBQUcsT0FBTyxDQUFDLGdCQUFnQixDQUFDLENBQUM7O0FBRTdDLE1BQU0sQ0FBQyxPQUFPLEdBQUc7QUFDZixNQUFJLEVBQUUsSUFBSSxZQUFZLEVBQUU7Q0FDekIsQ0FBQyIsImZpbGUiOiJzcmMvc2luZ2xldG9ucy5qcyIsInNvdXJjZXNDb250ZW50IjpbIlxuJ3VzZSBzdHJpY3QnO1xuXG52YXIgUmVzb3VyY2VQb29sID0gcmVxdWlyZSgnLi9SZXNvdXJjZVBvb2wnKTtcblxubW9kdWxlLmV4cG9ydHMgPSB7XG4gIHBvb2w6IG5ldyBSZXNvdXJjZVBvb2woKVxufTtcbiJdfQ==

@@ -2,7 +2,7 @@
 'use strict';
 
 var expect = require('chai').expect;
-var JSONAPI = require('../index');
+var JSONAPI = require('../build/jsonapi');
 var Resource = JSONAPI.Resource;
 
 describe('Resource', function () {

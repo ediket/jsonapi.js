@@ -3,7 +3,7 @@
 
 var expect = require('chai').expect;
 var _ = require('lodash');
-var JSONAPI = require('../index');
+var JSONAPI = require('../build/jsonapi');
 var ResourcePool = JSONAPI.ResourcePool;
 
 
