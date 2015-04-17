@@ -13,41 +13,16 @@ class ResourceProxy {
 
   constructor(options) {
 
-    this.url = options.url || options.links.self;
-    this.data = options.data || null;
-    this.links = options.links || null;
+    this.replaceFromResponse(options);
+    this.url = this.links.self;
 
     this.options = _.omit(options, 'data', 'links', 'url');
-    this.syncronizer = options.syncronizer;
-    this.pool = options.pool || pool;
-    this.pool.add(this);
-
-  }
-
-  _createNeighbor (options) {
-
-    return new ResourceProxy(_.extend({}, this.options, options));
-
-  }
-
-  fetch () {
-
-    return Q.when(this.syncronizer.get(this.url), function (res) {
-      if (!isValidResponse(res)) {
-        throw new Error('invalid response!');
-      }
-      this.data = _.omit(res.data, 'links');
-      this.links = res.links || res.data.links;
-      return this;
-    }.bind(this));
 
   }
 
   getData () {
 
-    return Q.when(this.data ? this : this.fetch(), function () {
-      return this.data;
-    }.bind(this));
+    return this.data;
 
   }
 
@@ -61,18 +36,32 @@ class ResourceProxy {
 
   getLink (key) {
 
-    return Q.when(this.links[key] ? this : this.fetch(), function () {
-      return this.links[key];
-    }.bind(this));
+    return this.links[key];
 
   }
 
-  getRelated (key) {
+  getRelatedURL (key) {
 
-    return Q.when(this.getLink(key), function (links) {
-      return this.pool.get(links.related) ||
-        this._createNeighbor({ url: links.related });
-    }.bind(this));
+    return this.getLink(key).related;
+
+  }
+
+  replaceFromResponse (options) {
+
+    _.extend(this, this.parseResponse(options));
+
+  }
+
+  parseResponse (res) {
+
+    if (!isValidResponse(res)) {
+      throw new Error('invalid response!');
+    }
+
+    return {
+      data: _.omit(res.data, 'links'),
+      links: res.links || res.data.links
+    }
 
   }
 

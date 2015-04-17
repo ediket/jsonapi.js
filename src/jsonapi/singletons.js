@@ -2,7 +2,8 @@ import ResourcePool from './ResourcePool';
 
 
 var singletons = {
-  pool: new ResourcePool()
+  pool: new ResourcePool(),
+  syncronizer: {}
 };
 
 
