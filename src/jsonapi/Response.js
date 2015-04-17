@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import Q from 'q';
-
 import Resource from './Resource';
 import CollectionResource from './CollectionResource';
 import Serializer from './Serializer';

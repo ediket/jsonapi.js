@@ -1,17 +1,18 @@
-import _ from 'lodash';
+import Resource from './jsonapi/Resource';
+import ResourceProxy from './jsonapi/ResourceProxy';
+import ResourcePool from './jsonapi/ResourcePool';
+import ResourceCollection from './jsonapi/ResourceCollection';
+import Session from './jsonapi/Session';
+import serializer from './jsonapi/serializer';
+import { pool } from './jsonapi/singletons';
 
 
-var JSONAPI = {
-  Resource: require('./jsonapi/Resource'),
-  ResourceProxy: require('./jsonapi/ResourceProxy'),
-  ResourcePool: require('./jsonapi/ResourcePool'),
-  ResourceCollection: require('./jsonapi/ResourceCollection'),
-  Session: require('./jsonapi/Session'),
-  serializer: require('./jsonapi/serializer')
+export {
+  Resource,
+  ResourceProxy,
+  ResourcePool,
+  ResourceCollection,
+  Session,
+  serializer,
+  pool
 };
-
-
-_.extend(JSONAPI, require('./jsonapi/singletons'));
-
-
-export default JSONAPI;

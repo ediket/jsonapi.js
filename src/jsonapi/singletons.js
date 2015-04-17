@@ -1,5 +1,9 @@
 import ResourcePool from './ResourcePool';
 
-export default {
+
+var singletons = {
   pool: new ResourcePool()
 };
+
+
+export default singletons;

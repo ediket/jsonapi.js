@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import Q from 'q';
 import ResourcePool from './ResourcePool';
-import singletons from './singletons';
+import { pool } from './singletons';
+console.log(pool);
 
 
 var isValidResponse = function (res) {
@@ -17,7 +18,7 @@ var ResourceProxy = function (options) {
 
   this.options = _.omit(options, 'data', 'links', 'url');
   this.syncronizer = options.syncronizer;
-  this.pool = options.pool || singletons.pool;
+  this.pool = options.pool || pool;
   this.pool.add(this);
 
 };
