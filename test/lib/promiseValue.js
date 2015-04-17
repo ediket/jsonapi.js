@@ -1,11 +1,7 @@
-
-'use strict';
-
-
-var Q = require('q');
+import Q from 'q';
 
 
-module.exports = function (value) {
+export default function (value) {
 
   var deferred = Q.defer();
 

@@ -1,10 +1,7 @@
-
-'use strict';
-
 var expect = require('chai').expect;
-var sinon = require('sinon');
-var _ = require('lodash');
-var JSONAPI = require('../build/jsonapi');
+import sinon from 'sinon';
+import _ from 'lodash';
+import JSONAPI from '../build/jsonapi';
 var serializer = JSONAPI.serializer;
 var Resource = JSONAPI.Resource;
 var ResourceCollection = JSONAPI.ResourceCollection;

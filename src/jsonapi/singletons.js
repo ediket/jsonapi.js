@@ -1,8 +1,5 @@
+import ResourcePool from './ResourcePool';
 
-'use strict';
-
-var ResourcePool = require('./ResourcePool');
-
-module.exports = {
+export default {
   pool: new ResourcePool()
 };

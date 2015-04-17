@@ -1,11 +1,7 @@
+import _ from 'lodash';
 
 
-'use strict';
-
-var _ = require('lodash');
-
-
-module.exports = function diffJSON(oldObj, newObj) {
+export default function diffJSON(oldObj, newObj) {
 
   if (!(oldObj && newObj)) {
     throw new Error('two object is required:', oldObj, newObj);
@@ -45,4 +41,4 @@ module.exports = function diffJSON(oldObj, newObj) {
 
   return result;
 
-};
+}

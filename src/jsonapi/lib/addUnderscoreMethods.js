@@ -1,8 +1,4 @@
-
-'use strict';
-
-
-var _ = require('lodash');
+import _ from 'lodash';
 
 var array = [];
 var slice = array.slice;
@@ -32,8 +28,8 @@ var addMethod = function(length, method, attribute) {
   }
 };
 
-module.exports = function(Class, methods, attribute) {
+export default function(Class, methods, attribute) {
   _.each(methods, function(length, method) {
     if (_[method]) Class.prototype[method] = addMethod(length, method, attribute);
   });
-};
+}

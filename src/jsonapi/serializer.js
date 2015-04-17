@@ -1,10 +1,6 @@
-
-
-'use strict';
-
-var _ = require('lodash');
-var Resource = require('./Resource');
-var ResourceCollection = require('./ResourceCollection');
+import _ from 'lodash';
+import Resource from './Resource';
+import ResourceCollection from './ResourceCollection';
 
 
 var filterReduceFields = function (fields, referKey) {
@@ -25,7 +21,7 @@ var filterReduceFields = function (fields, referKey) {
 };
 
 
-module.exports = {
+export default {
 
   serialize: function serialize(resource, options) {
 

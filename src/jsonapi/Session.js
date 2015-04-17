@@ -1,15 +1,10 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var Q = require('q');
-var Backbone = require('backbone');
-var Events = Backbone.Events;
-var ResourceCollection = require('./ResourceCollection');
-var serializer = require('./serializer');
-var JSONCamera = require('./lib/JSONCamera');
-var diffJSON = require('./lib/diffJSON');
+import _ from 'lodash';
+import Q from 'q';
+import { Events } from 'backbone';
+import ResourceCollection from './ResourceCollection';
+import serializer from './serializer';
+import JSONCamera from './lib/JSONCamera';
+import diffJSON from './lib/diffJSON';
 
 
 var ResourceSession = function ResourceSession (resources, url, options) {
@@ -244,4 +239,4 @@ _.extend(ResourceSession.prototype, Events, {
 
 });
 
-module.exports = ResourceSession;
+export default ResourceSession;

@@ -1,11 +1,7 @@
-
-'use strict';
-
-
-var $ = require('jquery');
-var _ = require('lodash');
-var Q = require('q');
-var Response = require('./Response');
+import $ from 'jquery';
+import _ from 'lodash';
+import Q from 'q';
+import Response from './Response';
 
 
 var ajaxOptions = {
@@ -48,7 +44,7 @@ var makeAjaxRequest = function (options) {
 };
 
 
-module.exports = {
+export default {
 
   head: function (url, data, options) {
 

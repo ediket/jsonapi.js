@@ -1,9 +1,5 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var addUnderscoreCollectionMethods = require('./addUnderscoreCollectionMethods');
+import _ from 'lodash';
+import addUnderscoreCollectionMethods from './addUnderscoreCollectionMethods';
 
 
 var JSONCamera = function (target, transform) {
@@ -36,4 +32,4 @@ _.extend(JSONCamera.prototype, {
 addUnderscoreCollectionMethods(JSONCamera, 'snapshots');
 
 
-module.exports = JSONCamera;
+export default JSONCamera;

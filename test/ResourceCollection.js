@@ -1,8 +1,5 @@
-
-'use strict';
-
 var expect = require('chai').expect;
-var JSONAPI = require('../build/jsonapi');
+import JSONAPI from '../build/jsonapi';
 var Resource = JSONAPI.Resource;
 var ResourceCollection = JSONAPI.ResourceCollection;
 

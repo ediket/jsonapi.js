@@ -1,8 +1,4 @@
-
-'use strict';
-
-
-var _ = require('lodash');
+import _ from 'lodash';
 
 
 var JSONAPI = {
@@ -18,4 +14,4 @@ var JSONAPI = {
 _.extend(JSONAPI, require('./jsonapi/singletons'));
 
 
-module.exports = JSONAPI;
+export default JSONAPI;

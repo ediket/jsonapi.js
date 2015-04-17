@@ -1,15 +1,10 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var Backbone = require('backbone');
-var Collection = Backbone.Collection;
-var Resource = require('./Resource');
-var SerializeMixin = require('./SerializeMixin');
+import _ from 'lodash';
+import { Collection } from 'backbone';
+import Resource from './Resource';
+import SerializeMixin from './SerializeMixin';
 
 
-module.exports = Collection.extend(_.extend({}, SerializeMixin, {
+export default Collection.extend(_.extend({}, SerializeMixin, {
 
   sync: function () { return false; },
 

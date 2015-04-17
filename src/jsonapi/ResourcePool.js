@@ -1,8 +1,4 @@
-
-'use strict';
-
-
-var _ = require('lodash');
+import _ from 'lodash';
 
 
 var ResourcePool = function (resources) {
@@ -30,4 +26,4 @@ _.extend(ResourcePool.prototype, {
 });
 
 
-module.exports = ResourcePool;
+export default ResourcePool;

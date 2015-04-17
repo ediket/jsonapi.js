@@ -1,9 +1,6 @@
-
-'use strict';
-
 var expect = require('chai').expect;
-var _ = require('lodash');
-var JSONAPI = require('../build/jsonapi');
+import _ from 'lodash';
+import JSONAPI from '../build/jsonapi';
 var ResourcePool = JSONAPI.ResourcePool;
 
 

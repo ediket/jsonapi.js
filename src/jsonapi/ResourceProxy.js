@@ -1,11 +1,7 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var Q = require('q');
-var ResourcePool = require('./ResourcePool');
-var singletons = require('./singletons');
+import _ from 'lodash';
+import Q from 'q';
+import ResourcePool from './ResourcePool';
+import singletons from './singletons';
 
 
 var isValidResponse = function (res) {
@@ -84,4 +80,4 @@ _.extend(ResourceProxy.prototype, {
 });
 
 
-module.exports = ResourceProxy;
+export default ResourceProxy;

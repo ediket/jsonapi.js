@@ -1,12 +1,9 @@
-
-'use strict';
-
 var expect = require('chai').expect;
-var sinon = require('sinon');
-var _ = require('lodash');
-var JSONAPI = require('../build/jsonapi');
-var stubPromise = require('./lib/stubPromise');
-var promiseValue = require('./lib/promiseValue');
+import sinon from 'sinon';
+import _ from 'lodash';
+import JSONAPI from '../build/jsonapi';
+import stubPromise from './lib/stubPromise';
+import promiseValue from './lib/promiseValue';
 var ResourceProxy = JSONAPI.ResourceProxy;
 
 describe('ResourceProxy', function () {

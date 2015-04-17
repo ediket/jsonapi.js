@@ -1,9 +1,5 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var addUnderscoreMethods = require('./addUnderscoreMethods');
+import _ from 'lodash';
+import addUnderscoreMethods from './addUnderscoreMethods';
 
 
 // Underscore methods that we want to implement on the Collection.
@@ -18,7 +14,7 @@ var collectionMethods = { forEach: 3, each: 3, map: 3, collect: 3, reduce: 4,
     isEmpty: 1, chain: 1, sample: 3, partition: 3 };
 
 
-module.exports = function (Collection, attribute) {
+export default function (Collection, attribute) {
 
   // Mix in each Underscore method as a proxy to `Collection#models`.
   addUnderscoreMethods(Collection, collectionMethods, attribute);
@@ -37,4 +33,4 @@ module.exports = function (Collection, attribute) {
     };
   });
 
-};
+}

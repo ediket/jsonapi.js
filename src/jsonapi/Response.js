@@ -1,14 +1,10 @@
+import $ from 'jquery';
+import _ from 'lodash';
+import Q from 'q';
 
-'use strict';
-
-
-var $ = require('jquery');
-var _ = require('lodash');
-var Q = require('q');
-
-var Resource = require('./Resource');
-var CollectionResource = require('./CollectionResource');
-var Serializer = require('./Serializer');
+import Resource from './Resource';
+import CollectionResource from './CollectionResource';
+import Serializer from './Serializer';
 
 
 var isResponseError = function (status) {
@@ -98,4 +94,4 @@ _.extend(Response.prototype, {
 });
 
 
-module.exports = Response;
+export default Response;

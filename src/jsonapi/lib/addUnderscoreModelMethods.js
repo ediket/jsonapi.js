@@ -1,9 +1,5 @@
-
-'use strict';
-
-
-var _ = require('lodash');
-var addUnderscoreMethods = require('./addUnderscoreMethods');
+import _ from 'lodash';
+import addUnderscoreMethods from './addUnderscoreMethods';
 
 
 // Underscore methods that we want to implement on the Model.
@@ -11,9 +7,9 @@ var addUnderscoreMethods = require('./addUnderscoreMethods');
       omit: 0, chain: 1, isEmpty: 1 };
 
 
-module.exports = function (Model, attributes) {
+export default function (Model, attributes) {
 
   // Mix in each Underscore method as a proxy to `Model#attributes`.
   addUnderscoreMethods(Model, modelMethods, attributes);
 
-};
+}

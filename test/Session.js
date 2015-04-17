@@ -1,13 +1,10 @@
-
-'use strict';
-
 var expect = require('chai').expect;
-var sinon = require('sinon');
-var Q = require('q');
-var _ = require('lodash');
-var JSONAPI = require('../build/jsonapi');
-var stubPromise = require('./lib/stubPromise');
-var promiseValue = require('./lib/promiseValue');
+import sinon from 'sinon';
+import Q from 'q';
+import _ from 'lodash';
+import JSONAPI from '../build/jsonapi';
+import stubPromise from './lib/stubPromise';
+import promiseValue from './lib/promiseValue';
 var Session = JSONAPI.Session;
 var serializer = JSONAPI.serializer;
 var Resource = JSONAPI.Resource;

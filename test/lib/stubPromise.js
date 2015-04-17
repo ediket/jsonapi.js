@@ -1,12 +1,8 @@
-
-'use strict';
-
-
-var sinon = require('sinon');
-var Q = require('Q');
+import sinon from 'sinon';
+import Q from 'Q';
 
 
-module.exports = function () {
+export default function () {
 
   var stub = sinon.stub.apply(sinon, arguments);
 

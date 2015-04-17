@@ -1,8 +1,4 @@
-
-
-'use strict';
-
-var _ = require('lodash');
+import _ from 'lodash';
 
 
 var SerializableRequiredError = function (message) {
@@ -12,7 +8,7 @@ var SerializableRequiredError = function (message) {
 SerializableRequiredError.prototype = Error.prototype;
 
 
-module.exports = {
+export default {
   toJSON: function () {
     throw new Error('toJSON should be implemented!');
   },
