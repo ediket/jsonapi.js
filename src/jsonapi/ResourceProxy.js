@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Q from 'q';
 import ResourcePool from './ResourcePool';
 import { pool } from './singletons';
-console.log(pool);
 
 
 var isValidResponse = function (res) {
@@ -10,29 +9,28 @@ var isValidResponse = function (res) {
 };
 
 
-var ResourceProxy = function (options) {
+class ResourceProxy {
 
-  this.url = options.url || options.links.self;
-  this.data = options.data || null;
-  this.links = options.links || null;
+  constructor(options) {
 
-  this.options = _.omit(options, 'data', 'links', 'url');
-  this.syncronizer = options.syncronizer;
-  this.pool = options.pool || pool;
-  this.pool.add(this);
+    this.url = options.url || options.links.self;
+    this.data = options.data || null;
+    this.links = options.links || null;
 
-};
+    this.options = _.omit(options, 'data', 'links', 'url');
+    this.syncronizer = options.syncronizer;
+    this.pool = options.pool || pool;
+    this.pool.add(this);
 
+  }
 
-_.extend(ResourceProxy.prototype, {
-
-  _createNeighbor: function (options) {
+  _createNeighbor (options) {
 
     return new ResourceProxy(_.extend({}, this.options, options));
 
-  },
+  }
 
-  fetch: function () {
+  fetch () {
 
     return Q.when(this.syncronizer.get(this.url), function (res) {
       if (!isValidResponse(res)) {
@@ -43,33 +41,33 @@ _.extend(ResourceProxy.prototype, {
       return this;
     }.bind(this));
 
-  },
+  }
 
-  getData: function () {
+  getData () {
 
     return Q.when(this.data ? this : this.fetch(), function () {
       return this.data;
     }.bind(this));
 
-  },
+  }
 
-  setLink: function (key, resource) {
+  setLink (key, resource) {
 
     this.links[key] = {
       related: resource.url
     };
 
-  },
+  }
 
-  getLink: function (key) {
+  getLink (key) {
 
     return Q.when(this.links[key] ? this : this.fetch(), function () {
       return this.links[key];
     }.bind(this));
 
-  },
+  }
 
-  getRelated: function (key) {
+  getRelated (key) {
 
     return Q.when(this.getLink(key), function (links) {
       return this.pool.get(links.related) ||
@@ -78,7 +76,7 @@ _.extend(ResourceProxy.prototype, {
 
   }
 
-});
+}
 
 
 export default ResourceProxy;

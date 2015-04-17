@@ -1,29 +1,28 @@
 import _ from 'lodash';
 
 
-var ResourcePool = function (resources) {
+class ResourcePool {
 
-  this.pool = {};
-  _.each(resources, this.add, this);
+  constructor(resources) {
 
-};
+    this.pool = {};
+    _.each(resources, this.add, this);
 
+  }
 
-_.extend(ResourcePool.prototype, {
-
-  add: function (resource) {
+  add (resource) {
 
     this.pool[resource.url] = resource;
 
-  },
+  }
 
-  get: function (url) {
+  get (url) {
 
     return this.pool[url];
 
   }
 
-});
+}
 
 
 export default ResourcePool;
