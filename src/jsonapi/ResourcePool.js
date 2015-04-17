@@ -21,7 +21,22 @@ class ResourcePool {
 
   }
 
-  fetch (url) {
+  add (resource) {
+
+    var { type, id } = resource;
+    this.pool.set(resource.url, resource);
+
+  }
+
+  get (url) {
+
+    return Q.when(this.pool.get(url) || this._fetch(url), function (res) {
+      return res;
+    }.bind(this));
+
+  }
+
+  _fetch (url) {
 
     return Q.when(this.syncronizer.get(url), function (res) {
       var resource = this.pool.get(url);
@@ -33,21 +48,6 @@ class ResourcePool {
         resource.replaceFromResponse(res);
       }
       return resource;
-    }.bind(this));
-
-  }
-
-  add (resource) {
-
-    var { type, id } = resource;
-    this.pool.set(resource.url, resource);
-
-  }
-
-  get (url) {
-
-    return Q.when(this.pool.get(url) || this.fetch(url), function (res) {
-      return res;
     }.bind(this));
 
   }

@@ -54,7 +54,7 @@ describe('ResourceProxy', function () {
         })
       );
 
-      pool.fetch('/api/foo/')
+      pool.get('/api/foo/')
         .then(function (rc) {
           var json = rc.getData();
           expect(syncronizer.get.called).to.be.true;
@@ -69,7 +69,7 @@ describe('ResourceProxy', function () {
 
     it('should not make ajax request when resource already in pool.', function () {
 
-      var foo = pool.create({
+      var foo = new ResourceProxy({
         data: {
           content: 'foo',
           links: {
@@ -86,7 +86,9 @@ describe('ResourceProxy', function () {
         }
       });
 
-      var bar = pool.create({
+      pool.add(foo);
+
+      var bar = new ResourceProxy({
         data: {
           content: 'bar',
           links: {
@@ -94,6 +96,8 @@ describe('ResourceProxy', function () {
           }
         }
       });
+
+      pool.add(bar);
 
       foo.setLink('barlink', bar);
 
@@ -121,7 +125,7 @@ describe('ResourceProxy', function () {
         })
       );
 
-      var rc = pool.create({
+      var rc = new ResourceProxy({
         data: {
           links: {
             self: '/api/foo/',
@@ -136,6 +140,8 @@ describe('ResourceProxy', function () {
           }
         }
       });
+
+      pool.add(rc);
 
       return pool.get(rc.getRelatedURL('children'))
         .then(function (children) {
