@@ -1,7 +1,6 @@
-var expect = require('chai').expect;
-import JSONAPI from '../build/jsonapi';
-var Resource = JSONAPI.Resource;
-var ResourceCollection = JSONAPI.ResourceCollection;
+import { expect } from 'chai';
+import { Resource, ResourceCollection } from '../build/jsonapi';
+
 
 describe('ResourceCollection', function () {
 

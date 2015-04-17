@@ -1,7 +1,6 @@
-var expect = require('chai').expect;
+import { expect } from 'chai';
 import _ from 'lodash';
-import JSONAPI from '../build/jsonapi';
-var ResourcePool = JSONAPI.ResourcePool;
+import { ResourcePool } from '../build/jsonapi';
 
 
 describe('ResourcePool', function () {

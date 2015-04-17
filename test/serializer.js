@@ -1,10 +1,11 @@
-var expect = require('chai').expect;
+import { expect } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
-import JSONAPI from '../build/jsonapi';
-var serializer = JSONAPI.serializer;
-var Resource = JSONAPI.Resource;
-var ResourceCollection = JSONAPI.ResourceCollection;
+import {
+  serializer,
+  Resource,
+  ResourceCollection } from '../build/jsonapi';
+
 
 describe('serializer', function () {
 

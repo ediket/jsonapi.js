@@ -1,14 +1,14 @@
-var expect = require('chai').expect;
+import { expect } from 'chai';
 import sinon from 'sinon';
 import Q from 'q';
 import _ from 'lodash';
-import JSONAPI from '../build/jsonapi';
 import stubPromise from './lib/stubPromise';
 import promiseValue from './lib/promiseValue';
-var Session = JSONAPI.Session;
-var serializer = JSONAPI.serializer;
-var Resource = JSONAPI.Resource;
-var ResourceCollection = JSONAPI.ResourceCollection;
+import {
+  Session,
+  Resource,
+  ResourceCollection } from '../build/jsonapi';
+
 
 describe('Session', function () {
 

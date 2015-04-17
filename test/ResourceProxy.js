@@ -1,10 +1,10 @@
-var expect = require('chai').expect;
+import { expect } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
-import JSONAPI from '../build/jsonapi';
 import stubPromise from './lib/stubPromise';
 import promiseValue from './lib/promiseValue';
-var ResourceProxy = JSONAPI.ResourceProxy;
+import { ResourceProxy } from '../build/jsonapi';
+
 
 describe('ResourceProxy', function () {
 
