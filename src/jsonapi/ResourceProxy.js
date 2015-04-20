@@ -7,7 +7,7 @@ import uuid from 'node-uuid';
 
 
 var isValidData = function (data) {
-  return data && data.type && data.links;
+  return data && data.type;
 };
 
 
@@ -58,7 +58,7 @@ class ResourceProxy extends Model {
     if (!isValidData(data)) {
       throw new Error('invalid response!');
     }
-    this.links = data.links;
+    this.links = data.links || {};
     return _.omit(data, 'links');
 
   }

@@ -6,12 +6,10 @@ var _ = require('lodash');
 
 
 var JSONAPI = {
-  Resource: require('./src/Resource'),
+  Transaction: require('./src/Transaction'),
   ResourceProxy: require('./src/ResourceProxy'),
   ResourcePool: require('./src/ResourcePool'),
-  ResourceCollection: require('./src/ResourceCollection'),
-  Session: require('./src/Session'),
-  serializer: require('./src/serializer')
+  serializer: require('./src/serializer'),
 };
 
 

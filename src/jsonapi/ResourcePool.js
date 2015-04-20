@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Q from 'q';
+import { Events } from 'backbone';
 import ResourceProxy from './ResourceProxy';
 
 
@@ -7,6 +8,7 @@ class ResourcePool {
 
   constructor(resources) {
 
+    _.extend(this, Events);
     this.pool = new Map();
     this.linkageToUUID = new Map();
     this.syncronizer = {};
@@ -16,8 +18,13 @@ class ResourcePool {
 
   create (res) {
 
-    var resource = new ResourceProxy(res)
+    var resource = new ResourceProxy(res);
     this.add(resource);
+
+    if (!resource.links.self) {
+      this.trigger('create', resource);
+    }
+
     return resource;
 
   }
@@ -30,7 +37,12 @@ class ResourcePool {
     if (linkage.type && linkage.id) {
       this.linkageToUUID.set(`${linkage.type}:${linkage.id}`, uuid);
     }
+
     this.pool.set(uuid, resource);
+
+    this.listenTo(resource, "change", function () {
+      this.trigger("change", resource);
+    });
 
   }
 
@@ -39,13 +51,28 @@ class ResourcePool {
     var { linkage, self, related, uuid } = link;
 
     if (!uuid && linkage) {
-      uuid = this.linkageToUUID.get(`${linkage.type}:${linkage.id}`)
+      uuid = this.linkageToUUID.get(`${linkage.type}:${linkage.id}`);
     }
 
     return Q.when(
       this._getFromMemory(uuid) ||
       this._getFromServer(related || self)
     );
+
+  }
+
+  remove (link) {
+
+    var { linkage, self, related, uuid } = link;
+
+    if (!uuid && linkage) {
+      uuid = this.linkageToUUID.get(`${linkage.type}:${linkage.id}`);
+    }
+
+    var resource = this._getFromMemory(uuid);
+    this.trigger("remove", resource);
+    this.stopListening(resource);
+    this.pool.delete(uuid);
 
   }
 
