@@ -46,6 +46,8 @@ describe('ResourceProxy', function () {
       syncronizer.get.withArgs('/api/foo/').returns(
         promiseValue({
           data: {
+            type: '123',
+            id: 23,
             content: 'hello world',
             links: {
               self: '/api/foo/'
@@ -54,7 +56,11 @@ describe('ResourceProxy', function () {
         })
       );
 
-      pool.get('/api/foo/')
+      var exampleLink = {
+        related: '/api/foo/'
+      };
+
+      pool.get(exampleLink)
         .then(function (rc) {
           var json = rc.getData();
           expect(syncronizer.get.called).to.be.true;
@@ -70,18 +76,18 @@ describe('ResourceProxy', function () {
     it('should not make ajax request when resource already in pool.', function () {
 
       var foo = new ResourceProxy({
-        data: {
-          content: 'foo',
-          links: {
-            self: '/api/foo/',
-            children: {
-              self: '/api/foo/links/children/',
-              related: '/api/foo/children/',
-              linkage: [{
-                type: 'foo',
-                id: 1
-              }]
-            }
+        type: 'foo',
+        id: 2,
+        content: 'foo',
+        links: {
+          self: '/api/foo/',
+          children: {
+            self: '/api/foo/links/children/',
+            related: '/api/foo/children/',
+            linkage: [{
+              type: 'foo',
+              id: 1
+            }]
           }
         }
       });
@@ -89,11 +95,11 @@ describe('ResourceProxy', function () {
       pool.add(foo);
 
       var bar = new ResourceProxy({
-        data: {
-          content: 'bar',
-          links: {
-            self: '/api/bar/'
-          }
+        type: 'bar',
+        id: 2,
+        content: 'bar',
+        links: {
+          self: '/api/bar/'
         }
       });
 
@@ -101,7 +107,7 @@ describe('ResourceProxy', function () {
 
       foo.setLink('barlink', bar);
 
-      return pool.get(foo.getRelatedURL('barlink'))
+      return pool.get(foo.getLink('barlink'))
         .then(function (bar) {
           var json = bar.getData();
           expect(syncronizer.get.called).to.be.false;
@@ -120,34 +126,37 @@ describe('ResourceProxy', function () {
           data: [{
             id: 1,
             type: 'foo',
-            content: 'hello'
+            content: 'hello',
+            links: {
+              self: '/api/foo/children/1/'
+            }
           }]
         })
       );
 
       var rc = new ResourceProxy({
-        data: {
-          links: {
-            self: '/api/foo/',
-            children: {
-              self: '/api/foo/links/children/',
-              related: '/api/foo/children/',
-              linkage: [{
-                type: 'foo',
-                id: 1
-              }]
-            }
+        type: 'content',
+        id: 1,
+        links: {
+          self: '/api/foo/',
+          children: {
+            self: '/api/foo/links/children/',
+            related: '/api/foo/children/',
+            linkage: [{
+              type: 'foo',
+              id: 1
+            }]
           }
         }
       });
 
       pool.add(rc);
 
-      return pool.get(rc.getRelatedURL('children'))
+      return pool.get(rc.getLink('children'))
         .then(function (children) {
-          var json = children.getData();
+          var json = children[0].getData();
           expect(syncronizer.get.called).to.be.true;
-          expect(json[0].content).to.equal('hello');
+          expect(json.content).to.equal('hello');
         });
 
     });

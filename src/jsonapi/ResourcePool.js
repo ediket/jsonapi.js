@@ -8,6 +8,7 @@ class ResourcePool {
   constructor(resources) {
 
     this.pool = new Map();
+    this.linkageToUUID = new Map();
     this.syncronizer = {};
     _.each(resources, this.add, this);
 
@@ -23,28 +24,45 @@ class ResourcePool {
 
   add (resource) {
 
-    var { type, id, url } = resource;
-    this.pool.set(url, resource);
+    var uuid = resource.links.uuid;
+    var linkage = resource.getLinkage();
+
+    if (linkage.type && linkage.id) {
+      this.linkageToUUID.set(`${linkage.type}:${linkage.id}`, uuid);
+    }
+    this.pool.set(uuid, resource);
 
   }
 
-  get (url) {
+  get (link) {
+
+    var { linkage, self, related, uuid } = link;
+
+    if (!uuid && linkage) {
+      uuid = this.linkageToUUID.get(`${linkage.type}:${linkage.id}`)
+    }
 
     return Q.when(
-      this._getFromMemory(url) || this._getFromServer(url)
+      this._getFromMemory(uuid) ||
+      this._getFromServer(related || self)
     );
 
   }
 
-  _getFromMemory (url) {
+  _getFromMemory (uuid) {
 
-    return this.pool.get(url);
+    return this.pool.get(uuid);
 
   }
 
   _getFromServer (url) {
 
     return Q.when(this.syncronizer.get(url), function (res) {
+      if (_.isArray(res.data)) {
+        return _.map(res.data, function (res) {
+          return this.create(res);
+        }, this);
+      }
       return this.create(res);
     }.bind(this));
 
@@ -58,7 +76,7 @@ class ResourcePool {
         resource = this.create(res);
       }
       else {
-        resource.replaceFromResponse(res);
+        resource.setFromData(res);
       }
       return resource;
     }.bind(this));

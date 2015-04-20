@@ -2,10 +2,11 @@ import _ from 'lodash';
 import Q from 'q';
 import ResourcePool from './ResourcePool';
 import { pool } from './singletons';
+import uuid from 'node-uuid';
 
 
-var isValidResponse = function (res) {
-  return res && res.data && (res.links || res.data.links);
+var isValidData = function (data) {
+  return data && data.type && data.links;
 };
 
 
@@ -13,10 +14,20 @@ class ResourceProxy {
 
   constructor(options) {
 
-    this.replaceFromResponse(options);
+    this.setFromData(options);
     this.url = this.links.self;
+    this.links.uuid = uuid.v4();
 
     this.options = _.omit(options, 'data', 'links', 'url');
+
+  }
+
+  getLinkage () {
+
+    return {
+      type: this.data.type,
+      id: this.data.id
+    };
 
   }
 
@@ -28,9 +39,7 @@ class ResourceProxy {
 
   setLink (key, resource) {
 
-    this.links[key] = {
-      related: resource.url
-    };
+    this.links[key] = resource.links;
 
   }
 
@@ -40,27 +49,21 @@ class ResourceProxy {
 
   }
 
-  getRelatedURL (key) {
+  setFromData (options) {
 
-    return this.getLink(key).related;
-
-  }
-
-  replaceFromResponse (options) {
-
-    _.extend(this, this.parseResponse(options));
+    _.extend(this, this.parseData(options));
 
   }
 
-  parseResponse (res) {
+  parseData (data) {
 
-    if (!isValidResponse(res)) {
+    if (!isValidData(data)) {
       throw new Error('invalid response!');
     }
 
     return {
-      data: _.omit(res.data, 'links'),
-      links: res.links || res.data.links
+      data: _.omit(data, 'links'),
+      links: data.links
     }
 
   }
