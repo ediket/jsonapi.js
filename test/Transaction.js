@@ -124,10 +124,6 @@ describe('Transaction', function () {
       content: 'foo'
     });
 
-    var exampleLink = {
-        related: '/api/foo/'
-      };
-
     pool.remove(foo);
 
     expect(transaction.operations).to.have.length(2);

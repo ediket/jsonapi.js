@@ -23,6 +23,18 @@ class ResourceProxy extends Model {
 
   }
 
+  getURL () {
+
+    return this.links.self;
+
+  }
+
+  getUUID () {
+
+    return this.links.uuid;
+
+  }
+
   getLinkage () {
 
     return {

@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Q from 'q';
 import { Events } from 'backbone';
 import ResourceProxy from './ResourceProxy';
+import Operation from './Operation';
 
 
 class ResourcePool {
@@ -21,8 +22,10 @@ class ResourcePool {
     var resource = new ResourceProxy(res);
     this.add(resource);
 
-    if (!resource.links.self) {
-      this.trigger('create', resource);
+    if (!resource.getURL()) {
+      this.trigger('transform',
+        new Operation('add', resource)
+      );
     }
 
     return resource;
@@ -41,8 +44,22 @@ class ResourcePool {
     this.pool.set(uuid, resource);
 
     this.listenTo(resource, "change", function () {
-      this.trigger("change", resource);
+      this.trigger('transform',
+        new Operation('replace', resource)
+      );
     });
+
+  }
+
+  remove (resource) {
+
+    var { uuid } = resource.links;
+
+    this.trigger('transform',
+      new Operation('remove', resource)
+    );
+    this.stopListening(resource);
+    this.pool.delete(uuid);
 
   }
 
@@ -58,16 +75,6 @@ class ResourcePool {
       this._getFromMemory(uuid) ||
       this._getFromServer(related || self)
     );
-
-  }
-
-  remove (resource) {
-
-    var { uuid } = resource.links;
-
-    this.trigger("remove", resource);
-    this.stopListening(resource);
-    this.pool.delete(uuid);
 
   }
 

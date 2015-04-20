@@ -31,54 +31,21 @@ class Transaction {
 
   _activate () {
 
-    this.listenTo(this.pool, 'create', this.onAddResource);
-    this.listenTo(this.pool, 'change', this.onChangeResource);
-    this.listenTo(this.pool, 'remove', this.onRemoveResource);
+    this.listenTo(this.pool, 'transform', this.onTransform);
     this.active = true;
 
   }
 
   _deactivate () {
 
-    this.stopListening(this.pool, 'create', this.onAddResource);
-    this.stopListening(this.pool, 'change', this.onChangeResource);
-    this.stopListening(this.pool, 'remove', this.onRemoveResource);
+    this.stopListening(this.pool, 'transform', this.onTransform);
     this.active = false;
 
   }
 
-  onAddResource (resource) {
+  onTransform (operation) {
 
-    var url = "api" + "/" +  resource.get('type') +  "/-";
-
-    this.operations.push({
-      op: "add",
-      path: url,
-      value: resource.toJSON()
-    });
-
-  }
-
-  onChangeResource (resource) {
-
-    var url = resource.links.self || "api" + "/" +  resource.get('type') +  "/-";
-
-    this.operations.push({
-      op: "change",
-      path: url,
-      value: resource.toJSON()
-    });
-
-  }
-
-  onRemoveResource (resource) {
-
-    var url = resource.links.self || "api" + "/" +  resource.get('type') +  "/-";
-
-    this.operations.push({
-      op: "remove",
-      path: url
-    });
+    this.operations.push(operation);
 
   }
 
