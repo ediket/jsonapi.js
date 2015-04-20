@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Q from 'q';
+import { Model } from 'backbone';
 import ResourcePool from './ResourcePool';
 import { pool } from './singletons';
 import uuid from 'node-uuid';
@@ -10,36 +11,39 @@ var isValidData = function (data) {
 };
 
 
-class ResourceProxy {
+class ResourceProxy extends Model {
 
-  constructor(options) {
+  constructor(attributes, options) {
 
-    this.setFromData(options);
-    this.url = this.links.self;
+    options = options || {};
+    _.defaults(options, { parse: true });
+
+    super(attributes, options);
     this.links.uuid = uuid.v4();
-
-    this.options = _.omit(options, 'data', 'links', 'url');
 
   }
 
   getLinkage () {
 
     return {
-      type: this.data.type,
-      id: this.data.id
+      type: this.get('type'),
+      id: this.get('id')
     };
-
-  }
-
-  getData () {
-
-    return this.data;
 
   }
 
   setLink (key, resource) {
 
     this.links[key] = resource.links;
+    this.trigger('add:link', key, this.links[key]);
+
+  }
+
+  removeLink (key) {
+
+    var removedLink = this.links[key];
+    delete this.links[key];
+    this.trigger('remove:link', key, removedLink);
 
   }
 
@@ -49,22 +53,13 @@ class ResourceProxy {
 
   }
 
-  setFromData (options) {
-
-    _.extend(this, this.parseData(options));
-
-  }
-
-  parseData (data) {
+  parse (data) {
 
     if (!isValidData(data)) {
       throw new Error('invalid response!');
     }
-
-    return {
-      data: _.omit(data, 'links'),
-      links: data.links
-    }
+    this.links = data.links;
+    return _.omit(data, 'links');
 
   }
 

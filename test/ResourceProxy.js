@@ -109,9 +109,8 @@ describe('ResourceProxy', function () {
 
       return pool.get(foo.getLink('barlink'))
         .then(function (bar) {
-          var json = bar.getData();
           expect(syncronizer.get.called).to.be.false;
-          expect(json.content).to.equal('bar');
+          expect(bar.get('content')).to.equal('bar');
         });
 
     });
@@ -154,9 +153,9 @@ describe('ResourceProxy', function () {
 
       return pool.get(rc.getLink('children'))
         .then(function (children) {
-          var json = children[0].getData();
+          var child = children[0];
           expect(syncronizer.get.called).to.be.true;
-          expect(json.content).to.equal('hello');
+          expect(child.get('content')).to.equal('hello');
         });
 
     });

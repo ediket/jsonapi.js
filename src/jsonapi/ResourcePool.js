@@ -63,7 +63,7 @@ class ResourcePool {
           return this.create(res);
         }, this);
       }
-      return this.create(res);
+      return this.create(res.data);
     }.bind(this));
 
   }
@@ -76,7 +76,7 @@ class ResourcePool {
         resource = this.create(res);
       }
       else {
-        resource.setFromData(res);
+        resource.set(res);
       }
       return resource;
     }.bind(this));

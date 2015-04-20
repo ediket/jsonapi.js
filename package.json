@@ -13,7 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test -w --compilers js:babel/register",
-    "src": "babel -w ./src -d ./build -s inline"
+    "src": "babel -w ./src -d ./build"
   },
   "author": "ironhee",
   "license": "MIT",
