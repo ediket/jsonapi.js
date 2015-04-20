@@ -23,15 +23,29 @@ class ResourcePool {
 
   add (resource) {
 
-    var { type, id } = resource;
-    this.pool.set(resource.url, resource);
+    var { type, id, url } = resource;
+    this.pool.set(url, resource);
 
   }
 
   get (url) {
 
-    return Q.when(this.pool.get(url) || this._fetch(url), function (res) {
-      return res;
+    return Q.when(
+      this._getFromMemory(url) || this._getFromServer(url)
+    );
+
+  }
+
+  _getFromMemory (url) {
+
+    return this.pool.get(url);
+
+  }
+
+  _getFromServer (url) {
+
+    return Q.when(this.syncronizer.get(url), function (res) {
+      return this.create(res);
     }.bind(this));
 
   }
@@ -41,8 +55,7 @@ class ResourcePool {
     return Q.when(this.syncronizer.get(url), function (res) {
       var resource = this.pool.get(url);
       if (!resource) {
-        resource = new ResourceProxy(res);
-        this.add(resource);
+        resource = this.create(res);
       }
       else {
         resource.replaceFromResponse(res);
