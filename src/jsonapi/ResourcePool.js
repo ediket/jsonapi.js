@@ -61,15 +61,10 @@ class ResourcePool {
 
   }
 
-  remove (link) {
+  remove (resource) {
 
-    var { linkage, self, related, uuid } = link;
+    var { uuid } = resource.links;
 
-    if (!uuid && linkage) {
-      uuid = this.linkageToUUID.get(`${linkage.type}:${linkage.id}`);
-    }
-
-    var resource = this._getFromMemory(uuid);
     this.trigger("remove", resource);
     this.stopListening(resource);
     this.pool.delete(uuid);
