@@ -50,7 +50,7 @@ class RestPool extends Pool {
     .then(resource => {
       return this.syncronizer.patch(
         resource.getLink('self'),
-        this._toResponse(resource))
+        this._toResponse(resource));
     })
     .then(response => {
       resource.set.apply(resource, response.data);
@@ -95,10 +95,10 @@ class RestPool extends Pool {
     })
     .then(response => {
       if (resource) {
-        resource.set(response.data, { parse: true })
+        resource.set(response.data, { parse: true });
       }
       else {
-        resource = new Resource(response.data)
+        resource = new Resource(response.data);
       }
       return resource;
     });
