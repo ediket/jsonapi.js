@@ -48,7 +48,7 @@ describe('MemoryPool', function () {
         }
       });
 
-      return pool.patch(foo, 'content', 'wow')
+      return pool.patch(foo, 'content', 'wow');
 
     })
     .then(function (foo) {
