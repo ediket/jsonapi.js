@@ -20,90 +20,115 @@ class RestPool extends Pool {
 
   create (attributes, options) {
 
-    return Q.Promise((resolve, reject, notify) => {
+    return Q.fcall(() => {
+      return this.syncronizer.post(this._getURL(attributes.type),
+        {
+          data: attributes
+        });
+    })
+    .then(response => {
+      return new Resource(response.data, options);
+    })
+    .then(resource => {
+      return this.add(resource);
+    })
+    .then(resource => {
+      this._triggerTransform('add', resource);
+      return resource;
+    });
 
-      var resource = new Resource(attributes, options);
+  }
 
-      this.syncronizer.post(
-            this._getURL(attributes.type),
-            resource.toJSONResponse())
-        .then(response => {
-          return this.add(resource)
-        })
-        .then(resource => {
-          this._triggerTransform('add', resource);
-          return resource;
-        })
-        .then(resolve);
+  patch (resource, attributes) {
 
+    var setArguments = _.toArray(arguments).slice(1);
+
+    return Q.fcall(() => {
+      resource.set.apply(resource, setArguments);
+      return resource;
+    })
+    .then(resource => {
+      return this.syncronizer.patch(
+        resource.getLink('self'),
+        this._toResponse(resource))
+    })
+    .then(response => {
+      resource.set.apply(resource, response.data);
+      return resource;
+    })
+    .then(() => {
+      this._triggerTransform('replace', resource);
+      return resource;
+    });
+
+  }
+
+  remove (resource) {
+
+    return Q.fcall(() => {
+      return this.syncronizer.delete(
+        resource.getLink('self'));
+    })
+    .then(response => {
+      this.stopListening(resource);
+      this._triggerTransform('remove', resource);
+      this.pool.delete(resource.getLink('self'));
+      return resource;
     });
 
   }
 
   add (resource) {
 
+    this.pool.set(resource.getLink('self'), resource);
 
-  }
-
-  remove (resource) {
-
-    // implement this
+    return Q.fcall(() => resource);
 
   }
 
   get (url) {
 
-    return Q.promise((resolve, reject, notify) => {
+    var resource = this.pool.get(url);
 
-      resolve(this.pool.get(url));
-
+    return Q.fcall(() => {
+      return this.syncronizer.get(url);
+    })
+    .then(response => {
+      if (resource) {
+        resource.set(response.data, { parse: true })
+      }
+      else {
+        resource = new Resource(response.data)
+      }
+      return resource;
     });
 
   }
 
-  _getURL (type) {
+  _getURL (type, id) {
 
     var url = this.typeToUrl[type];
+
     if (!url) {
       throw new Error(`type[${type}] is not supported!`);
     }
+
+    if (id) {
+      url = url + id;
+    }
+
     return url;
 
   }
 
-  // fetch (type, id) {
+  _toResponse (resource) {
 
-  //   var url = this.host + type + "/" + id || "";
+    var result = {};
+    result.data = resource.toJSON();
+    result.data.links = resource.links;
+    return _.clone(result, true);
 
-  //   return Q.promise((resolve, reject, notify) => {
-
-  //     // RESTful.get(url)
-  //     //   .then((resource) => {
-
-  //     //     resolve(this.add(resource));
-
-  //     //   })
-  //     //   .catch(function () {
-  //     //     console.log("???");
-  //     //   });
-
-  //     // console.log($.ajax);
-  //     // $.ajax({
-  //     //   url: "/foo/1"
-  //     // })
-  //     // .done(function() {
-  //     //   console.log( "success" );
-  //     // })
-  //     // .fail(function() {
-  //     //   console.log( "error" );
-  //     // })
-  //     // .always(function() {
-  //     //   console.log( "complete" );
-  //     // });
-
-  //   });
-
-  // }
+  }
 
 }
 

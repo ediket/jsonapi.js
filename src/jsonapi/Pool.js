@@ -39,6 +39,16 @@ class Pool {
 
   }
 
+  _triggerTransform (op, resource) {
+
+    this.trigger('transform', new Operation({
+      op: op,
+      path: resource.getLink('self'),
+      value: resource.toJSON()
+    }));
+
+  }
+
 }
 
 

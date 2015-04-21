@@ -16,16 +16,15 @@ class MemoryPool extends Pool {
 
   create (attributes, options) {
 
-    return Q.Promise((resolve, reject, notify) => {
-
-      var resource = new Resource(attributes, options);
-      this.add(resource)
-        .then(resource => {
-          this._triggerTransform('add', resource);
-          return resource;
-        })
-        .then(resolve);
-
+    return Q.fcall(() => {
+      return new Resource(attributes, options);
+    })
+    .then(resource => {
+      return this.add(resource);
+    })
+    .then(resource => {
+      this._triggerTransform('add', resource);
+      return resource;
     });
 
   }
@@ -34,57 +33,39 @@ class MemoryPool extends Pool {
 
     var setArguments = _.toArray(arguments).slice(1);
 
-    return Q.Promise((resolve, reject, notify) => {
-
+    return Q.fcall(() => {
       resource.set.apply(resource, setArguments);
       this._triggerTransform('replace', resource);
-      resolve(resource);
-
+      return resource;
     });
 
   }
 
   remove (resource) {
 
-    return Q.Promise((resolve, reject, notify) => {
-
+    return Q.fcall(() => {
       this.stopListening(resource);
       this._triggerTransform('remove', resource);
       this.pool.delete(resource.getLink('self'));
-      resolve(resource);
-
+      return resource;
     });
 
   }
 
   get (url) {
 
-    return Q.promise((resolve, reject, notify) => {
-
-      resolve(this.pool.get(url));
-
+    return Q.fcall(() => {
+      return this.pool.get(url);
     });
 
   }
 
   add (resource) {
 
-    return Q.promise((resolve, reject, notify) => {
-
+    return Q.fcall(() => {
       this.pool.set(resource.getLink('self'), resource);
-      resolve(resource);
-
+      return resource;
     });
-
-  }
-
-  _triggerTransform (op, resource) {
-
-    this.trigger('transform', new Operation({
-      op: op,
-      path: resource.getLink('self'),
-      value: resource.toJSON()
-    }));
 
   }
 

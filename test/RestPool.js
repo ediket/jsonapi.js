@@ -11,46 +11,23 @@ import { RestPool, Resource, RESTful } from '../build/jsonapi';
 
 describe('RestPool', function () {
 
-  var server;
   var restPool;
-
   var syncronizer;
-  var originalSyncronizer;
 
   beforeEach(function () {
-
-    server = sinon.fakeServer.create();
-    server.autoRespond = true;
 
     restPool = new RestPool([], {
       typeToUrl: {
         foo: '/api/foo/'
       }
     });
-
     syncronizer = {
       post: stubPromise(),
       get: stubPromise(),
       delete: stubPromise(),
       patch: stubPromise()
     };
-
-    originalSyncronizer = restPool.syncronizer;
     restPool.syncronizer = syncronizer;
-
-  });
-
-  afterEach(function () {
-
-    syncronizer.post.reset();
-    syncronizer.get.reset();
-    syncronizer.delete.reset();
-    syncronizer.patch.reset();
-
-    restPool = {};
-    server.restore();
-
-    restPool.syncronizer = originalSyncronizer;
 
   });
 
@@ -65,7 +42,7 @@ describe('RestPool', function () {
             id: 23,
             content: 'hello world',
             links: {
-              self: '/api/foo/'
+              self: '/api/foo/23'
             }
           }
         })
@@ -75,28 +52,133 @@ describe('RestPool', function () {
 
         return restPool.create({
           type: 'foo',
-          id: 23,
-          content: 'hello world',
-          links: {
-            self: '/api/foo/'
-          }
+          content: 'hello world'
         })
 
       })
       .then(resource => {
 
-        console.log(syncronizer.post.getCall(0));
-        expect(syncronizer.post.getCall(0)).to.deep.equal(matchJSON({
+        var args = syncronizer.post.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/');
+        expect(args[1]).to.deep.equal({
+          data: {
+            type: 'foo',
+            content: 'hello world'
+          }
+        });
+        expect(resource.getLink('self')).to.deep.equal('/api/foo/23');
+        expect(resource.id).to.deep.equal(23);
+
+      });
+
+    });
+
+  });
+
+  describe('#patch', function () {
+
+    it('should patch resource and make PATCH request', function () {
+
+      syncronizer.patch.withArgs('/api/foo/23').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 23,
+            content: 'hello world',
+            links: {
+              self: '/api/foo/23'
+            }
+          }
+        })
+      );
+
+      return Q.fcall(() => {
+        return new Resource({
           type: 'foo',
-          content: 'foo'
-        }));
+          id: 23,
+          content: 'hello world',
+          links: {
+            self: '/api/foo/23'
+          }
+        });
+      })
+      .then((foo) => {
+        return restPool.patch(foo, 'content', 'wow')
+      })
+      .then(resource => {
+        var args = syncronizer.patch.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/23');
+        expect(args[1]).to.deep.equal({
+          data: {
+            type: 'foo',
+            id: 23,
+            content: 'wow',
+            links: {
+              self: '/api/foo/23'
+            }
+          }
+        });
+        expect(resource.get('content')).to.deep.equal('wow');
+      });
 
-        expect(restPool.get()).to.deep.equal(matchJSON({
+    });
+
+  });
+
+  describe('#remove', function () {
+
+    it('should remove resource and make DELETE request', function () {
+
+      return Q.fcall(() => {
+        return new Resource({
           type: 'foo',
-          content: 'foo'
-        }));
+          id: 23,
+          content: 'hello world',
+          links: {
+            self: '/api/foo/23'
+          }
+        });
+      })
+      .then((foo) => {
+        return restPool.remove(foo)
+      })
+      .then(resource => {
+        var args = syncronizer.delete.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/23');
+      });
 
+    });
 
+  });
+
+  describe('#get', function () {
+
+    it('should get resource and make GET request', function () {
+
+      syncronizer.get.withArgs('/api/foo/23').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 23,
+            content: 'hello world',
+            links: {
+              self: '/api/foo/23'
+            }
+          }
+        })
+      );
+
+      return Q.fcall(() => {
+        return restPool.get('/api/foo/23');
+      })
+      .then(resource => {
+        var args = syncronizer.get.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/23');
+        expect(resource.toJSON()).to.deep.equal({
+          type: 'foo',
+          id: 23,
+          content: 'hello world'
+        });
       });
 
     });
