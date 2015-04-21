@@ -14,11 +14,11 @@ class MemoryPool extends Pool {
 
   }
 
-  create (attributes) {
+  create (attributes, options) {
 
     return Q.Promise((resolve, reject, notify) => {
 
-      var resource = new Resource(attributes);
+      var resource = new Resource(attributes, options);
       this.add(resource)
         .then(resource => {
           this._triggerTransform('add', resource);
@@ -32,7 +32,7 @@ class MemoryPool extends Pool {
 
   patch (resource, attributes) {
 
-    var setArguments = _.toArray(arguments).slice(1)
+    var setArguments = _.toArray(arguments).slice(1);
 
     return Q.Promise((resolve, reject, notify) => {
 
@@ -71,7 +71,7 @@ class MemoryPool extends Pool {
 
     return Q.promise((resolve, reject, notify) => {
 
-      this.pool.set(resource.getLink('self'), resource)
+      this.pool.set(resource.getLink('self'), resource);
       resolve(resource);
 
     });
