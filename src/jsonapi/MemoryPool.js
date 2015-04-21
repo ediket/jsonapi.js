@@ -16,6 +16,10 @@ class MemoryPool extends Pool {
 
   create (attributes, options) {
 
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
+
     return Q.fcall(() => {
       return new Resource(attributes, options);
     })
@@ -23,30 +27,44 @@ class MemoryPool extends Pool {
       return this.add(resource);
     })
     .then(resource => {
-      this._triggerTransform('add', resource);
+      if (!options.byOperation) {
+        this._triggerTransform('add', resource);
+      }
       return resource;
     });
 
   }
 
-  patch (resource, attributes) {
+  patch (resource, attributes, options) {
+
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
 
     var setArguments = _.toArray(arguments).slice(1);
 
     return Q.fcall(() => {
       resource.set.apply(resource, setArguments);
-      this._triggerTransform('replace', resource);
+      if (!options.byOperation) {
+        this._triggerTransform('replace', resource);
+      }
       return resource;
     });
 
   }
 
-  remove (resource) {
+  remove (resource, options) {
+
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
 
     return Q.fcall(() => {
       this.stopListening(resource);
-      this._triggerTransform('remove', resource);
       this.pool.delete(resource.getLink('self'));
+      if (!options.byOperation) {
+        this._triggerTransform('remove', resource);
+      }
       return resource;
     });
 

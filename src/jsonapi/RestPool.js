@@ -20,6 +20,10 @@ class RestPool extends Pool {
 
   create (attributes, options) {
 
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
+
     return Q.fcall(() => {
       return this.syncronizer.post(this._getURL(attributes.type),
         {
@@ -33,13 +37,19 @@ class RestPool extends Pool {
       return this.add(resource);
     })
     .then(resource => {
-      this._triggerTransform('add', resource);
+      if (!options.byOperation) {
+        this._triggerTransform('add', resource);
+      }
       return resource;
     });
 
   }
 
-  patch (resource, attributes) {
+  patch (resource, attributes, options) {
+
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
 
     var setArguments = _.toArray(arguments).slice(1);
 
@@ -57,13 +67,19 @@ class RestPool extends Pool {
       return resource;
     })
     .then(() => {
-      this._triggerTransform('replace', resource);
+      if (!options.byOperation) {
+        this._triggerTransform('replace', resource);
+      }
       return resource;
     });
 
   }
 
-  remove (resource) {
+  remove (resource, options) {
+
+    var options = _.defaults(options || {}, {
+      byOperation: false
+    });
 
     return Q.fcall(() => {
       return this.syncronizer.delete(
@@ -71,8 +87,10 @@ class RestPool extends Pool {
     })
     .then(response => {
       this.stopListening(resource);
-      this._triggerTransform('remove', resource);
       this.pool.delete(resource.getLink('self'));
+      if (!options.byOperation) {
+        this._triggerTransform('remove', resource);
+      }
       return resource;
     });
 

@@ -7,11 +7,11 @@ import { MemoryPool, Resource, PoolConnector } from '../build/jsonapi';
 
 describe('PoolConnect', function () {
 
-  var pool1
-  var pool2
+  var pool1;
+  var pool2;
 
-  var pool1to2Connector
-  var pool2to1Connector
+  var pool1to2Connector;
+  var pool2to1Connector;
 
 
   function getNthOperation (nth) {
@@ -25,19 +25,7 @@ describe('PoolConnect', function () {
 
     pool1 = new MemoryPool();
     pool2 = new MemoryPool();
-
     pool1to2Connector = new PoolConnector(pool1, pool2);
-
-
-  });
-
-  afterEach(function () {
-
-    pool1 = {};
-    pool2 = {};
-
-    pool1to2Connector = {};
-    pool2to1Connector = {};
 
   });
 
@@ -51,12 +39,11 @@ describe('PoolConnect', function () {
       });
     })
     .then(foo => {
-      pool1to2Connector.flush()
-      return Q.spread([
-        pool1.get(foo.getLink('self')),
-        pool2.get(foo.getLink('self'))
-      ], (foo1, foo2) => {
-        expect(foo1.attributes).to.equal(foo2.attributes);
+      expect(pool1to2Connector.operations).to.have.length(1);
+      expect(pool1to2Connector.operations[0]).to.deep.equal({
+        op: 'add',
+        path: foo.getLink('self'),
+        value: foo.toJSON(),
       });
     });
 
