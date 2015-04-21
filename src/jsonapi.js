@@ -5,7 +5,6 @@ import MemoryPool from './jsonapi/MemoryPool';
 import RestPool from './jsonapi/RestPool';
 import RESTful from './jsonapi/RESTful';
 import Transaction from './jsonapi/Transaction';
-import { pool } from './jsonapi/singletons';
 
 export {
   Transaction,
@@ -13,7 +12,6 @@ export {
   ResourceProxy,
   ResourcePool,
   MemoryPool,
-  pool,
   RestPool,
   RESTful
 };
