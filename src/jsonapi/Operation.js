@@ -1,11 +1,11 @@
 class Operation {
 
-  constructor (op, resource) {
+  constructor (options) {
 
-    this.op = op;
-    this.path = `/api/${resource.get('type')}/${resource.getUUID()}`;
-    if (op !== 'remove') {
-      this.value = resource.toJSON();
+    this.op = options.op;
+    this.path = options.path;
+    if (options.op !== 'remove') {
+      this.value = options.value;
     }
 
   }

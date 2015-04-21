@@ -1,28 +1,45 @@
 import { expect } from 'chai';
 import _ from 'lodash';
-import { Transaction, ResourceProxy, pool } from '../build/jsonapi';
+import Q from 'q';
+import matchJSON from './lib/matchJSON';
+import { Transaction, ResourceProxy, MemoryPool } from '../build/jsonapi';
 
 
 describe('Transaction', function () {
+
+  var pool;
+
+  beforeEach(function () {
+
+    pool = new MemoryPool();
+
+  });
 
   it('should resource trace begin', function () {
 
     var transaction = new Transaction(pool);
     transaction.begin();
 
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
-    });
+    return Q.fcall(function () {
 
-    expect(transaction.operations).to.have.length(1);
-    expect(transaction.operations[0]).to.deep.equal({
-      op: "add",
-      path: "api/foo/-",
-      value: {
+      return pool.create({
         type: 'foo',
         content: 'foo'
-      }
+      });
+
+    })
+    .then(function (foo) {
+
+      expect(transaction.operations).to.have.length(1);
+      expect(transaction.operations[0]).to.deep.equal({
+        op: "add",
+        path: foo.getLink('self'),
+        value: {
+          type: 'foo',
+          content: 'foo'
+        }
+      });
+
     });
 
   });
@@ -31,86 +48,93 @@ describe('Transaction', function () {
 
     var transaction = new Transaction(pool);
 
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
+    return Q.fcall(function () {
+
+      return pool.create({
+        type: 'foo',
+        content: 'foo'
+      });
+
+    })
+    .then(function () {
+
+      expect(transaction.operations).to.have.length(0);
+
     });
-
-    transaction.begin();
-
-    expect(transaction.operations).to.have.length(0);
 
   });
 
   it('should trace resource changing', function () {
 
     var transaction = new Transaction(pool);
-
     transaction.begin();
 
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
-    });
+    return Q.fcall(function () {
 
-    foo.set("content", "bar");
-
-    expect(transaction.operations).to.have.length(2);
-    expect(transaction.operations[0]).to.deep.equal({
-      op: "add",
-      path: "api/foo/-",
-      value: {
+      return pool.create({
         type: 'foo',
         content: 'foo'
-      }
+      });
+
+    })
+    .then(function (foo) {
+
+      return pool.patch(foo, "content", "bar");
+
+    })
+    .then(function (foo) {
+
+      expect(transaction.operations).to.have.length(2);
+      expect(transaction.operations[0]).to.deep.equal({
+        op: "add",
+        path: foo.getLink('self'),
+        value: {
+          type: 'foo',
+          content: 'foo'
+        }
+      });
+      expect(transaction.operations[1]).to.deep.equal({
+        op: "replace",
+        path: foo.getLink('self'),
+        value: {
+          type: 'foo',
+          content: 'bar'
+        }
+      });
+
     });
 
-    expect(transaction.operations[1]).to.deep.equal({
-      op: "change",
-      path: "api/foo/-",
-      value: {
+  });
+
+  it('should not trace resource after commit', function () {
+
+    var transaction = new Transaction(pool);
+    transaction.begin();
+
+    return Q.fcall(function () {
+
+      return pool.create({
         type: 'foo',
-        content: 'bar'
-      }
+        content: 'foo'
+      });
+
+    })
+    .then(function (foo) {
+
+      transaction.commit();
+      return pool.patch(foo, "content", "bar");
+
+    })
+    .then(function (foo) {
+
+      return pool.patch(foo, "content", "foo");
+
+    })
+    .then(function (foo) {
+
+      expect(transaction.operations).to.have.length(1);
+
     });
-
-  });
-
-  it('should not trace resource after commit', function () {
-
-    var transaction = new Transaction(pool);
-    transaction.begin();
-
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
-    });
-
-    transaction.commit();
-
-    foo.set("content", "bar");
-    foo.set("content", "foo");
-
-    expect(transaction.operations).to.have.length(1);
-
-  });
-
-  it('should not trace resource after commit', function () {
-
-    var transaction = new Transaction(pool);
-    transaction.begin();
-
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
-    });
-
-    transaction.commit();
-
-    foo.set("content", "bar");
-    foo.set("content", "foo");
-
-    expect(transaction.operations).to.have.length(1);
 
   });
 
@@ -119,17 +143,25 @@ describe('Transaction', function () {
     var transaction = new Transaction(pool);
     transaction.begin();
 
-    var foo = pool.create({
-      type: 'foo',
-      content: 'foo'
-    });
+    return Q.fcall(function () {
 
-    pool.remove(foo);
+      return pool.create({
+        type: 'foo',
+        content: 'foo'
+      });
 
-    expect(transaction.operations).to.have.length(2);
+    })
+    .then(function (foo) {
+
+      return pool.remove(foo);
+
+    })
+    .then(function (foo) {
+
+      expect(transaction.operations).to.have.length(2);
+
+    })
 
   });
-
-
 
 });
