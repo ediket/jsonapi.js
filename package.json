@@ -12,7 +12,7 @@
   ],
   "main": "./build-npm/jsonapi.js",
   "files": [
-    "./build-npm/"
+    "./build-npm/**/*.js"
   ],
   "scripts": {
     "test": "mocha test -w --compilers js:babel/register",
