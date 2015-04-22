@@ -13,6 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test -w --compilers js:babel/register",
+    "test-ui": "gulp dev",
     "src": "babel -w ./src -d ./build"
   },
   "author": "ironhee",
@@ -27,11 +28,33 @@
   },
   "devDependencies": {
     "babel": "^5.1.10",
+    "babelify": "^6.0.2",
+    "browserify": "^9.0.8",
     "chai": "^2.2.0",
-    "sinon": "^1.14.1"
+    "gulp": "^3.8.11",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-watch": "^4.2.4",
+    "karma": "^0.12.31",
+    "karma-browserify": "^4.1.2",
+    "karma-chrome-launcher": "^0.1.8",
+    "karma-mocha": "^0.1.10",
+    "karma-mocha-reporter": "^1.0.2",
+    "mocha": "^2.2.4",
+    "run-sequence": "^1.0.2",
+    "sinon": "^1.14.1",
+    "vinyl-source-stream": "^1.1.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ironhee/backbone.resource.git"
+  },
+  "browserify": {
+    "debug": true,
+    "transform": [
+      "babelify"
+    ],
+    "extensions": [
+      ".js"
+    ]
   }
 }

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Q from 'q';
 import { Events } from 'backbone';
-import ResourceProxy from './ResourceProxy';
+
 
 class Transaction {
 
