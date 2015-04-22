@@ -33,7 +33,7 @@ var Pool = (function () {
     _classCallCheck(this, Pool);
 
     _import2['default'].extend(this, _Events.Events);
-    this.pool = new Map();
+    this.pool = {};
     _import2['default'].each(resources, this.add, this);
   }
 

@@ -61,7 +61,7 @@ class MemoryPool extends Pool {
 
     return Q.fcall(() => {
       this.stopListening(resource);
-      this.pool.delete(resource.getLink('self'));
+      delete this.pool[resource.getLink('self')];
       if (!options.byOperation) {
         this._triggerTransform('remove', resource);
       }
@@ -73,7 +73,7 @@ class MemoryPool extends Pool {
   get (url) {
 
     return Q.fcall(() => {
-      return this.pool.get(url);
+      return this.pool[url];
     });
 
   }
@@ -81,7 +81,7 @@ class MemoryPool extends Pool {
   add (resource) {
 
     return Q.fcall(() => {
-      this.pool.set(resource.getLink('self'), resource);
+      this.pool[resource.getLink('self')] = resource;
       return resource;
     });
 

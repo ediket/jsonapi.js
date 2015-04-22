@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import _ from 'lodash';
 import Q from 'q';
 import matchJSON from './lib/matchJSON';
-import { MemoryPool, Resource } from '../build/jsonapi';
+import { MemoryPool, Resource } from '../build-npm/jsonapi';
 
 
 describe('MemoryPool', function () {

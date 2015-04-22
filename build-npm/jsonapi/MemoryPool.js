@@ -95,7 +95,7 @@ var MemoryPool = (function (_Pool) {
 
       return _Q2['default'].fcall(function () {
         _this3.stopListening(resource);
-        _this3.pool['delete'](resource.getLink('self'));
+        delete _this3.pool[resource.getLink('self')];
         if (!options.byOperation) {
           _this3._triggerTransform('remove', resource);
         }
@@ -108,7 +108,7 @@ var MemoryPool = (function (_Pool) {
       var _this4 = this;
 
       return _Q2['default'].fcall(function () {
-        return _this4.pool.get(url);
+        return _this4.pool[url];
       });
     }
   }, {
@@ -117,7 +117,7 @@ var MemoryPool = (function (_Pool) {
       var _this5 = this;
 
       return _Q2['default'].fcall(function () {
-        _this5.pool.set(resource.getLink('self'), resource);
+        _this5.pool[resource.getLink('self')] = resource;
         return resource;
       });
     }

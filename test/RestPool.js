@@ -6,7 +6,7 @@ import Q from 'q';
 import promiseValue from './lib/promiseValue';
 import matchJSON from './lib/matchJSON';
 import stubPromise from './lib/stubPromise';
-import { RestPool, Resource, RESTful } from '../build/jsonapi';
+import { RestPool, Resource, RESTful } from '../build-npm/jsonapi';
 
 
 describe('RestPool', function () {

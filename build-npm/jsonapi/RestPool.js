@@ -120,7 +120,7 @@ var RestPool = (function (_Pool) {
         return _this3.syncronizer['delete'](resource.getLink('self'));
       }).then(function (response) {
         _this3.stopListening(resource);
-        _this3.pool['delete'](resource.getLink('self'));
+        delete _this3.pool[resource.getLink('self')];
         if (!options.byOperation) {
           _this3._triggerTransform('remove', resource);
         }
@@ -131,7 +131,7 @@ var RestPool = (function (_Pool) {
     key: 'add',
     value: function add(resource) {
 
-      this.pool.set(resource.getLink('self'), resource);
+      this.pool[resource.getLink('self')] = resource;
 
       return _Q2['default'].fcall(function () {
         return resource;
@@ -142,7 +142,7 @@ var RestPool = (function (_Pool) {
     value: function get(url) {
       var _this4 = this;
 
-      var resource = this.pool.get(url);
+      var resource = this.pool[url];
 
       return _Q2['default'].fcall(function () {
         return _this4.syncronizer.get(url);

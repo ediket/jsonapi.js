@@ -89,7 +89,7 @@ class RestPool extends Pool {
     })
     .then(response => {
       this.stopListening(resource);
-      this.pool.delete(resource.getLink('self'));
+      delete this.pool[resource.getLink('self')];
       if (!options.byOperation) {
         this._triggerTransform('remove', resource);
       }
@@ -100,7 +100,7 @@ class RestPool extends Pool {
 
   add (resource) {
 
-    this.pool.set(resource.getLink('self'), resource);
+    this.pool[resource.getLink('self')] = resource;
 
     return Q.fcall(() => resource);
 
@@ -108,7 +108,7 @@ class RestPool extends Pool {
 
   get (url) {
 
-    var resource = this.pool.get(url);
+    var resource = this.pool[url];
 
     return Q.fcall(() => {
       return this.syncronizer.get(url);

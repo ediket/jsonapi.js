@@ -10,7 +10,7 @@ class Pool {
   constructor(resources) {
 
     _.extend(this, Events);
-    this.pool = new Map();
+    this.pool = {};
     _.each(resources, this.add, this);
 
   }

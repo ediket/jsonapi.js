@@ -1,6 +1,6 @@
 {
   "name": "backbone.resource",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "description": "Resource for JSONAPI. Based on Backbone.",
   "keywords": [
     "jsonapi",
@@ -10,14 +10,15 @@
     "model",
     "linkage"
   ],
-  "main": "./build-npm/jsonapi.js",
+  "main": "build-npm/jsonapi.js",
   "files": [
-    "./build-npm/**/*.js"
+    "build-npm"
   ],
   "scripts": {
     "test": "mocha test -w --compilers js:babel/register",
     "test-ui": "gulp dev",
-    "src": "babel -w ./src -d ./build-npm"
+    "dev": "babel -w src -d build-npm",
+    "build": "babel src -d build-npm"
   },
   "author": "ironhee",
   "license": "MIT",
@@ -42,6 +43,7 @@
     "karma-mocha": "^0.1.10",
     "karma-mocha-reporter": "^1.0.2",
     "mocha": "^2.2.4",
+    "npm": "^2.8.3",
     "run-sequence": "^1.0.2",
     "sinon": "^1.14.1",
     "vinyl-source-stream": "^1.1.0"
