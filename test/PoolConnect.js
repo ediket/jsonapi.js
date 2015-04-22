@@ -13,14 +13,6 @@ describe('PoolConnect', function () {
   var pool1to2Connector;
   var pool2to1Connector;
 
-
-  function getNthOperation (nth) {
-
-    var call = eventHandler.getCall(nth);
-    return call ? call.args[0] : undefined;
-
-  }
-
   beforeEach(function () {
 
     pool1 = new MemoryPool();
@@ -38,13 +30,22 @@ describe('PoolConnect', function () {
         content: 'bar'
       });
     })
-    .then(foo => {
+    .then(resource => {
       expect(pool1to2Connector.operations).to.have.length(1);
       expect(pool1to2Connector.operations[0]).to.deep.equal({
         op: 'add',
-        path: foo.getLink('self'),
-        value: foo.toJSON(),
+        path: resource.getLink('self'),
+        value: resource.toJSON(),
       });
+      return pool1to2Connector.flush().then(() => resource);
+    })
+    .then(foo => {
+      return Q.spread([
+        foo,
+        pool1to2Connector.getReplica(foo)
+      ], (foo1, foo2) => {
+        expect(foo1.toJSON()).to.deep.equal(foo2.toJSON());
+      })
     });
 
   });

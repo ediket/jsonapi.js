@@ -21,6 +21,20 @@ class PoolConnector {
 
   }
 
+  getReplica (resource) {
+
+    return this.target.get(
+      this.getReplicatedURL(resource.getLink('self'))
+    );
+
+  }
+
+  getReplicatedURL (url) {
+
+    return this.sourceToTarget[url];
+
+  }
+
   onTrasnform (operation) {
 
     this.operations.push(operation);
@@ -29,13 +43,11 @@ class PoolConnector {
 
   flush () {
 
-    return _.chain(this.operation)
-      .reduce(this.operations, (promise, operation) => {
-        return promise.then(() => {
-          this._applyOperationToTarget(operation);
-        });
-      }, Q())
-      .value();
+    return _.reduce(this.operations, (promise, operation) => {
+      return promise.then(() => {
+        return this._applyOperationToTarget(operation);
+      });
+    }, Q());
 
   }
 
@@ -52,9 +64,9 @@ class PoolConnector {
         byOperation: true
       })
       .then(resource => {
-        this.sourceToTarget[path] = resource.getLink('self')
+        this.sourceToTarget[path] = resource.getLink('self');
         return resource;
-      })
+      });
     }
     else if (op === "replace") {
       return this.target.patch(tartgetResource, value, {
