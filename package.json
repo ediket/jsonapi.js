@@ -10,11 +10,14 @@
     "model",
     "linkage"
   ],
-  "main": "index.js",
+  "main": "./build-npm/jsonapi.js",
+  "files": [
+    "./build-npm/"
+  ],
   "scripts": {
     "test": "mocha test -w --compilers js:babel/register",
     "test-ui": "gulp dev",
-    "src": "babel -w ./src -d ./build"
+    "src": "babel -w ./src -d ./build-npm"
   },
   "author": "ironhee",
   "license": "MIT",
@@ -23,7 +26,6 @@
     "jquery": "^2.1.3",
     "lodash": "^3.6.0",
     "node-uuid": "^1.4.3",
-    "npm": "^2.8.3",
     "q": "^1.2.0"
   },
   "devDependencies": {
