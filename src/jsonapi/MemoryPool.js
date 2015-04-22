@@ -16,7 +16,7 @@ class MemoryPool extends Pool {
 
   create (attributes, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 
@@ -37,7 +37,7 @@ class MemoryPool extends Pool {
 
   patch (resource, attributes, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 
@@ -55,7 +55,7 @@ class MemoryPool extends Pool {
 
   remove (resource, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 

@@ -7,7 +7,7 @@ import Operation from './Operation';
 
 class PoolConnector {
 
-  constructor(source, target, options) {
+  constructor(source, target, options = {}) {
 
     _.extend(this, Events);
 
@@ -21,11 +21,13 @@ class PoolConnector {
 
   }
 
-  getReplica (resource) {
+  getReplica (resourceOrURL) {
+
+    var url = _.isString(resourceOrURL) ?
+      resourceOrURL : resourceOrURL.getLink('self');
 
     return this.target.get(
-      this.getReplicatedURL(resource.getLink('self'))
-    );
+      this.getReplicatedURL(url));
 
   }
 
@@ -47,7 +49,16 @@ class PoolConnector {
       return promise.then(() => {
         return this._applyOperationToTarget(operation);
       });
-    }, Q());
+    }, Q())
+    .then(() => {
+      this._cleanQueue();
+    });
+
+  }
+
+  _cleanQueue () {
+
+    this.operations = [];
 
   }
 
@@ -57,26 +68,38 @@ class PoolConnector {
     var value = operation.value;
     var path = operation.path;
 
-    var tartgetResource = this.sourceToTarget[path];
 
     if (op === "add") {
+
       return this.target.create(value, {
-        byOperation: true
+        byOperation: true,
       })
       .then(resource => {
+        var url = resource.getLink('self');
         this.sourceToTarget[path] = resource.getLink('self');
         return resource;
       });
+
     }
     else if (op === "replace") {
-      return this.target.patch(tartgetResource, value, {
-        byOperation: true
+
+      return this.getReplica(path)
+      .then(targetResource => {
+        return this.target.patch(targetResource, value, {
+          byOperation: true
+        });
       });
+
     }
     else if (op === "remove") {
-      return this.target.remove(tartgetResource, {
-        byOperation: true
+
+      return this.getReplica(path)
+      .then(targetResource => {
+        return this.target.remove(targetResource, {
+          byOperation: true
+        });
       });
+
     }
 
   }
