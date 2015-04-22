@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import Q from 'q';
-import Resource from './Resource';
+import Response from './Response';
 
 var ajaxOptions = {
 
@@ -30,13 +30,13 @@ var makeAjaxRequest = function (options) {
     $.ajax(options)
       .then(function (data, textStatus, jqXHR) {
         delete jqXHR.then; // treat xhr as a non-promise
-        var resource = new Resource(jqXHR);
-        resolve(resource);
+        var response = new Response(jqXHR);
+        resolve(response);
       })
       .fail(function (jqXHR, textStatus, errorThrown) {
         delete jqXHR.then; // treat xhr as a non-promise
-        var resource = new Resource(jqXHR);
-        reject(resource);
+        var response = new Response(jqXHR);
+        reject(response);
       });
   });
 

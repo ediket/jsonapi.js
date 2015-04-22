@@ -12,8 +12,10 @@ class RestPool extends Pool {
 
   constructor (resources, options) {
 
+    options = options || {};
+
     super(resources, options);
-    this.syncronizer = {};  // FIXME: implement this
+    this.syncronizer = RESTful;
     this.typeToUrl = options.typeToUrl || {};
 
   }

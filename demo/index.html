@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>demo</title>
+  <script src="../build-bower/vendor.js"></script>
+  <script src="../build-bower/jsonapi.js"></script>
+  <script src="../node_modules/sinon/pkg/sinon.js"></script>
+</head>
+<body>
+  <script>
+    /* jshint ignore:start */
+    var server = sinon.fakeServer.create();
+    server.autoRespond = true;
+    server.autoRespondAfter = 300;
+    server.respondWith("GET", '/api/foo/1', [
+      200,
+      {
+        "Content-Type": "application/vnd.api+json"
+      },
+      JSON.stringify({
+        data: {
+          id: 1,
+          type: 'foo',
+          content: 'hello',
+          links: {
+            self: '/api/foo/1'
+          }
+        }
+      })
+    ]);
+    server.respondWith("POST", '/api/foo/', [
+      200,
+      {
+        "Content-Type": "application/vnd.api+json"
+      },
+      JSON.stringify({
+        data: {
+          id: 1,
+          type: 'foo',
+          content: 'hello',
+          links: {
+            self: '/api/foo/1'
+          }
+        }
+      })
+    ]);
+    server.respondWith("PATCH", '/api/foo/1', [
+      200,
+      {
+        "Content-Type": "application/vnd.api+json"
+      },
+      JSON.stringify({
+        data: {
+          id: 1,
+          type: 'foo',
+          content: 'wow',
+          links: {
+            self: '/api/foo/1'
+          }
+        }
+      })
+    ]);
+    server.respondWith("DELETE", '/api/foo/1', [
+      200,
+      {
+        "Content-Type": "application/vnd.api+json"
+      },
+      "{}"
+    ]);
+
+
+    var $ = require('jquery');
+    var restPool = new JSONAPI.RestPool([], {
+      typeToUrl: {
+        "foo": "/api/foo/"
+      }
+    });
+
+    restPool.create({
+      type: 'foo',
+      content: 'hello'
+    })
+    .then(function (res) {
+      console.log(res.toJSON(), res.links);
+      return res;
+    })
+    .then(function (res) {
+      return restPool.patch(res, {
+        content: 'wow'
+      })
+    })
+    .then(function (res) {
+      console.log(res.toJSON(), res.links);
+      return res;
+    })
+    .then(function (res) {
+      return restPool.remove(res);
+    })
+    .then(function (res) {
+      console.log(res.toJSON(), res.links);
+      return res;
+    })
+    .catch(function () {
+      console.log(arguments[0].stack);
+    })
+
+
+
+  </script>
+</body>
+</html>
