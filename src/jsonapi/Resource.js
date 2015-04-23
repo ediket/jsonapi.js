@@ -17,8 +17,11 @@ class Resource extends Model {
 
     super(attributes, options);
 
+    if (!this.id) {
+      this.id = uuid.v4();
+    }
     if (!this.getLink('self')) {
-      this.setLink('self', '/' + uuid.v4());
+      this.setLink('self', '/' + this.id);
     }
 
   }

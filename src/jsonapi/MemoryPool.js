@@ -24,7 +24,7 @@ class MemoryPool extends Pool {
       return new Resource(attributes, options);
     })
     .then(resource => {
-      return this.add(resource);
+      return this.add(resource, { create: true });
     })
     .then(resource => {
       if (!options.byOperation) {

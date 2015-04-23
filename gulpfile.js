@@ -53,7 +53,7 @@ gulp.task('browserify:vendor', function () {
     .bundle()
     .pipe(source('vendor.js'))
     .pipe(sourcemaps.write())
-    .pipe(gulp.dest('build-bower'));;
+    .pipe(gulp.dest('build-bower'));
 
 });
 

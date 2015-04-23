@@ -35,14 +35,15 @@ class RestPool extends Pool {
     return Q.fcall(() => {
       return this.syncronizer.post(this.getURL(attributes.type),
         {
-          data: attributes
-        });
+          data: _.omit(attributes, 'id', 'links')
+        }
+      );
     })
     .then(response => {
       return new Resource(response.data, options);
     })
     .then(resource => {
-      return this.add(resource);
+      return this.add(resource, { create: true });
     })
     .then(resource => {
       if (!options.byOperation) {
@@ -119,9 +120,6 @@ class RestPool extends Pool {
         resource = new Resource(response.data);
       }
       return resource;
-    })
-    .then(resource => {
-      return this.add(resource);
     });
 
   }

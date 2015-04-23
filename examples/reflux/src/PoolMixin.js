@@ -6,9 +6,19 @@ var PoolMixin = function (memoryPool, restPool, memoryToRest, type) {
 
   return {
 
+    getState: function () {
+
+      return _.map(memoryPool.pool, function (resource) {
+        return resource.toJSON();
+      });
+
+    },
+
     create: function (attributes) {
       return Q.fcall(function () {
-        return memoryPool.create(attributes);
+        return memoryPool.create(
+          _.extend(attributes, { type: type })
+        );
       });
     },
 
@@ -38,9 +48,15 @@ var PoolMixin = function (memoryPool, restPool, memoryToRest, type) {
         return resource || restPool.get(url)
           .then(function (resource) {
             return memoryPool.add(resource)
-              .then(this.flush.bind(this, resource))
+              .then(this.flush.bind(this, resource));
           }.bind(this));
       }.bind(this));
+    },
+
+    getURL: function (id) {
+
+      return memoryPool.getURL(type, id) || restPool.getURL(type, id);
+
     },
 
     find: function (pridicate) {
@@ -66,7 +82,7 @@ var PoolMixin = function (memoryPool, restPool, memoryToRest, type) {
       });
     }
 
-  }
+  };
 
 };
 

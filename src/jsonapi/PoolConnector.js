@@ -3,7 +3,6 @@ import Q from 'q';
 import { Events } from 'backbone';
 import Resource from './Resource';
 import Pool from './Pool';
-import Operation from './Operation';
 
 class PoolConnector {
 

@@ -2,38 +2,15 @@ var Q = require('q');
 var expect = require('chai').expect;
 var Reflux = require('reflux');
 var sinon = require('sinon');
+var stubPromise = require('./libs/stubPromise');
+var matchJSON = require('./libs/matchJSON');
+var promiseValue = require('./libs/promiseValue');
 var JSONAPI = require('backbone.resource');
 var Resource = JSONAPI.Resource;
 var MemoryPool = JSONAPI.MemoryPool;
 var RestPool = JSONAPI.RestPool;
 var PoolConnector = JSONAPI.PoolConnector;
 var PoolMixin = require('../src/PoolMixin');
-
-
-var stubPromise = function () {
-
-  var stub = sinon.stub.apply(sinon, arguments);
-
-  var deferred = Q.defer();
-
-  deferred.resolve();
-
-  stub.returns(deferred.promise);
-
-  return stub;
-
-};
-
-
-var promiseValue = function (value) {
-
-  var deferred = Q.defer();
-
-  deferred.resolve(value);
-
-  return deferred.promise;
-
-};
 
 
 describe('PoolMixin', function () {
@@ -45,6 +22,7 @@ describe('PoolMixin', function () {
     }
   });
   var memoryToRest = new PoolConnector(memoryPool, restPool);
+  var syncronizer;
 
   var Store = Reflux.createStore({
 
@@ -167,20 +145,14 @@ describe('PoolMixin', function () {
 
       return Q.fcall(function () {
         return Store.create({
-          type: 'foo',
-          id: 1,
-          content: 'hello world',
-          links: {
-            self: '/api/foo/1'
-          }
+          content: 'hello world'
         });
       })
       .then(function (resource) {
-        expect(resource.toJSON()).to.deep.equal({
+        expect(resource.toJSON()).to.satisfy(matchJSON({
           type: 'foo',
-          id: 1,
           content: 'hello world'
-        });
+        }));
         expect(syncronizer.post.getCall(0)).to.not.ok;
       });
 
@@ -197,17 +169,15 @@ describe('PoolMixin', function () {
         .then(Store.flush());
       })
       .then(function (resource) {
-        expect(resource.toJSON()).to.deep.equal({
+        expect(resource.toJSON()).to.satisfy(matchJSON({
           type: 'foo',
-          id: 1,
           content: 'hello world'
-        });
+        }));
         expect(syncronizer.post.getCall(0)).to.ok;
         expect(syncronizer.post.getCall(0).args[0]).to.deep.equal('/api/foo/');
         expect(syncronizer.post.getCall(0).args[1]).to.deep.equal({
           data: {
             type: 'foo',
-            id: 1,
             content: 'hello world'
           }
         });
@@ -252,7 +222,7 @@ describe('PoolMixin', function () {
     it('should patch resource in memory and not request PATCH if store is not flushed', function () {
 
       return Q.fcall(function () {
-        return Store.get('/api/foo/1')
+        return Store.get('/api/foo/1');
       })
       .then(function (resource) {
         return Store.patch(resource, {
@@ -270,7 +240,7 @@ describe('PoolMixin', function () {
 
     });
 
-    it('should create resource in memory and request POST if store is flushed', function () {
+    it('should patch resource in memory and request PATCH if store is flushed', function () {
 
       return Q.fcall(function () {
         return Store.get('/api/foo/1');
@@ -320,7 +290,7 @@ describe('PoolMixin', function () {
     it('should remove resource in memory and not request DELETE if store is not flushed', function () {
 
       return Q.fcall(function () {
-        return Store.get('/api/foo/1')
+        return Store.get('/api/foo/1');
       })
       .then(function (resource) {
         return Store.remove(resource);
@@ -343,6 +313,38 @@ describe('PoolMixin', function () {
       .then(function (resource) {
         expect(syncronizer.delete.getCall(0)).to.ok;
         expect(syncronizer.delete.getCall(0).args[0]).to.equal('/api/foo/1');
+      });
+
+    });
+
+  });
+
+  describe('#getState', function () {
+
+    before(function () {
+
+      syncronizer.get.withArgs('/api/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'hello world',
+            links: {
+              self: '/api/foo/1'
+            }
+          }
+        })
+      );
+
+    });
+
+    it('should return current MemoryPool\'s resources', function () {
+
+      return Q.fcall(function () {
+        return Store.get('/api/foo/1');
+      })
+      .then(function (resource) {
+        expect(Store.getState()).to.have.length(1);
       });
 
     });

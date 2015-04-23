@@ -1,11 +1,18 @@
+var _ = require('lodash');
+
+
 class Operation {
 
-  constructor (options) {
+  constructor (op, resource) {
 
-    this.op = options.op;
-    this.path = options.path;
-    if (options.op !== 'remove') {
-      this.value = options.value;
+    this.op = op;
+    this.path = resource.getLink('self');
+    if (op !== 'remove') {
+      this.value = resource.deserialize();
+      this.value = _.omit(this.value, 'id');
+      this.value = _.omit(this.value, 'links');
+    }
+    if (op === 'add') {
     }
 
   }
