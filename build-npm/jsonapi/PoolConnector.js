@@ -28,10 +28,6 @@ var _Pool = require('./Pool');
 
 var _Pool2 = _interopRequireWildcard(_Pool);
 
-var _Operation = require('./Operation');
-
-var _Operation2 = _interopRequireWildcard(_Operation);
-
 var PoolConnector = (function () {
   function PoolConnector(source, target) {
     var options = arguments[2] === undefined ? {} : arguments[2];
@@ -44,7 +40,6 @@ var PoolConnector = (function () {
     this.target = target;
     this.sourceToTarget = {};
     this.operations = [];
-    this.cloneBays = [];
 
     this.listenTo(this.source, 'transform', this._onTrasnform);
     this.listenTo(this.source, 'add', this._onAdd);
@@ -75,7 +70,11 @@ var PoolConnector = (function () {
     key: '_onAdd',
     value: function _onAdd(resource) {
 
-      this.cloneBays.push(resource);
+      var clonedResource = resource.clone();
+      this._addReplicaLink(resource, clonedResource);
+      return this.target.add(clonedResource, {
+        byOperation: false
+      });
     }
   }, {
     key: 'flush',
@@ -89,12 +88,6 @@ var PoolConnector = (function () {
           });
         }, _Q2['default']());
       }).then(function () {
-        return _import2['default'].reduce(_this.cloneBays, function (promise, resource) {
-          return promise.then(function () {
-            return _this._applyCloneToTarget(resource);
-          });
-        }, _Q2['default']());
-      }).then(function () {
         _this._cleanQueues();
       });
     }
@@ -103,17 +96,6 @@ var PoolConnector = (function () {
     value: function _cleanQueues() {
 
       this.operations = [];
-      this.cloneBays = [];
-    }
-  }, {
-    key: '_applyCloneToTarget',
-    value: function _applyCloneToTarget(resource) {
-
-      var clonedResource = resource.clone();
-      this._addReplicaLink(resource, clonedResource);
-      return this.target.add(clonedResource, {
-        byOperation: false
-      });
     }
   }, {
     key: '_applyOperationToTarget',

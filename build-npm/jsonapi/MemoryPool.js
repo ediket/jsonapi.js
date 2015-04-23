@@ -57,7 +57,7 @@ var MemoryPool = (function (_Pool) {
       return _Q2['default'].fcall(function () {
         return new _Resource2['default'](attributes, options);
       }).then(function (resource) {
-        return _this.add(resource);
+        return _this.add(resource, { create: true });
       }).then(function (resource) {
         if (!options.byOperation) {
           _this._triggerTransform('add', resource);
@@ -115,10 +115,12 @@ var MemoryPool = (function (_Pool) {
     key: 'getURL',
     value: function getURL(type, id) {
 
-      return _import2['default'].find(this.pool, function (resource) {
+      var resource = _import2['default'].find(this.pool, function (resource) {
         var json = resource.toJSON();
         return json.type === type && json.id === id;
-      }).getLink('self');
+      });
+
+      return resource ? resource.getLink('self') : undefined;
     }
   }, {
     key: 'find',

@@ -54,12 +54,13 @@ var Pool = (function () {
     value: function add(resource, options) {
 
       options = _import2['default'].defaults(options || {}, {
-        byOperation: false
+        byOperation: false,
+        create: false
       });
 
-      if (!options.byOperation) {
-        if (!this.pool[resource.getLink('self')]) {
-          this.pool[resource.getLink('self')] = resource;
+      if (!this.pool[resource.getLink('self')]) {
+        this.pool[resource.getLink('self')] = resource;
+        if (!options.create && !options.byOperation) {
           this._triggerAdd(resource);
         }
       }
@@ -71,11 +72,7 @@ var Pool = (function () {
     key: '_triggerTransform',
     value: function _triggerTransform(op, resource) {
 
-      this.trigger('transform', new _Operation2['default']({
-        op: op,
-        path: resource.getLink('self'),
-        value: resource.toJSON()
-      }));
+      this.trigger('transform', new _Operation2['default'](op, resource));
     }
   }, {
     key: '_triggerAdd',

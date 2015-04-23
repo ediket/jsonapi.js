@@ -37,8 +37,11 @@ var Resource = (function (_Model) {
 
     _get(Object.getPrototypeOf(Resource.prototype), 'constructor', this).call(this, attributes, options);
 
+    if (!this.id) {
+      this.id = _uuid2['default'].v4();
+    }
     if (!this.getLink('self')) {
-      this.setLink('self', '/' + _uuid2['default'].v4());
+      this.setLink('self', '/' + this.id);
     }
   }
 

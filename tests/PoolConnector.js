@@ -36,15 +36,12 @@ describe('PoolConnect', function () {
       return pool1.get(resource.getLink('self'));
     })
     .then( pool1Resource => {
-
       return Q.spread([
         pool1Resource,
         pool1to2Connector.getReplica(pool1Resource)
       ], (pool1Resource, pool2Resource) => {
-
-        expect(pool1Resource.toJSON())
-          .to.deep.equal(pool2Resource.toJSON());
-
+        expect(_.omit(pool1Resource.toJSON(), 'id'))
+          .to.deep.equal(_.omit(pool2Resource.toJSON(), 'id'));
       });
 
     });
@@ -79,7 +76,8 @@ describe('PoolConnect', function () {
         pool1.get(pool1Resource.getLink('self')),
         pool1to2Connector.getReplica(pool1Resource)
       ], (pool1Resource, pool2Resource) => {
-        expect(pool1Resource.toJSON()).to.deep.equal(pool2Resource.toJSON());
+        expect(_.omit(pool1Resource.toJSON(), 'id'))
+          .to.deep.equal(_.omit(pool2Resource.toJSON(), 'id'));
       });
     });
 
@@ -111,7 +109,6 @@ describe('PoolConnect', function () {
         pool1.get(pool1Resource.getLink('self')),
         pool1to2Connector.getReplica(pool1Resource)
       ], (pool1Resource, pool2Resource) => {
-
         expect(pool1Resource).to.undefined;
         expect(pool2Resource).to.undefined;
       });
@@ -142,8 +139,8 @@ describe('PoolConnect', function () {
       ], (pool1Resource, pool2Resource) => {
 
         expect(pool1Resource).to.not.equal(pool2Resource);
-        expect(pool1Resource.toJSON()).to.deep
-          .equal(pool2Resource.toJSON());
+        expect(_.omit(pool1Resource.toJSON(), 'id'))
+          .to.deep.equal(_.omit(pool2Resource.toJSON(), 'id'));
 
       });
     });

@@ -74,12 +74,12 @@ var RestPool = (function (_Pool) {
 
       return _Q2['default'].fcall(function () {
         return _this.syncronizer.post(_this.getURL(attributes.type), {
-          data: attributes
+          data: _import2['default'].omit(attributes, 'id', 'links')
         });
       }).then(function (response) {
         return new _Resource2['default'](response.data, options);
       }).then(function (resource) {
-        return _this.add(resource);
+        return _this.add(resource, { create: true });
       }).then(function (resource) {
         if (!options.byOperation) {
           _this._triggerTransform('add', resource);

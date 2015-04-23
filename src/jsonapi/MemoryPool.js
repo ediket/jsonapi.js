@@ -24,7 +24,7 @@ class MemoryPool extends Pool {
       return new Resource(attributes, options);
     })
     .then(resource => {
-      return this.add(resource);
+      return this.add(resource, { create: true });
     })
     .then(resource => {
       if (!options.byOperation) {
@@ -80,10 +80,12 @@ class MemoryPool extends Pool {
 
   getURL (type, id) {
 
-    return _.find(this.pool, function (resource) {
+    var resource = _.find(this.pool, function (resource) {
       var json = resource.toJSON();
       return json.type === type && json.id === id;
-    }).getLink('self');
+    });
+
+    return resource ? resource.getLink('self') : undefined;
 
   }
 

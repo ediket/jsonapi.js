@@ -42,12 +42,13 @@ class Pool {
   add (resource, options) {
 
     options = _.defaults(options || {}, {
-      byOperation: false
+      byOperation: false,
+      create: false
     });
 
-    if (!options.byOperation) {
-      if (!this.pool[resource.getLink('self')]) {
-        this.pool[resource.getLink('self')] = resource;
+    if (!this.pool[resource.getLink('self')]) {
+      this.pool[resource.getLink('self')] = resource;
+      if (!options.create && !options.byOperation) {
         this._triggerAdd(resource);
       }
     }
@@ -57,11 +58,7 @@ class Pool {
 
   _triggerTransform (op, resource) {
 
-    this.trigger('transform', new Operation({
-      op: op,
-      path: resource.getLink('self'),
-      value: resource.toJSON()
-    }));
+    this.trigger('transform', new Operation(op, resource));
 
   }
 
