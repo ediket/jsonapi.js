@@ -41,14 +41,29 @@ var Pool = (function () {
     key: 'create',
     value: function create(attributes, options) {}
   }, {
-    key: 'add',
-    value: function add(resource) {}
-  }, {
     key: 'remove',
     value: function remove(resource) {}
   }, {
     key: 'get',
     value: function get(id) {}
+  }, {
+    key: 'add',
+    value: function add(resource, options) {
+
+      options = _import2['default'].defaults(options || {}, {
+        byOperation: false
+      });
+
+      if (!options.byOperation) {
+        if (!this.pool[resource.getLink('self')]) {
+          this.pool[resource.getLink('self')] = resource;
+          this._triggerAdd(resource);
+        }
+      }
+      return _Q2['default'].fcall(function () {
+        return resource;
+      });
+    }
   }, {
     key: '_triggerTransform',
     value: function _triggerTransform(op, resource) {
@@ -59,6 +74,12 @@ var Pool = (function () {
         value: resource.toJSON()
       }));
     }
+  }, {
+    key: '_triggerAdd',
+    value: function _triggerAdd(resource) {
+
+      this.trigger('add', resource);
+    }
   }]);
 
   return Pool;
@@ -68,8 +89,6 @@ exports['default'] = Pool;
 module.exports = exports['default'];
 
 // implement this// implement this
-
-// implement this
 
 // implement this
 

@@ -112,13 +112,12 @@ var MemoryPool = (function (_Pool) {
       });
     }
   }, {
-    key: 'add',
-    value: function add(resource) {
+    key: 'find',
+    value: function find(predicate) {
       var _this5 = this;
 
       return _Q2['default'].fcall(function () {
-        _this5.pool[resource.getLink('self')] = resource;
-        return resource;
+        return _import2['default'].find(_this5.pool, predicate);
       });
     }
   }]);

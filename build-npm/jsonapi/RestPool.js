@@ -58,11 +58,17 @@ var RestPool = (function (_Pool) {
   _inherits(RestPool, _Pool);
 
   _createClass(RestPool, [{
+    key: 'setURL',
+    value: function setURL(type, url) {
+
+      this.typeToUrl[type] = url;
+    }
+  }, {
     key: 'create',
     value: function create(attributes, options) {
       var _this = this;
 
-      var options = _import2['default'].defaults(options || {}, {
+      options = _import2['default'].defaults(options || {}, {
         byOperation: false
       });
 
@@ -86,7 +92,7 @@ var RestPool = (function (_Pool) {
     value: function patch(resource, attributes, options) {
       var _this2 = this;
 
-      var options = _import2['default'].defaults(options || {}, {
+      options = _import2['default'].defaults(options || {}, {
         byOperation: false
       });
 
@@ -112,7 +118,7 @@ var RestPool = (function (_Pool) {
     value: function remove(resource, options) {
       var _this3 = this;
 
-      var options = _import2['default'].defaults(options || {}, {
+      options = _import2['default'].defaults(options || {}, {
         byOperation: false
       });
 
@@ -124,16 +130,6 @@ var RestPool = (function (_Pool) {
         if (!options.byOperation) {
           _this3._triggerTransform('remove', resource);
         }
-        return resource;
-      });
-    }
-  }, {
-    key: 'add',
-    value: function add(resource) {
-
-      this.pool[resource.getLink('self')] = resource;
-
-      return _Q2['default'].fcall(function () {
         return resource;
       });
     }

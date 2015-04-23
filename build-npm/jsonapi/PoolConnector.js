@@ -44,8 +44,10 @@ var PoolConnector = (function () {
     this.target = target;
     this.sourceToTarget = {};
     this.operations = [];
+    this.cloneBays = [];
 
-    this.listenTo(this.source, 'transform', this.onTrasnform);
+    this.listenTo(this.source, 'transform', this._onTrasnform);
+    this.listenTo(this.source, 'add', this._onAdd);
     // this.stopListening(source, "transform");
   }
 
@@ -64,29 +66,54 @@ var PoolConnector = (function () {
       return this.sourceToTarget[url];
     }
   }, {
-    key: 'onTrasnform',
-    value: function onTrasnform(operation) {
+    key: '_onTrasnform',
+    value: function _onTrasnform(operation) {
 
       this.operations.push(operation);
+    }
+  }, {
+    key: '_onAdd',
+    value: function _onAdd(resource) {
+
+      this.cloneBays.push(resource);
     }
   }, {
     key: 'flush',
     value: function flush() {
       var _this = this;
 
-      return _import2['default'].reduce(this.operations, function (promise, operation) {
-        return promise.then(function () {
-          return _this._applyOperationToTarget(operation);
-        });
-      }, _Q2['default']()).then(function () {
-        _this._cleanQueue();
+      return _Q2['default'].fcall(function () {
+        return _import2['default'].reduce(_this.operations, function (promise, operation) {
+          return promise.then(function () {
+            return _this._applyOperationToTarget(operation);
+          });
+        }, _Q2['default']());
+      }).then(function () {
+        return _import2['default'].reduce(_this.cloneBays, function (promise, resource) {
+          return promise.then(function () {
+            return _this._applyCloneToTarget(resource);
+          });
+        }, _Q2['default']());
+      }).then(function () {
+        _this._cleanQueues();
       });
     }
   }, {
-    key: '_cleanQueue',
-    value: function _cleanQueue() {
+    key: '_cleanQueues',
+    value: function _cleanQueues() {
 
       this.operations = [];
+      this.cloneBays = [];
+    }
+  }, {
+    key: '_applyCloneToTarget',
+    value: function _applyCloneToTarget(resource) {
+
+      var clonedResource = resource.clone();
+      this._addReplicaLink(resource, clonedResource);
+      return this.target.add(clonedResource, {
+        byOperation: false
+      });
     }
   }, {
     key: '_applyOperationToTarget',
@@ -102,7 +129,7 @@ var PoolConnector = (function () {
         return this.target.create(value, {
           byOperation: true }).then(function (resource) {
           var url = resource.getLink('self');
-          _this2.sourceToTarget[path] = resource.getLink('self');
+          _this2._addReplicaLink(path, resource);
           return resource;
         });
       } else if (op === 'replace') {
@@ -120,6 +147,22 @@ var PoolConnector = (function () {
           });
         });
       }
+    }
+  }, {
+    key: '_addReplicaLink',
+    value: function _addReplicaLink(source, target) {
+
+      var sourceURL = source;
+      if (!_import2['default'].isString(source)) {
+        sourceURL = source.getLink('self');
+      }
+
+      var targetURL = target;
+      if (!_import2['default'].isString(target)) {
+        targetURL = target.getLink('self');
+      }
+
+      this.sourceToTarget[sourceURL] = targetURL;
     }
   }]);
 

@@ -79,6 +79,20 @@ var Resource = (function (_Model) {
       this.links = data.links || {};
       return _import2['default'].omit(data, 'links');
     }
+  }, {
+    key: 'deserialize',
+    value: function deserialize() {
+
+      var data = _import2['default'].clone(this.attributes, true);
+      data.links = _import2['default'].clone(this.links, true);
+      return data;
+    }
+  }, {
+    key: 'clone',
+    value: function clone() {
+
+      return new Resource(this.deserialize(), { parse: true });
+    }
   }]);
 
   return Resource;
