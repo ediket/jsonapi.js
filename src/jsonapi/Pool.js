@@ -21,12 +21,6 @@ class Pool {
 
   }
 
-  add (resource) {
-
-    // implement this
-
-  }
-
   remove (resource) {
 
     // implement this
@@ -39,6 +33,22 @@ class Pool {
 
   }
 
+  add (resource, options) {
+
+    options = _.defaults(options || {}, {
+      byOperation: false
+    });
+
+    if (!options.byOperation) {
+      if (!this.pool[resource.getLink('self')]) {
+        this.pool[resource.getLink('self')] = resource;
+        this._triggerAdd(resource);
+      }
+    }
+    return Q.fcall(() => resource);
+
+  }
+
   _triggerTransform (op, resource) {
 
     this.trigger('transform', new Operation({
@@ -46,6 +56,12 @@ class Pool {
       path: resource.getLink('self'),
       value: resource.toJSON()
     }));
+
+  }
+
+  _triggerAdd (resource) {
+
+    this.trigger('add', resource);
 
   }
 

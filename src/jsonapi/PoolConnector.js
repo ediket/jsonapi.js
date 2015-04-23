@@ -15,8 +15,10 @@ class PoolConnector {
     this.target = target;
     this.sourceToTarget = {};
     this.operations = [];
+    this.cloneBays = [];
 
-    this.listenTo(this.source, "transform", this.onTrasnform);
+    this.listenTo(this.source, "transform", this._onTrasnform);
+    this.listenTo(this.source, "add", this._onAdd);
     // this.stopListening(source, "transform");
 
   }
@@ -37,28 +39,54 @@ class PoolConnector {
 
   }
 
-  onTrasnform (operation) {
+  _onTrasnform (operation) {
 
     this.operations.push(operation);
 
   }
 
+  _onAdd (resource) {
+
+    this.cloneBays.push(resource);
+
+  }
+
   flush () {
 
-    return _.reduce(this.operations, (promise, operation) => {
-      return promise.then(() => {
-        return this._applyOperationToTarget(operation);
-      });
-    }, Q())
+    return Q.fcall(() => {
+      return _.reduce(this.operations, (promise, operation) => {
+        return promise.then(() => {
+          return this._applyOperationToTarget(operation);
+        });
+      }, Q())
+    })
     .then(() => {
-      this._cleanQueue();
+      return _.reduce(this.cloneBays, (promise, resource) => {
+        return promise.then(() => {
+          return this._applyCloneToTarget(resource);
+        });
+      }, Q());
+    })
+    .then(() => {
+      this._cleanQueues();
     });
 
   }
 
-  _cleanQueue () {
+  _cleanQueues () {
 
     this.operations = [];
+    this.cloneBays = [];
+
+  }
+
+  _applyCloneToTarget (resource) {
+
+    var clonedResource = resource.clone();
+    this._addReplicaLink(resource, clonedResource);
+    return this.target.add(clonedResource, {
+      byOperation: false
+    });
 
   }
 
@@ -76,7 +104,7 @@ class PoolConnector {
       })
       .then(resource => {
         var url = resource.getLink('self');
-        this.sourceToTarget[path] = resource.getLink('self');
+        this._addReplicaLink(path, resource)
         return resource;
       });
 
@@ -101,6 +129,22 @@ class PoolConnector {
       });
 
     }
+
+  }
+
+  _addReplicaLink (source, target) {
+
+    var sourceURL = source;
+    if (!_.isString(source)) {
+      sourceURL = source.getLink('self')
+    }
+
+    var targetURL = target;
+    if (!_.isString(target)) {
+      targetURL = target.getLink('self')
+    }
+
+    this.sourceToTarget[sourceURL] = targetURL;
 
   }
 

@@ -20,9 +20,15 @@ class RestPool extends Pool {
 
   }
 
+  setURL (type, url) {
+
+    this.typeToUrl[type] = url;
+
+  }
+
   create (attributes, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 
@@ -49,7 +55,7 @@ class RestPool extends Pool {
 
   patch (resource, attributes, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 
@@ -79,7 +85,7 @@ class RestPool extends Pool {
 
   remove (resource, options) {
 
-    var options = _.defaults(options || {}, {
+    options = _.defaults(options || {}, {
       byOperation: false
     });
 
@@ -98,14 +104,6 @@ class RestPool extends Pool {
 
   }
 
-  add (resource) {
-
-    this.pool[resource.getLink('self')] = resource;
-
-    return Q.fcall(() => resource);
-
-  }
-
   get (url) {
 
     var resource = this.pool[url];
@@ -120,6 +118,7 @@ class RestPool extends Pool {
       else {
         resource = new Resource(response.data);
       }
+      this.add(resource);
       return resource;
     });
 

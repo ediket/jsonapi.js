@@ -78,11 +78,10 @@ class MemoryPool extends Pool {
 
   }
 
-  add (resource) {
+  find (predicate) {
 
     return Q.fcall(() => {
-      this.pool[resource.getLink('self')] = resource;
-      return resource;
+      return _.find(this.pool, predicate);
     });
 
   }

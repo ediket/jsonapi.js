@@ -18,32 +18,6 @@ describe('PoolConnect', function () {
 
   });
 
-  it('transforms can be applied to one resource and ' +
-     'should be manually applied to the other resource', function () {
-
-    var pool1to2Connector = new PoolConnector(pool1, pool2);
-
-    return Q.fcall(() => {
-      return pool1.create({
-        type: 'foo',
-        content: 'bar'
-      });
-    })
-    .then(resource => {
-      return pool1to2Connector.flush()
-        .then(() => resource);
-    })
-    .then(resource => {
-      return Q.spread([
-        resource,
-        pool1to2Connector.getReplica(resource)
-      ], (foo1, foo2) => {
-        expect(foo1.toJSON()).to.deep.equal(foo2.toJSON());
-      });
-    });
-
-  });
-
   it(`Connector should process 'add' operation`, () => {
 
     var pool1to2Connector = new PoolConnector(pool1, pool2);
@@ -140,6 +114,37 @@ describe('PoolConnect', function () {
 
         expect(pool1Resource).to.undefined;
         expect(pool2Resource).to.undefined;
+      });
+    });
+
+  });
+
+  it(`Connector should process 'add' operation`, () => {
+
+    var pool1to2Connector = new PoolConnector(pool1, pool2);
+
+    return Q.fcall(() => {
+      return pool1.add(
+        new Resource({
+          type: 'foo',
+          content: 'bar'
+        })
+      );
+    })
+    .then(resource => {
+      return pool1to2Connector.flush()
+        .then(() => resource);
+    })
+    .then(pool1Resource => {
+      return Q.spread([
+        pool1.get(pool1Resource.getLink('self')),
+        pool1to2Connector.getReplica(pool1Resource)
+      ], (pool1Resource, pool2Resource) => {
+
+        expect(pool1Resource).to.not.equal(pool2Resource);
+        expect(pool1Resource.toJSON()).to.deep
+          .equal(pool2Resource.toJSON());
+
       });
     });
 

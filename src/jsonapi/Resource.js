@@ -58,6 +58,20 @@ class Resource extends Model {
 
   }
 
+  deserialize () {
+
+    var data = _.clone(this.attributes, true);
+    data.links = _.clone(this.links, true);
+    return data;
+
+  }
+
+  clone () {
+
+    return new Resource(this.deserialize(), { parse: true });
+
+  }
+
 }
 
 

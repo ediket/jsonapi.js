@@ -106,4 +106,28 @@ describe('Resource', function () {
     });
 
   });
+
+  describe('#clone', function () {
+
+    it('should clone of itself', function () {
+
+      var foo = new Resource({
+        type: 'foo',
+        id: 1,
+        name: '23',
+        links: {
+          self: '/foo/1',
+          test: '/test/1'
+        }
+      });
+
+      var fooClone = foo.clone();
+
+      expect(foo).to.not.equal(fooClone);
+      expect(foo.toJSON()).to.deep.equal(fooClone.toJSON());
+
+    });
+
+  });
+
 });
