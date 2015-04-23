@@ -1,0 +1,20 @@
+{
+  "name": "reflux-backbone.resource-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "backbone.resource": "file:../..",
+    "q": "^1.2.0",
+    "reflux": "^0.2.7"
+  },
+  "devDependencies": {
+    "chai": "^2.2.0",
+    "sinon": "^1.14.1"
+  }
+}
