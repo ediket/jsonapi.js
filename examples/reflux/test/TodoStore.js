@@ -5,6 +5,7 @@ var Reflux = require('reflux');
 var sinon = require('sinon');
 var stubPromise = require('./libs/stubPromise');
 var promiseValue = require('./libs/promiseValue');
+var matchJSON = require('./libs/matchJSON');
 var JSONAPI = require('backbone.resource');
 var Resource = JSONAPI.Resource;
 var MemoryPool = JSONAPI.MemoryPool;
@@ -50,9 +51,9 @@ describe('PoolMixin', function () {
 
   });
 
-  describe('#getTodo', function () {
+  describe('#fetchTodo', function () {
 
-    it('it should return current todos', function () {
+    it('it should make GET request and fetch Todo', function () {
 
       syncronizer.get.withArgs('/api/todo/1').returns(
         promiseValue({
@@ -66,6 +67,28 @@ describe('PoolMixin', function () {
           }
         })
       );
+
+      return Q.fcall(function () {
+        return TodoActions.fetchTodo(1);
+      })
+      .then(function () {
+        var state = TodoStore.getState();
+        expect(syncronizer.get.getCall(0)).to.ok;
+        expect(state).to.have.length(1);
+        expect(state[0]).to.satisfy(matchJSON({
+          type: 'todo',
+          content: 'hello world'
+        }));
+      })
+
+    });
+
+  });
+
+  describe('#createTodo', function () {
+
+    it('it should make POST request and create new Todo', function () {
+
       syncronizer.post.withArgs('/api/todo/').returns(
         promiseValue({
           data: {
@@ -74,6 +97,42 @@ describe('PoolMixin', function () {
             content: 'wow world',
             links: {
               self: '/api/todo/2'
+            }
+          }
+        })
+      );
+
+      return Q.fcall(function () {
+        return TodoActions.createTodo({
+          content: 'wow world'
+        });
+      })
+      .then(function () {
+        var state = TodoStore.getState();
+        expect(syncronizer.post.getCall(0)).to.ok;
+        expect(state).to.have.length(1);
+        expect(state[0]).to.satisfy(matchJSON({
+          type: 'todo',
+          content: 'wow world'
+        }));
+      });
+
+    });
+
+  });
+
+  describe('#patchTodo', function () {
+
+    it('it should make PATCH request and patch Todo', function () {
+
+      syncronizer.get.withArgs('/api/todo/1').returns(
+        promiseValue({
+          data: {
+            type: 'todo',
+            id: 1,
+            content: 'hello world',
+            links: {
+              self: '/api/todo/1'
             }
           }
         })
@@ -92,61 +151,67 @@ describe('PoolMixin', function () {
       );
 
       return Q.fcall(function () {
-        return TodoActions.getTodo(1);
+        return TodoActions.fetchTodo(1);
       })
       .then(function () {
         var state = TodoStore.getState();
-        expect(state).to.have.length(1);
-
-        return TodoActions.createTodo({
-          content: 'wow world'
-        });
-      })
-      .then(function () {
-        var state = TodoStore.getState();
-        expect(state).to.have.length(2);
         return TodoActions.patchTodo(state[0].id, {
           content: 'test content'
         });
       })
       .then(function () {
         var state = TodoStore.getState();
-        expect(state[0].content).to.equal('test content');
+        expect(syncronizer.patch.getCall(0)).to.ok;
+        expect(state[0]).to.satisfy(matchJSON({
+          type: 'todo',
+          content: 'test content'
+        }));
       });
 
     });
 
   });
 
-  describe('#createTodo', function () {
+describe('#removeTodo', function () {
 
-    it('it should create todo', function () {
+    it('it should make DELETE request and remove Todo', function () {
 
-      syncronizer.post.withArgs('/api/todo/').returns(
+      syncronizer.get.withArgs('/api/todo/1').returns(
         promiseValue({
           data: {
             type: 'todo',
-            id: 2,
+            id: 1,
+            content: 'hello world',
+            links: {
+              self: '/api/todo/1'
+            }
+          }
+        })
+      );
+      syncronizer.delete.withArgs('/api/todo/1').returns(
+        promiseValue({
+          data: {
+            type: 'todo',
+            id: 1,
             content: 'wow world',
             links: {
-              self: '/api/todo/2'
+              self: '/api/todo/1'
             }
           }
         })
       );
 
       return Q.fcall(function () {
-        return TodoActions.createTodo({
-          content: 'wow world'
-        });
+        return TodoActions.fetchTodo(1);
       })
       .then(function () {
         var state = TodoStore.getState();
-        expect(state).to.have.length(1);
-        expect(_.omit(state[0], 'id')).to.deep.equal({
-          type: 'todo',
-          content: 'wow world'
-        });
+        return TodoActions.removeTodo(state[0].id);
+      })
+      .then(function () {
+        var state = TodoStore.getState();
+        expect(syncronizer.delete.getCall(0)).to.ok;
+        expect(state).to.have.length(0);
       });
 
     });

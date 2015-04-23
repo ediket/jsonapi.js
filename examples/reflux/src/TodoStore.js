@@ -31,7 +31,16 @@ var TodoStore = Reflux.createStore({
 
   },
 
-  onRemoveTodo: function () {
+  onRemoveTodo: function (id) {
+
+    TodoActions.removeTodo.promise(
+      this.get(this.getURL(id))
+        .then(function (resource) {
+          return this.remove(resource);
+        }.bind(this))
+        .then(this.flush.bind(this))
+        .then(this.trigger.bind(this))
+    );
 
   },
 
@@ -48,9 +57,9 @@ var TodoStore = Reflux.createStore({
 
   },
 
-  onGetTodo: function (id) {
+  onFetchTodo: function (id) {
 
-    TodoActions.getTodo.promise(
+    TodoActions.fetchTodo.promise(
       this.get(this.getURL(id))
         .then(this.flush.bind(this))
         .then(this.trigger.bind(this))
