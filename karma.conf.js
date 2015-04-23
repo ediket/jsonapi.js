@@ -8,13 +8,13 @@ module.exports = function(config) {
     files: [
       './build-bower/vendor.js',
       './build-bower/jsonapi.js',
-      './test/**/*.js'
+      './tests/**/*.js'
     ],
     exclude: [
       '*.js'
     ],
     preprocessors: {
-      "./test/**/*.js": ['browserify']
+      "./tests/**/*.js": ['browserify']
     },
     reporters: ['mocha'],
     colors: true,

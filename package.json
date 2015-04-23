@@ -15,7 +15,7 @@
     "build-npm"
   ],
   "scripts": {
-    "test": "mocha test -w --compilers js:babel/register",
+    "test": "mocha tests -w --compilers js:babel/register",
     "test-ui": "gulp dev",
     "dev": "babel -w src -d build-npm",
     "build": "babel src -d build-npm"
