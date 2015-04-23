@@ -1,14 +1,20 @@
 {
-  "name": "jsonapi",
-  "version": "2.0.0",
-  "homepage": "https://github.com/ironhee/backbone.resource",
+  "name": "jsonapi.js",
+  "version": "2.0.7",
+  "homepage": "https://github.com/ironhee/jsonapi.js",
   "authors": [
-    "ironhee <iron@ediket.com>"
+    "ironhee <iron@ediket.com>",
+    "jeongsd <asdfg852456@gmail.com>"
   ],
-  "description": "Resource for JSONAPI. Based on Backbone.",
+  "description": "Javascript implement of JSONAPI",
   "main": "./build-bower/jsonapi.js",
   "keywords": [
-    "jsonapi"
+    "jsonapi",
+    "resource",
+    "RESTful",
+    "REST",
+    "model",
+    "linkage"
   ],
   "license": "MIT",
   "ignore": [
