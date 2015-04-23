@@ -33,6 +33,12 @@ class Pool {
 
   }
 
+  getURL (type, id) {
+
+    // implement this
+
+  }
+
   add (resource, options) {
 
     options = _.defaults(options || {}, {

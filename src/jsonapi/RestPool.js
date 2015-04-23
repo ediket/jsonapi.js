@@ -33,7 +33,7 @@ class RestPool extends Pool {
     });
 
     return Q.fcall(() => {
-      return this.syncronizer.post(this._getURL(attributes.type),
+      return this.syncronizer.post(this.getURL(attributes.type),
         {
           data: attributes
         });
@@ -123,7 +123,7 @@ class RestPool extends Pool {
 
   }
 
-  _getURL (type, id) {
+  getURL (type, id) {
 
     var url = this.typeToUrl[type];
 

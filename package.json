@@ -1,6 +1,6 @@
 {
   "name": "backbone.resource",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Resource for JSONAPI. Based on Backbone.",
   "keywords": [
     "jsonapi",

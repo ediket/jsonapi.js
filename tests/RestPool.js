@@ -185,4 +185,18 @@ describe('RestPool', function () {
 
   });
 
+  describe('#getURL', function () {
+
+    it('should return url of resource', function () {
+
+      return Q.fcall(function () {
+
+        expect(restPool.getURL('foo', 1)).to.equal('/api/foo/1');
+
+      })
+
+    });
+
+  });
+
 });
