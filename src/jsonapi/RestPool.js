@@ -118,7 +118,6 @@ class RestPool extends Pool {
       else {
         resource = new Resource(response.data);
       }
-      this.add(resource);
       return resource;
     });
 
