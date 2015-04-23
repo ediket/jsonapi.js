@@ -5,7 +5,13 @@
     "email": "leechulhee95@gmail.com",
     "url": "http://ironhee.github.io/"
   },
-  "version": "2.0.6",
+  "contributors": [
+    {
+      "name": "SeongDae Jeong",
+      "email": "asdfg852456@gmail.com"
+    }
+  ],
+  "version": "2.0.7",
   "description": "Javascript implement of JSONAPI",
   "keywords": [
     "jsonapi",
