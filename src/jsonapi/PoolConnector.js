@@ -15,7 +15,6 @@ class PoolConnector {
     this.target = target;
     this.sourceToTarget = {};
     this.operations = [];
-    this.cloneBays = [];
 
     this.listenTo(this.source, "transform", this._onTrasnform);
     this.listenTo(this.source, "add", this._onAdd);
@@ -47,7 +46,11 @@ class PoolConnector {
 
   _onAdd (resource) {
 
-    this.cloneBays.push(resource);
+    var clonedResource = resource.clone();
+    this._addReplicaLink(resource, clonedResource);
+    return this.target.add(clonedResource, {
+      byOperation: false
+    });
 
   }
 
@@ -61,13 +64,6 @@ class PoolConnector {
       }, Q())
     })
     .then(() => {
-      return _.reduce(this.cloneBays, (promise, resource) => {
-        return promise.then(() => {
-          return this._applyCloneToTarget(resource);
-        });
-      }, Q());
-    })
-    .then(() => {
       this._cleanQueues();
     });
 
@@ -76,17 +72,6 @@ class PoolConnector {
   _cleanQueues () {
 
     this.operations = [];
-    this.cloneBays = [];
-
-  }
-
-  _applyCloneToTarget (resource) {
-
-    var clonedResource = resource.clone();
-    this._addReplicaLink(resource, clonedResource);
-    return this.target.add(clonedResource, {
-      byOperation: false
-    });
 
   }
 

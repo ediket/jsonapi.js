@@ -119,6 +119,9 @@ class RestPool extends Pool {
         resource = new Resource(response.data);
       }
       return resource;
+    })
+    .then(resource => {
+      return this.add(resource);
     });
 
   }
