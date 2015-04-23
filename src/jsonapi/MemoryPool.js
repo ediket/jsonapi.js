@@ -78,6 +78,15 @@ class MemoryPool extends Pool {
 
   }
 
+  getURL (type, id) {
+
+    return _.find(this.pool, function (resource) {
+      var json = resource.toJSON();
+      return json.type === type && json.id === id;
+    }).getLink('self');
+
+  }
+
   find (predicate) {
 
     return Q.fcall(() => {

@@ -112,6 +112,15 @@ var MemoryPool = (function (_Pool) {
       });
     }
   }, {
+    key: 'getURL',
+    value: function getURL(type, id) {
+
+      return _import2['default'].find(this.pool, function (resource) {
+        var json = resource.toJSON();
+        return json.type === type && json.id === id;
+      }).getLink('self');
+    }
+  }, {
     key: 'find',
     value: function find(predicate) {
       var _this5 = this;

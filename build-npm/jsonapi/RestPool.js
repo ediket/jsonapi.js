@@ -73,7 +73,7 @@ var RestPool = (function (_Pool) {
       });
 
       return _Q2['default'].fcall(function () {
-        return _this.syncronizer.post(_this._getURL(attributes.type), {
+        return _this.syncronizer.post(_this.getURL(attributes.type), {
           data: attributes
         });
       }).then(function (response) {
@@ -152,8 +152,8 @@ var RestPool = (function (_Pool) {
       });
     }
   }, {
-    key: '_getURL',
-    value: function _getURL(type, id) {
+    key: 'getURL',
+    value: function getURL(type, id) {
 
       var url = this.typeToUrl[type];
 

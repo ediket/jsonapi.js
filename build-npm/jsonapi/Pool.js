@@ -47,6 +47,9 @@ var Pool = (function () {
     key: 'get',
     value: function get(id) {}
   }, {
+    key: 'getURL',
+    value: function getURL(type, id) {}
+  }, {
     key: 'add',
     value: function add(resource, options) {
 
@@ -89,6 +92,8 @@ exports['default'] = Pool;
 module.exports = exports['default'];
 
 // implement this// implement this
+
+// implement this
 
 // implement this
 
