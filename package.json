@@ -1,12 +1,17 @@
 {
-  "name": "backbone.resource",
+  "name": "jsonapi.js",
+  "author": {
+    "name": "ChulHee Lee",
+    "email": "leechulhee95@gmail.com",
+    "url": "http://ironhee.github.io/"
+  },
   "version": "2.0.6",
-  "description": "Resource for JSONAPI. Based on Backbone.",
+  "description": "Javascript implement of JSONAPI",
   "keywords": [
     "jsonapi",
-    "backbone",
     "resource",
-    "restful",
+    "RESTful",
+    "REST",
     "model",
     "linkage"
   ],
@@ -20,7 +25,6 @@
     "dev": "babel -w src -d build-npm",
     "build": "babel src -d build-npm"
   },
-  "author": "ironhee",
   "license": "MIT",
   "dependencies": {
     "backbone": "^1.1.2",
@@ -50,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ironhee/backbone.resource.git"
+    "url": "https://github.com/ironhee/jsonapi.js.git"
   },
   "browserify": {
     "debug": true,
