@@ -20,7 +20,7 @@ describe('Resource', function () {
 
   it('should parse data argument', function () {
 
-    var foo = new Resource({
+    let foo = new Resource({
       type: 'foo',
       id: 2,
       content: 'foo'
@@ -36,7 +36,7 @@ describe('Resource', function () {
 
   it('should parse link argument', function () {
 
-    var foo = new Resource({
+    let foo = new Resource({
       type: 'foo',
       links: {
         self: '/foo/1'
@@ -51,7 +51,7 @@ describe('Resource', function () {
 
     it('should return url of link', function () {
 
-      var foo = new Resource({
+      let foo = new Resource({
         type: 'foo',
         links: {
           self: '/foo/1'
@@ -68,11 +68,11 @@ describe('Resource', function () {
 
     it('should link another resource', function () {
 
-      var foo = new Resource({
+      let foo = new Resource({
         type: 'foo'
       });
 
-      var bar = new Resource({
+      let bar = new Resource({
         type: 'bar',
         links: {
           self: '/bar/1'
@@ -91,7 +91,7 @@ describe('Resource', function () {
 
     it('should remove link of resource', function () {
 
-      var foo = new Resource({
+      let foo = new Resource({
         type: 'foo',
         links: {
           self: '/foo/1',
@@ -111,7 +111,7 @@ describe('Resource', function () {
 
     it('should clone of itself', function () {
 
-      var foo = new Resource({
+      let foo = new Resource({
         type: 'foo',
         id: 1,
         name: '23',
@@ -121,7 +121,7 @@ describe('Resource', function () {
         }
       });
 
-      var fooClone = foo.clone();
+      let fooClone = foo.clone();
 
       expect(foo).to.not.equal(fooClone);
       expect(foo.toJSON()).to.deep.equal(fooClone.toJSON());

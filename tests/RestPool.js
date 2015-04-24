@@ -11,8 +11,8 @@ import { RestPool, Resource, RESTful } from '../index';
 
 describe('RestPool', function () {
 
-  var restPool;
-  var syncronizer;
+  let restPool;
+  let syncronizer;
 
   beforeEach(function () {
 
@@ -58,7 +58,7 @@ describe('RestPool', function () {
       })
       .then(resource => {
 
-        var args = syncronizer.post.getCall(0).args;
+        let args = syncronizer.post.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/');
         expect(args[1]).to.deep.equal({
           data: {
@@ -106,7 +106,7 @@ describe('RestPool', function () {
         return restPool.patch(foo, 'content', 'wow');
       })
       .then(resource => {
-        var args = syncronizer.patch.getCall(0).args;
+        let args = syncronizer.patch.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/23');
         expect(args[1]).to.deep.equal({
           data: {
@@ -143,7 +143,7 @@ describe('RestPool', function () {
         return restPool.remove(foo);
       })
       .then(resource => {
-        var args = syncronizer.delete.getCall(0).args;
+        let args = syncronizer.delete.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/23');
       });
 
@@ -172,7 +172,7 @@ describe('RestPool', function () {
         return restPool.get('/api/foo/23');
       })
       .then(resource => {
-        var args = syncronizer.get.getCall(0).args;
+        let args = syncronizer.get.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/23');
         expect(resource.toJSON()).to.deep.equal({
           type: 'foo',
@@ -202,7 +202,7 @@ describe('RestPool', function () {
         return restPool.get('/api/foo/');
       })
       .then(resources => {
-        var args = syncronizer.get.getCall(0).args;
+        let args = syncronizer.get.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/');
         expect(resources).to.have.length(1);
         expect(resources[0].toJSON()).to.deep.equal({
@@ -239,7 +239,7 @@ describe('RestPool', function () {
         });
       })
       .then(resources => {
-        var args = syncronizer.get.getCall(0).args;
+        let args = syncronizer.get.getCall(0).args;
         expect(args[0]).to.deep.equal('/api/foo/');
         expect(resources).to.have.length(1);
         expect(resources[0].toJSON()).to.deep.equal({

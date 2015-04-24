@@ -8,13 +8,13 @@ import { MemoryPool, Resource } from '../index';
 
 describe('MemoryPool', function () {
 
-  var pool;
-  var eventHandler;
+  let pool;
+  let eventHandler;
 
 
   function getNthOperation (nth) {
 
-    var call = eventHandler.getCall(nth);
+    let call = eventHandler.getCall(nth);
     return call ? call.args[0] : undefined;
 
   }
@@ -135,11 +135,11 @@ describe('MemoryPool', function () {
 
     it('should remove Resource and stop track', function () {
 
-      var foo = new Resource({
+      let foo = new Resource({
         type: 'foo',
         content: 'bar'
       });
-      var fooURL = foo.getLink('self');
+      let fooURL = foo.getLink('self');
 
       Q.fcall(function () {
 
@@ -219,7 +219,7 @@ describe('MemoryPool', function () {
 
       return Q.fcall(function () {
 
-        var foo = new Resource({
+        let foo = new Resource({
           type: 'foo',
           content: 'bar'
         });
