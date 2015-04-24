@@ -7,7 +7,7 @@ import { Transaction, MemoryPool } from '../index';
 
 describe('Transaction', function () {
 
-  var pool;
+  let pool;
 
   beforeEach(function () {
 
@@ -17,7 +17,7 @@ describe('Transaction', function () {
 
   it('should resource trace begin', function () {
 
-    var transaction = new Transaction(pool);
+    let transaction = new Transaction(pool);
     transaction.begin();
 
     return Q.fcall(function () {
@@ -46,7 +46,7 @@ describe('Transaction', function () {
 
   it('should not trace resource before begin', function () {
 
-    var transaction = new Transaction(pool);
+    let transaction = new Transaction(pool);
 
     return Q.fcall(function () {
 
@@ -66,7 +66,7 @@ describe('Transaction', function () {
 
   it('should trace resource changing', function () {
 
-    var transaction = new Transaction(pool);
+    let transaction = new Transaction(pool);
     transaction.begin();
 
     return Q.fcall(function () {
@@ -108,7 +108,7 @@ describe('Transaction', function () {
 
   it('should not trace resource after commit', function () {
 
-    var transaction = new Transaction(pool);
+    let transaction = new Transaction(pool);
     transaction.begin();
 
     return Q.fcall(function () {
@@ -140,7 +140,7 @@ describe('Transaction', function () {
 
   it('should trace removed resource', function () {
 
-    var transaction = new Transaction(pool);
+    let transaction = new Transaction(pool);
     transaction.begin();
 
     return Q.fcall(function () {

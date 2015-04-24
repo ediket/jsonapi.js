@@ -4,9 +4,9 @@ import Q from 'Q';
 
 export default function () {
 
-  var stub = sinon.stub.apply(sinon, arguments);
+  let stub = sinon.stub.apply(sinon, arguments);
 
-  var deferred = Q.defer();
+  let deferred = Q.defer();
 
   deferred.resolve();
 

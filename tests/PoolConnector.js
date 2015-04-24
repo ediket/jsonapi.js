@@ -7,8 +7,8 @@ import { MemoryPool, Resource, PoolConnector } from '../index';
 
 describe('PoolConnect', function () {
 
-  var pool1;
-  var pool2;
+  let pool1;
+  let pool2;
 
 
   beforeEach(function () {
@@ -20,7 +20,7 @@ describe('PoolConnect', function () {
 
   it(`Connector should process 'add' operation`, () => {
 
-    var pool1to2Connector = new PoolConnector(pool1, pool2);
+    let pool1to2Connector = new PoolConnector(pool1, pool2);
 
     return Q.fcall(() => {
       return pool1.create({
@@ -50,7 +50,7 @@ describe('PoolConnect', function () {
 
   it(`Connector should process 'patch' operation`, () => {
 
-    var pool1to2Connector = new PoolConnector(pool1, pool2);
+    let pool1to2Connector = new PoolConnector(pool1, pool2);
 
     return Q.fcall(() => {
       return pool1.create({
@@ -85,7 +85,7 @@ describe('PoolConnect', function () {
 
   it(`Connector should process 'remove' operation`, () => {
 
-    var pool1to2Connector = new PoolConnector(pool1, pool2);
+    let pool1to2Connector = new PoolConnector(pool1, pool2);
 
     return Q.fcall(() => {
       return pool1.create({
@@ -118,7 +118,7 @@ describe('PoolConnect', function () {
 
   it(`Connector should process 'add' operation`, () => {
 
-    var pool1to2Connector = new PoolConnector(pool1, pool2);
+    let pool1to2Connector = new PoolConnector(pool1, pool2);
 
     return Q.fcall(() => {
       return pool1.add(

@@ -8,13 +8,13 @@ import { Pool, Resource } from '../index';
 
 describe('Pool', function () {
 
-  var pool;
-  var eventHandler;
+  let pool;
+  let eventHandler;
 
 
   function getNthOperation (nth) {
 
-    var call = eventHandler.getCall(nth);
+    let call = eventHandler.getCall(nth);
     return call ? call.args[0] : undefined;
 
   }
