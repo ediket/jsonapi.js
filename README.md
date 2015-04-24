@@ -175,22 +175,12 @@ npm install -g gulp
 npm install -g babel
 ```  
 
-es6 watch and compile
-```bash
-npm run dev
-```
-
 watch test
 ```bash
 npm run test
 ```
 
-build for npm
+build
 ```bash
 npm run build
-```
-
-build for bower
-```bash
-gulp build
 ```

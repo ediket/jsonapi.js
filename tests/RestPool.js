@@ -6,7 +6,7 @@ import Q from 'q';
 import promiseValue from './libs/promiseValue';
 import matchJSON from './libs/matchJSON';
 import stubPromise from './libs/stubPromise';
-import { RestPool, Resource, RESTful } from '../build-npm/jsonapi';
+import { RestPool, Resource, RESTful } from '../index';
 
 
 describe('RestPool', function () {
@@ -53,7 +53,7 @@ describe('RestPool', function () {
         return restPool.create({
           type: 'foo',
           content: 'hello world'
-        })
+        });
 
       })
       .then(resource => {
@@ -103,7 +103,7 @@ describe('RestPool', function () {
         });
       })
       .then((foo) => {
-        return restPool.patch(foo, 'content', 'wow')
+        return restPool.patch(foo, 'content', 'wow');
       })
       .then(resource => {
         var args = syncronizer.patch.getCall(0).args;
@@ -140,7 +140,7 @@ describe('RestPool', function () {
         });
       })
       .then((foo) => {
-        return restPool.remove(foo)
+        return restPool.remove(foo);
       })
       .then(resource => {
         var args = syncronizer.delete.getCall(0).args;
@@ -191,9 +191,19 @@ describe('RestPool', function () {
 
       return Q.fcall(function () {
 
+        expect(restPool.getURL('foo')).to.equal('/api/foo/');
+
+      });
+
+    });
+
+    it('should return url of resource2', function () {
+
+      return Q.fcall(function () {
+
         expect(restPool.getURL('foo', 1)).to.equal('/api/foo/1');
 
-      })
+      });
 
     });
 

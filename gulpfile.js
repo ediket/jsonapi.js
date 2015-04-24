@@ -13,7 +13,7 @@ var dependencies = _.keys(pkg.dependencies);
 
 gulp.task('watch:src', function() {
 
-  gulp.watch('src/**/*.js', ['browserify:src']);
+  gulp.watch(['lib/**/*.js', 'index.js'], ['browserify:src']);
 
 });
 
@@ -28,8 +28,7 @@ gulp.task('watch:test', function() {
 gulp.task('browserify:src', function () {
 
   var b = browserify({
-    entries: './jsonapi',
-    basedir: './src/',
+    entries: './index.js',
     standalone: 'JSONAPI',
     debug: true
   })

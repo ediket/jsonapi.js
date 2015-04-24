@@ -26,10 +26,8 @@
     "build-npm"
   ],
   "scripts": {
-    "test": "mocha tests -w --compilers js:babel/register",
-    "test-ui": "gulp dev",
-    "dev": "babel -w src -d build-npm",
-    "build": "babel src -d build-npm"
+    "test": "mocha tests -w --recursive --compilers js:babel/register",
+    "build": "babel index.js -d build-npm; babel lib -d build-npm/lib; gulp build"
   },
   "license": "MIT",
   "dependencies": {

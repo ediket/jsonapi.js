@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import _ from 'lodash';
 import Q from 'q';
 import matchJSON from './libs/matchJSON';
-import { Transaction, MemoryPool } from '../build-npm/jsonapi';
+import { Transaction, MemoryPool } from '../index';
 
 
 describe('Transaction', function () {

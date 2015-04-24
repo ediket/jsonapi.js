@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import _ from 'lodash';
 import stubPromise from './libs/stubPromise';
 import promiseValue from './libs/promiseValue';
-import { Resource, ResourcePool } from '../build-npm/jsonapi';
+import { Resource, ResourcePool } from '../index';
 
 
 describe('Resource', function () {
