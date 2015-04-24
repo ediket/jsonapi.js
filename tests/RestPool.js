@@ -183,6 +183,75 @@ describe('RestPool', function () {
 
     });
 
+    it('should get multiple resource and make GET request', function () {
+
+      syncronizer.get.withArgs('/api/foo/').returns(
+        promiseValue({
+          data: [{
+            type: 'foo',
+            id: 23,
+            content: 'hello world',
+            links: {
+              self: '/api/foo/23'
+            }
+          }]
+        })
+      );
+
+      return Q.fcall(() => {
+        return restPool.get('/api/foo/');
+      })
+      .then(resources => {
+        var args = syncronizer.get.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/');
+        expect(resources).to.have.length(1);
+        expect(resources[0].toJSON()).to.deep.equal({
+          type: 'foo',
+          id: 23,
+          content: 'hello world'
+        });
+      });
+
+    });
+
+    it('should get resource with params and make GET request', function () {
+
+      syncronizer.get.withArgs('/api/foo/', {
+        'filter[state]': 'normal'
+      })
+      .returns(
+        promiseValue({
+          data: [{
+            type: 'foo',
+            state: 'normal',
+            id: 23,
+            content: 'hello world',
+            links: {
+              self: '/api/foo/23'
+            }
+          }]
+        })
+      );
+
+      return Q.fcall(() => {
+        return restPool.get('/api/foo/', {
+          'filter[state]': 'normal'
+        });
+      })
+      .then(resources => {
+        var args = syncronizer.get.getCall(0).args;
+        expect(args[0]).to.deep.equal('/api/foo/');
+        expect(resources).to.have.length(1);
+        expect(resources[0].toJSON()).to.deep.equal({
+          type: 'foo',
+          id: 23,
+          state: 'normal',
+          content: 'hello world'
+        });
+      });
+
+    });
+
   });
 
   describe('#getURL', function () {
@@ -190,19 +259,8 @@ describe('RestPool', function () {
     it('should return url of resource', function () {
 
       return Q.fcall(function () {
-
         expect(restPool.getURL('foo')).to.equal('/api/foo/');
-
-      });
-
-    });
-
-    it('should return url of resource2', function () {
-
-      return Q.fcall(function () {
-
         expect(restPool.getURL('foo', 1)).to.equal('/api/foo/1');
-
       });
 
     });

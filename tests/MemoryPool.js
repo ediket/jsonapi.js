@@ -194,6 +194,23 @@ describe('MemoryPool', function () {
 
     });
 
+    it('should return multiple Resource', function () {
+
+      return Q.fcall(() => pool.create({
+        type: 'foo',
+        content: 'bar'
+      }))
+      .then(() => pool.create({
+        type: 'foo',
+        content: 'baz'
+      }))
+      .then(() => pool.get('/foo/'))
+      .then(function (resources) {
+        expect(resources).to.have.length(2);
+      });
+
+    });
+
   });
 
   describe('#add', function () {
@@ -228,20 +245,8 @@ describe('MemoryPool', function () {
     it('should return url of resource', function () {
 
       return Q.fcall(function () {
-
-        var foo = new Resource({
-          id: 1,
-          type: 'foo',
-          content: 'bar'
-        });
-
-        return pool.add(foo);
-
-      })
-      .then(function (foo) {
-
-        expect(pool.getURL('foo', 1)).to.equal(foo.getLink('self'));
-
+        expect(pool.getURL('foo')).to.equal('/foo/');
+        expect(pool.getURL('foo', 1)).to.equal('/foo/1');
       });
 
     });
