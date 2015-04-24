@@ -18,6 +18,10 @@ var _RestPool = require('./lib/RestPool');
 
 var _RestPool2 = _interopRequireWildcard(_RestPool);
 
+var _Pool = require('./lib/Pool');
+
+var _Pool2 = _interopRequireWildcard(_Pool);
+
 var _RESTful = require('./lib/RESTful');
 
 var _RESTful2 = _interopRequireWildcard(_RESTful);
@@ -34,5 +38,6 @@ exports.Transaction = _Transaction2['default'];
 exports.Resource = _Resource2['default'];
 exports.MemoryPool = _MemoryPool2['default'];
 exports.RestPool = _RestPool2['default'];
+exports.Pool = _Pool2['default'];
 exports.RESTful = _RESTful2['default'];
 exports.PoolConnector = _PoolConnector2['default'];

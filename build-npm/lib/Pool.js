@@ -58,12 +58,19 @@ var Pool = (function () {
         create: false
       });
 
-      if (!this.pool[resource.getLink('self')]) {
-        this.pool[resource.getLink('self')] = resource;
-        if (!options.create && !options.byOperation) {
-          this._triggerAdd(resource);
+      var _addToPool = (function (resource) {
+        if (!this.pool[resource.getLink('self')]) {
+          this.pool[resource.getLink('self')] = resource;
+          if (!options.create && !options.byOperation) {
+            this._triggerAdd(resource);
+          }
         }
-      }
+      }).bind(this);
+
+      _import2['default'].isArray(resource) ? _import2['default'].each(resource, function (resource) {
+        return _addToPool(resource);
+      }) : _addToPool(resource);
+
       return _Q2['default'].fcall(function () {
         return resource;
       });
