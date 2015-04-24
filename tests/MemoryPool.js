@@ -240,17 +240,4 @@ describe('MemoryPool', function () {
 
   });
 
-  describe('#getURL', function () {
-
-    it('should return url of resource', function () {
-
-      return Q.fcall(function () {
-        expect(pool.getURL('foo')).to.equal('/foo/');
-        expect(pool.getURL('foo', 1)).to.equal('/foo/1');
-      });
-
-    });
-
-  });
-
 });
