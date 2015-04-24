@@ -60,7 +60,7 @@ var _parseHeaders = function _parseHeaders(xhr) {
 
   var headerRegex = /^(.*?):[ \t]*([^\r\n]*)$/mg;
   var headersString = xhr.getAllResponseHeaders();
-  var findResult;
+  var findResult = undefined;
 
   while ((findResult = headerRegex.exec(headersString)) !== null) {
     result.push(findResult.slice(1));

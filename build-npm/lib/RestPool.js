@@ -135,8 +135,10 @@ var RestPool = (function (_Pool) {
     }
   }, {
     key: 'get',
-    value: function get(url, options) {
+    value: function get(urlOrLinkage, options) {
       var _this4 = this;
+
+      var url = this._toURL(urlOrLinkage);
 
       return _Q2['default'].fcall(function () {
         return _this4.syncronizer.get(url, options);
@@ -164,6 +166,19 @@ var RestPool = (function (_Pool) {
         url = url + id;
       }
 
+      return url;
+    }
+  }, {
+    key: '_toURL',
+    value: function _toURL(urlOrLinkage) {
+
+      var url = undefined;
+      if (_import2['default'].startsWith(urlOrLinkage, '/')) {
+        url = urlOrLinkage;
+      } else {
+        var linkage = urlOrLinkage;
+        url = this.getURL(linkage.type, linkage.id);
+      }
       return url;
     }
   }, {

@@ -104,8 +104,9 @@ var MemoryPool = (function (_Pool) {
     }
   }, {
     key: 'get',
-    value: function get(url) {
+    value: function get(urlOrLinkage) {
 
+      var url = this._toURL(urlOrLinkage);
       var resource = this.pool[url];
 
       if (!resource) {
@@ -131,6 +132,19 @@ var MemoryPool = (function (_Pool) {
         url = url + id;
       }
 
+      return url;
+    }
+  }, {
+    key: '_toURL',
+    value: function _toURL(urlOrLinkage) {
+
+      var url = undefined;
+      if (_import2['default'].startsWith(urlOrLinkage, '/')) {
+        url = urlOrLinkage;
+      } else {
+        var linkage = urlOrLinkage;
+        url = this.getURL(linkage.type, linkage.id);
+      }
       return url;
     }
   }, {
