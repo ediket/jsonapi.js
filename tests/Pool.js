@@ -487,9 +487,9 @@ describe('Pool', function () {
 
       return Q.fcall(() => pool.push())
       .then(() => {
-        expect(sync.post.getCall(0)).to.be.ok;
-        expect(sync.patch.getCall(0)).to.be.ok;
-        expect(sync.delete.getCall(0)).to.be.ok;
+        expect(sync.post.getCall(0)).to.not.be.ok;
+        expect(sync.patch.getCall(0)).to.not.be.ok;
+        expect(sync.delete.getCall(0)).to.not.be.ok;
       });
 
     });
