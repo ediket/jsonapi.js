@@ -166,7 +166,7 @@ describe('Pool', function () {
       pool.commit();
       expect(pool.commits).to.has.length(1);
       let commit = pool.commits[0];
-      expect(_.values(commit)).to.has.length(2);
+      expect(_.values(commit)).to.has.length(1);
       expect(_.find(commit, staged1)).to.be.ok;
       expect(_.find(commit, staged2)).to.be.ok;
 
@@ -316,6 +316,19 @@ describe('Pool', function () {
 
     it('should handle POST', function () {
 
+      sync.post.withArgs('/foo/').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
+
       pool.addRemote('foo', '/foo/')
       pool.add(new Resource({
         type: 'foo',
@@ -340,18 +353,27 @@ describe('Pool', function () {
 
     it('should handle DELETE', function () {
 
-      pool.addRemote('foo', '/foo/')
-      pool.rm(new Resource({
-        type: 'foo',
-        id: 1,
-        content: 'test',
-        links: {
-          self: '/foo/1'
-        }
-      }));
-      pool.commit();
+      sync.get.withArgs('/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'will be deleted',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
 
-      return Q.fcall(() => pool.push())
+      pool.addRemote('foo', '/foo/')
+
+      return Q.fcall(() => pool.pull('foo', 1))
+      .then(resource => {
+        pool.rm(resource);
+        pool.commit();
+      })
+      .then(() => pool.push())
       .then(() => {
         expect(sync.delete.getCall(0)).to.be.ok;
         expect(sync.delete.getCall(0).args[0])
@@ -362,18 +384,42 @@ describe('Pool', function () {
 
     it('should handle PATCH', function () {
 
-      pool.addRemote('foo', '/foo/')
-      pool.add(new Resource({
-        type: 'foo',
-        id: 1,
-        content: 'test',
-        links: {
-          self: '/foo/1'
-        }
-      }));
-      pool.commit();
+      sync.get.withArgs('/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
 
-      return Q.fcall(() => pool.push())
+      sync.patch.withArgs('/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
+
+      pool.addRemote('foo', '/foo/')
+      return Q.fcall(() => pool.pull('foo', 1))
+      .then(resource => {
+        resource.set({
+          'content': 'patch data'
+        });
+        pool.add(resource);
+        pool.commit();
+      })
+      .then(() => pool.push())
       .then(() => {
         expect(sync.patch.getCall(0)).to.be.ok;
         expect(sync.patch.getCall(0).args[0])
@@ -382,7 +428,7 @@ describe('Pool', function () {
           data: {
             type: 'foo',
             id: 1,
-            content: 'test',
+            content: 'patch data',
             links: {
               self: '/foo/1'
             }
@@ -407,7 +453,7 @@ describe('Pool', function () {
         })
       );
 
-      sync.patch.withArgs('/foo/').returns(
+      sync.patch.withArgs('/foo/1').returns(
         promiseValue({
           data: {
             type: 'foo',
