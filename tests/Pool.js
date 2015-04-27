@@ -276,6 +276,102 @@ describe('Pool', function () {
 
   });
 
+  describe('#pullByLink', function () {
+
+    it('should fetch remote resource', function () {
+
+      sync.get.withArgs('/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'hello world',
+            links: {
+              self: '/foo/1',
+              bar: '/foo/1/bar/2'
+            }
+          }
+        })
+      );
+
+      sync.get.withArgs('/foo/1/bar/2').returns(
+        promiseValue({
+          data: {
+            type: 'bar',
+            id: 2,
+            content: 'bar content',
+            links: {
+              self: '/bar/2',
+              wow: {
+                related: '/bar/2/wow/',
+                self: '/bar/2/links/wow/',
+                linkage: {
+                  type: 'wow',
+                  id: 3
+                }
+              }
+            }
+          }
+        })
+      );
+
+      sync.get.withArgs('/wow/3').returns(
+        promiseValue({
+          data: {
+            type: 'wow',
+            id: 3,
+            content: 'wow content',
+            links: {
+              self: '/wow/3'
+            }
+          }
+        })
+      );
+
+      pool.addRemote('foo', '/foo/')
+      pool.addRemote('wow', '/wow/')
+
+      return Q.fcall(() => pool.pull('foo', 1))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        return pool.pullByLink(resource.getLink('bar'));
+      })
+      .then(() => {
+        let resource = pool.get('bar', 2);
+        return pool.pullByLink(resource.getLink('wow'));
+        expect(resource.serialize()).to.deep.equal({
+          type: 'bar',
+          id: 2,
+          content: 'bar content',
+          links: {
+            self: '/bar/2',
+            wow: {
+              related: '/bar/2/wow/',
+              self: '/bar/2/links/wow/',
+              linkage: {
+                type: 'wow',
+                id: 3
+              }
+            }
+          }
+        })
+      })
+      .then(() => {
+        let resource = pool.get('wow', 3);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'wow',
+          id: 3,
+          content: 'wow content',
+          links: {
+            self: '/wow/3'
+          }
+        })
+      });
+
+    });
+
+  });
+
   describe('#get', function () {
 
     it('should get resource in pool', function () {
