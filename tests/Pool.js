@@ -65,7 +65,7 @@ describe('Pool', function () {
 
       let serialized = resource.serialize();
 
-      pool.add(resource)
+      pool.add(resource);
 
       let staged = pool.getStaged(resource);
       expect(staged).to.deep.equal(serialized);
@@ -214,7 +214,7 @@ describe('Pool', function () {
 
   });
 
-  describe('#clone', function () {
+  describe('#pull', function () {
 
     it('should fetch remote resource', function () {
 
@@ -233,13 +233,39 @@ describe('Pool', function () {
 
       pool.addRemote('foo', '/foo/')
 
-      return Q.fcall(() => pool.clone('foo', 1))
+      return Q.fcall(() => pool.pull('foo', 1))
       .then(() => {
         let resource = pool.get('foo', 1);
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
           content: 'hello world',
+          links: {
+            self: '/foo/1'
+          }
+        })
+      })
+      .then(() => {
+        sync.get.withArgs('/foo/1').returns(
+          promiseValue({
+            data: {
+              type: 'foo',
+              id: 1,
+              content: 'wow world',
+              links: {
+                self: '/foo/1'
+              }
+            }
+          })
+        );
+      })
+      .then(() => pool.pull('foo', 1))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          content: 'wow world',
           links: {
             self: '/foo/1'
           }
@@ -269,7 +295,7 @@ describe('Pool', function () {
 
       pool.addRemote('foo', '/foo/');
 
-      return Q.fcall(() => pool.clone('foo', 1))
+      return Q.fcall(() => pool.pull('foo', 1))
       .then(() => {
         let resource = pool.get('foo', 1);
         expect(resource.serialize()).to.deep.equal({
