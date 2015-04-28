@@ -433,8 +433,18 @@ describe('Pool', function () {
           links: {
             self: '/foo/1'
           }
-        })
-      });
+        });
+        let resources = pool.get('foo');
+        expect(resources.length).to.equal(1);
+        expect(resources[0].serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          content: 'hello world',
+          links: {
+            self: '/foo/1'
+          }
+        });
+      })
 
     });
 
