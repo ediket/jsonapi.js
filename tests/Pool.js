@@ -274,6 +274,38 @@ describe('Pool', function () {
 
     });
 
+    it('should fetch multiple remote resource', function () {
+
+      sync.get.withArgs('/foo/').returns(
+        promiseValue({
+          data: [{
+            type: 'foo',
+            id: 1,
+            content: 'hello world',
+            links: {
+              self: '/foo/1'
+            }
+          }]
+        })
+      );
+
+      pool.addRemote('foo', '/foo/')
+
+      return Q.fcall(() => pool.pull('foo'))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          content: 'hello world',
+          links: {
+            self: '/foo/1'
+          }
+        })
+      });
+
+    });
+
   });
 
   describe('#pullByLink', function () {
