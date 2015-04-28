@@ -161,6 +161,12 @@ var Pool = (function () {
     key: 'get',
     value: function get(type, id) {
 
+      if (id === undefined) {
+        return _import2['default'].filter(this.pool, function (resource) {
+          return resource.get('type') === type;
+        });
+      }
+
       return _import2['default'].find(this.pool, function (resource) {
         return resource.get('type') === type && resource.get('id') === id;
       });
