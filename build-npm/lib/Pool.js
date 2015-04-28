@@ -220,10 +220,7 @@ var Pool = (function () {
       }
 
       return this.sync.get(url, options).then(function (response) {
-        var data = _this4._fromResponse(response);
-        var resource = _this4.get(data.type, data.id);
-        var rid = resource ? resource.rid : undefined;
-        return _this4._saveResponse(response, rid);
+        return _this4._saveResponse(response);
       });
     }
   }, {
@@ -276,8 +273,21 @@ var Pool = (function () {
     key: '_saveResponse',
     value: function _saveResponse(response, rid) {
 
-      var data = response.data;
-      var resource = this.pool[rid];
+      return this._saveData(this._fromResponse(response), rid);
+    }
+  }, {
+    key: '_saveData',
+    value: function _saveData(data, rid) {
+      var _this6 = this;
+
+      if (_import2['default'].isArray(data)) {
+        return _import2['default'].map(data, function (data) {
+          return _this6._saveData(data);
+        });
+      }
+
+      var resource = rid !== undefined ? this.pool[rid] : this.get(data.type, data.id);
+
       if (!resource) {
         resource = new _Resource2['default'](data);
       } else {
