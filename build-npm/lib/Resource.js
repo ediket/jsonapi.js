@@ -79,14 +79,14 @@ var Resource = (function () {
     key: 'serialize',
     value: function serialize() {
 
-      var result = this.attributes;
+      var result = _import2['default'].clone(this.attributes, true);
       result.links = this.links;
 
       if (_import2['default'].isEmpty(result.links)) {
         delete result.links;
       }
 
-      return _import2['default'].clone(result, true);
+      return result;
     }
   }, {
     key: 'deserialize',
