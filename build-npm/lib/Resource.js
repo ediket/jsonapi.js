@@ -6,10 +6,6 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _inherits = function (subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
-
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
@@ -18,89 +14,109 @@ var _import = require('lodash');
 
 var _import2 = _interopRequireWildcard(_import);
 
-var _Model2 = require('backbone');
-
 var _uuid = require('node-uuid');
 
 var _uuid2 = _interopRequireWildcard(_uuid);
 
-var isValidAttrs = function isValidAttrs(data) {
-  return data && data.type;
-};
-
-var Resource = (function (_Model) {
-  function Resource(attributes, options) {
+var Resource = (function () {
+  function Resource(attributes) {
     _classCallCheck(this, Resource);
 
-    options = options || {};
-    _import2['default'].defaults(options, { parse: true });
+    this.attributes = {};
+    this.links = {};
+    this.rid = _uuid2['default'].v4();
 
-    _get(Object.getPrototypeOf(Resource.prototype), 'constructor', this).call(this, attributes, options);
-
-    if (!this.id) {
-      this.id = _uuid2['default'].v4();
-    }
-    if (!this.getLink('self')) {
-      var json = this.toJSON();
-      this.setLink('self', '/' + json.type + '/' + this.id);
-    }
+    this.deserialize(attributes);
   }
 
-  _inherits(Resource, _Model);
-
   _createClass(Resource, [{
-    key: 'setLink',
-    value: function setLink(key, resource) {
+    key: 'get',
+    value: function get(key) {
 
-      var url = _import2['default'].isString(resource) ? resource : resource.getLink('self');
-      this.links[key] = url;
-      this.trigger('add:link', key, this.links[key]);
+      return this.attributes[key];
     }
   }, {
-    key: 'removeLink',
-    value: function removeLink(key) {
+    key: 'set',
+    value: function set(attributes) {
 
-      if (key === 'self') {
-        throw new Error('self link is not able to removed!');
-      }
-      var removedLink = this.links[key];
-      delete this.links[key];
-      this.trigger('remove:link', key, removedLink);
+      _import2['default'].extend(this.attributes, attributes);
+    }
+  }, {
+    key: 'unset',
+    value: function unset(key) {
+
+      delete this.attributes[key];
     }
   }, {
     key: 'getLink',
     value: function getLink(key) {
 
+      key = key || 'self';
       return this.links[key];
     }
   }, {
-    key: 'parse',
-    value: function parse(data) {
+    key: 'setLink',
+    value: function setLink(links) {
 
-      if (!isValidAttrs(data)) {
-        throw new Error('invalid data! type should be provided');
+      _import2['default'].extend(this.links, links);
+    }
+  }, {
+    key: 'unsetLink',
+    value: function unsetLink(key) {
+
+      delete this.links[key];
+    }
+  }, {
+    key: 'getLinkage',
+    value: function getLinkage() {
+
+      return {
+        type: this.attributes.type,
+        id: this.attributes.id
+      };
+    }
+  }, {
+    key: 'serialize',
+    value: function serialize() {
+
+      var result = this.attributes;
+      result.links = this.links;
+
+      if (_import2['default'].isEmpty(result.links)) {
+        delete result.links;
       }
-      this.links = data.links || {};
-      return _import2['default'].omit(data, 'links');
+
+      return _import2['default'].clone(result, true);
     }
   }, {
     key: 'deserialize',
-    value: function deserialize() {
+    value: function deserialize(serialized) {
 
-      var data = _import2['default'].clone(this.attributes, true);
-      data.links = _import2['default'].clone(this.links, true);
-      return data;
+      if (!this._validateSerialized(serialized)) {
+        throw new Error('invalid data! type should be provided');
+      }
+
+      this.set(_import2['default'].clone(_import2['default'].omit(serialized, 'links'), true));
+      this.setLink(serialized.links);
     }
   }, {
     key: 'clone',
     value: function clone() {
 
-      return new Resource(this.deserialize(), { parse: true });
+      var resource = new Resource(this.serialize());
+      resource.uuid = this.uuid;
+      return resource;
+    }
+  }, {
+    key: '_validateSerialized',
+    value: function _validateSerialized(serialized) {
+
+      return serialized && serialized.type;
     }
   }]);
 
   return Resource;
-})(_Model2.Model);
+})();
 
 exports['default'] = Resource;
 module.exports = exports['default'];

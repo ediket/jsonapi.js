@@ -26834,4 +26834,17 @@ return Q;
 });
 
 }).call(this,require('_process'))
-},{"_process":2}]},{},[]);
+},{"_process":2}],"url-join":[function(require,module,exports){
+function normalize (str) {
+  return str
+          .replace(/[\/]+/g, '/')
+          .replace(/\/\?/g, '?')
+          .replace(/\/\#/g, '#')
+          .replace(/\:\//g, '://');
+}
+
+module.exports = function () {
+  var joined = [].slice.call(arguments, 0).join('/');
+  return normalize(joined);
+};
+},{}]},{},[]);
