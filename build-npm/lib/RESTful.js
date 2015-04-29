@@ -22,13 +22,6 @@ var _Response = require('./Response');
 
 var _Response2 = _interopRequireWildcard(_Response);
 
-var ajaxOptions = {
-
-  contentType: 'application/json',
-  processData: true
-
-};
-
 var stringifyRequiredMethod = function stringifyRequiredMethod(method) {
   // these HTTP methods requires JSON.stringify
   return /^(POST|PUT|PATCH|DELETE)$/.test(method.toUpperCase());
@@ -36,10 +29,10 @@ var stringifyRequiredMethod = function stringifyRequiredMethod(method) {
 
 var makeAjaxRequest = function makeAjaxRequest(options) {
 
-  options = _import2['default'].extend({}, ajaxOptions, options);
+  options = options || {};
 
   if (stringifyRequiredMethod(options.type)) {
-    if (options.contentType === 'application/json') {
+    if (options.contentType === 'application/vnd.api+json') {
       options.data = JSON.stringify(options.data);
     }
   }
@@ -58,7 +51,7 @@ var makeAjaxRequest = function makeAjaxRequest(options) {
   });
 };
 
-exports['default'] = {
+var RESTful = {
 
   head: function head(url, data, options) {
 
@@ -66,7 +59,7 @@ exports['default'] = {
       url: url,
       type: 'HEAD',
       data: data
-    }, options);
+    }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   },
 
@@ -86,7 +79,7 @@ exports['default'] = {
       url: url,
       type: 'POST',
       data: data
-    }, options);
+    }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   },
 
@@ -96,7 +89,7 @@ exports['default'] = {
       url: url,
       type: 'PUT',
       data: data
-    }, options);
+    }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   },
 
@@ -106,7 +99,7 @@ exports['default'] = {
       url: url,
       type: 'PATCH',
       data: data
-    }, options);
+    }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   },
 
@@ -116,9 +109,18 @@ exports['default'] = {
       url: url,
       type: 'DELETE',
       data: data
-    }, options);
+    }, this.defaultOptions, options);
     return makeAjaxRequest(options);
+  },
+
+  defaultOptions: {
+
+    contentType: 'application/vnd.api+json',
+    processData: true
+
   }
 
 };
+
+exports['default'] = RESTful;
 module.exports = exports['default'];
