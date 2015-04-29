@@ -364,13 +364,10 @@ describe('Pool', function () {
       pool.addRemote('wow', '/wow/')
 
       return Q.fcall(() => pool.pull('foo', 1))
-      .then(() => {
-        let resource = pool.get('foo', 1);
+      .then(resource => {
         return pool.pullByLink(resource.getLink('bar'));
       })
-      .then(() => {
-        let resource = pool.get('bar', 2);
-        return pool.pullByLink(resource.getLink('wow'));
+      .then(resource => {
         expect(resource.serialize()).to.deep.equal({
           type: 'bar',
           id: 2,
@@ -386,10 +383,10 @@ describe('Pool', function () {
               }
             }
           }
-        })
+        });
+        return pool.pullByLink(resource.getLink('wow'));
       })
-      .then(() => {
-        let resource = pool.get('wow', 3);
+      .then(resource => {
         expect(resource.serialize()).to.deep.equal({
           type: 'wow',
           id: 3,
