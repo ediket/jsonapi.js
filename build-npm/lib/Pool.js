@@ -38,14 +38,11 @@ var Pool = (function () {
   function Pool(options) {
     _classCallCheck(this, Pool);
 
+    this.sync = _RESTful2['default'];
     this.resetAll();
   }
 
   _createClass(Pool, [{
-    key: 'sync',
-    value: undefined,
-    enumerable: true
-  }, {
     key: 'resetAll',
     value: function resetAll() {
 
