@@ -11,7 +11,7 @@
       "email": "asdfg852456@gmail.com"
     }
   ],
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Javascript implement of JSONAPI",
   "keywords": [
     "jsonapi",
@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "test": "mocha tests -w --recursive --compilers js:babel/register",
-    "build": "babel index.js -d build-npm; babel lib -d build-npm/lib; gulp build"
+    "build": "rm -rf build-npm; babel index.js -d build-npm; babel lib -d build-npm/lib; gulp build"
   },
   "license": "MIT",
   "dependencies": {
