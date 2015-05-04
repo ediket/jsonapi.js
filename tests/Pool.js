@@ -32,7 +32,7 @@ describe('Pool', function () {
 
     pool.sync = OriginSync;
 
-  })
+  });
 
   beforeEach(function () {
 
@@ -87,7 +87,7 @@ describe('Pool', function () {
       let serialized1 = resource1.serialize();
       let serialized2 = resource2.serialize();
 
-      pool.add([resource1, resource2])
+      pool.add([resource1, resource2]);
 
       let staged1 = pool.getStaged(resource1);
       let staged2 = pool.getStaged(resource2);
@@ -107,7 +107,7 @@ describe('Pool', function () {
         content: 'bar'
       });
 
-      pool.rm(resource)
+      pool.rm(resource);
       let staged = pool.getStaged(resource);
       expect(staged).to.deep.equal(null);
 
@@ -130,6 +130,154 @@ describe('Pool', function () {
       let staged2 = pool.getStaged(resource2);
       expect(staged1).to.deep.equal(null);
       expect(staged2).to.deep.equal(null);
+
+    });
+
+  });
+
+  describe('#addLinkage', function () {
+
+    it('should add not hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/')
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.addLinkage(resource1, 'bar', barLink, {
+        hasMany: false
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
+      });
+
+    });
+
+    it('should add hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/')
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.addLinkage(resource1, 'bar', barLink, {
+        hasMany: true
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 1
+          }]
+        });
+      });
+
+    });
+
+  });
+
+  describe('#rmLinkage', function () {
+
+    it('should remove not hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/');
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.rmLinkage(resource1, 'bar', barLink, {
+        hasMany: false
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let deleteCall = sync.delete.getCall(0);
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
+      });
+
+    });
+
+    it('should remove hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/');
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.rmLinkage(resource1, 'bar', barLink, {
+        hasMany: true
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let deleteCall = sync.delete.getCall(0);
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 1
+          }]
+        });
+      });
 
     });
 
@@ -170,7 +318,7 @@ describe('Pool', function () {
       expect(_.find(commit, staged1)).to.be.ok;
       expect(_.find(commit, staged2)).to.be.ok;
 
-    })
+    });
 
   });
 
@@ -206,7 +354,7 @@ describe('Pool', function () {
 
     it('should add remote url', function () {
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
 
       expect(pool.getRemote('foo')).to.equal('/foo/');
 
@@ -231,7 +379,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.pull('foo', 1))
       .then(() => {
@@ -243,7 +391,7 @@ describe('Pool', function () {
           links: {
             self: '/foo/1'
           }
-        })
+        });
       })
       .then(() => {
         sync.get.withArgs('/foo/1').returns(
@@ -269,7 +417,7 @@ describe('Pool', function () {
           links: {
             self: '/foo/1'
           }
-        })
+        });
       });
 
     });
@@ -289,7 +437,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.pull('foo'))
       .then(() => {
@@ -301,7 +449,7 @@ describe('Pool', function () {
           links: {
             self: '/foo/1'
           }
-        })
+        });
       });
 
     });
@@ -360,8 +508,8 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
-      pool.addRemote('wow', '/wow/')
+      pool.addRemote('foo', '/foo/');
+      pool.addRemote('wow', '/wow/');
 
       return Q.fcall(() => pool.pull('foo', 1))
       .then(resource => {
@@ -394,7 +542,7 @@ describe('Pool', function () {
           links: {
             self: '/wow/3'
           }
-        })
+        });
       });
 
     });
@@ -441,7 +589,7 @@ describe('Pool', function () {
             self: '/foo/1'
           }
         });
-      })
+      });
 
     });
 
@@ -464,7 +612,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
       pool.add(new Resource({
         type: 'foo',
         content: 'test'
@@ -501,7 +649,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.pull('foo', 1))
       .then(resource => {
@@ -545,7 +693,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
       return Q.fcall(() => pool.pull('foo', 1))
       .then(resource => {
         resource.set({
@@ -601,7 +749,7 @@ describe('Pool', function () {
         })
       );
 
-      pool.addRemote('foo', '/foo/')
+      pool.addRemote('foo', '/foo/');
 
       let resource = new Resource({
         type: 'foo',

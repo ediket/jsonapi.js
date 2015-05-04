@@ -49,6 +49,7 @@ var Pool = (function () {
       this.pool = {};
       this.blobs = {};
       this.staged = {};
+      this.stagedLink = [];
       this.remote = {};
       this.commits = [];
       this.remoteIndex = -1;
@@ -106,6 +107,41 @@ var Pool = (function () {
       return this.staged[rid];
     }
   }, {
+    key: 'rmLinkage',
+    value: function rmLinkage(resource, relation, linkage, options) {
+
+      return this._createLinkageOperation('remove', resource, relation, linkage, options);
+    }
+  }, {
+    key: 'addLinkage',
+    value: function addLinkage(resource, relation, linkage, options) {
+
+      return this._createLinkageOperation('add', resource, relation, linkage, options);
+    }
+  }, {
+    key: '_createLinkageOperation',
+    value: function _createLinkageOperation(op, resource, relation, linkage, options) {
+      var _this3 = this;
+
+      if (_import2['default'].isArray(linkage)) {
+        return _import2['default'].map(linkage, function (linkage) {
+          return _this3._createLinkageOperation(op, resource, relation, linkage, options);
+        });
+      }
+
+      var staged = {
+        op: op,
+        resource: resource,
+        relation: relation,
+        linkage: linkage,
+        options: options
+      };
+
+      this.stagedLink.push(staged);
+
+      return staged;
+    }
+  }, {
     key: 'getStaged',
     value: function getStaged(resource) {
 
@@ -124,7 +160,7 @@ var Pool = (function () {
   }, {
     key: 'commit',
     value: function commit() {
-      var _this3 = this;
+      var _this4 = this;
 
       var lastCommit = this.getCommit();
 
@@ -134,10 +170,15 @@ var Pool = (function () {
             delete commit[rid];
           }
         } else {
-          commit[rid] = _this3._createBlob(serialized);
+          commit[rid] = _this4._createBlob(serialized);
         }
         return commit;
       }, _import2['default'].clone(lastCommit, true));
+
+      _import2['default'].reduce(this.stagedLink, function (commit, linkOperation) {
+        commit[_uuid2['default'].v4()] = linkOperation;
+        return commit;
+      }, newCommit);
 
       this.commits.push(newCommit);
       this.staged = {};
@@ -150,9 +191,10 @@ var Pool = (function () {
     }
   }, {
     key: 'getRemote',
-    value: function getRemote(type, id) {
+    value: function getRemote(type, id, relation) {
 
-      return _urlJoin2['default'](this.remote[type], id);
+      var urlParts = _import2['default'].compact([this.remote[type], id, relation ? 'links' : undefined, relation]);
+      return _urlJoin2['default'].apply(null, urlParts);
     }
   }, {
     key: 'get',
@@ -216,20 +258,20 @@ var Pool = (function () {
   }, {
     key: 'pullByURL',
     value: function pullByURL(url, options) {
-      var _this4 = this;
+      var _this5 = this;
 
       if (!_import2['default'].isEmpty(this.staged)) {
         throw new Error('pull when staged change is not exist');
       }
 
       return this.sync.get(url, options).then(function (response) {
-        return _this4._saveResponse(response);
+        return _this5._saveResponse(response);
       });
     }
   }, {
     key: 'push',
     value: function push(idx) {
-      var _this5 = this;
+      var _this6 = this;
 
       idx = idx || this.commits.length - 1;
 
@@ -245,31 +287,72 @@ var Pool = (function () {
       var changedOrAdded = _import2['default'].without(_import2['default'].keys(afterCommit), _import2['default'].keys(removed));
 
       var deleteRequest = _import2['default'].map(removed, function (rid) {
-        var type = _this5.pool[rid].get('type');
-        var id = _this5.pool[rid].get('id');
+        // is Link
+        if (!_this6.pool[rid]) {
+          return;
+        }
+
+        var type = _this6.pool[rid].get('type');
+        var id = _this6.pool[rid].get('id');
         if (id) {
-          return _this5.sync['delete'](_this5.getRemote(type, id)).then(function (response) {});
+          return _this6.sync['delete'](_this6.getRemote(type, id)).then(function (response) {
+            delete _this6.pool[rid];
+          });
         }
       });
 
       var postOrPatchRequest = _import2['default'].map(changedOrAdded, function (rid) {
-        var type = _this5.pool[rid].get('type');
-        var id = _this5.pool[rid].get('id');
+        // is Link
+        if (!_this6.pool[rid]) {
+          return;
+        }
+
+        var type = _this6.pool[rid].get('type');
+        var id = _this6.pool[rid].get('id');
         var blob = afterCommit[rid];
         if (id) {
-          return _this5.sync.patch(_this5.getRemote(type, id), _this5._toRequest(blob)).then(function (response) {
-            return _this5._saveResponse(response, rid);
+          return _this6.sync.patch(_this6.getRemote(type, id), _this6._toRequest(blob)).then(function (response) {
+            return _this6._saveResponse(response, rid);
           });
         }
         if (!id) {
-          return _this5.sync.post(_this5.getRemote(type), _this5._toRequest(blob)).then(function (response) {
-            return _this5._saveResponse(response, rid);
+          return _this6.sync.post(_this6.getRemote(type), _this6._toRequest(blob)).then(function (response) {
+            return _this6._saveResponse(response, rid);
+          });
+        }
+      });
+
+      var linkOperationRequest = _import2['default'].map(afterCommit, function (staged, rid) {
+        // is resource
+        if (_this6.pool[rid] || !staged.op) {
+          return;
+        }
+
+        var type = staged.resource.get('type');
+        var id = staged.resource.get('id');
+        var options = _import2['default'].defaults(staged.options || {}, {
+          hasMany: true
+        });
+        var op = staged.op;
+        var relation = staged.relation;
+        var linkage = staged.linkage;
+        var requestBody = options.hasMany ? { data: [linkage] } : { data: linkage };
+
+        if (op === 'add') {
+          return _this6.sync.post(_this6.getRemote(type, id, relation), requestBody).then(function () {
+            return requestBody;
+          });
+        }
+
+        if (op === 'remove') {
+          return _this6.sync['delete'](_this6.getRemote(type, id, relation), requestBody).then(function () {
+            return requestBody;
           });
         }
       });
 
       return _Q2['default'].all(deleteRequest.concat(postOrPatchRequest)).then(function () {
-        _this5.setRemoteIndex();
+        _this6.setRemoteIndex();
       });
     }
   }, {
@@ -281,11 +364,11 @@ var Pool = (function () {
   }, {
     key: '_saveData',
     value: function _saveData(data, rid) {
-      var _this6 = this;
+      var _this7 = this;
 
       if (_import2['default'].isArray(data)) {
         return _import2['default'].map(data, function (data) {
-          return _this6._saveData(data);
+          return _this7._saveData(data);
         });
       }
 
@@ -328,5 +411,3 @@ var Pool = (function () {
 
 exports['default'] = Pool;
 module.exports = exports['default'];
-
-// delete this.pool[rid];
