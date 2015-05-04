@@ -135,6 +135,154 @@ describe('Pool', function () {
 
   });
 
+  describe('#addLinkage', function () {
+
+    it('should add not hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/')
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.addLinkage(resource1, 'bar', barLink, {
+        hasMany: false
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
+      });
+
+    });
+
+    it('should add hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/')
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.addLinkage(resource1, 'bar', barLink, {
+        hasMany: true
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 1
+          }]
+        });
+      });
+
+    });
+
+  });
+
+  describe('#rmLinkage', function () {
+
+    it('should remove not hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/');
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.rmLinkage(resource1, 'bar', barLink, {
+        hasMany: false
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let deleteCall = sync.delete.getCall(0);
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
+      });
+
+    });
+
+    it('should remove hasMany linkage to pool', function () {
+
+      pool.addRemote('test', '/test/');
+
+      let resource1 = new Resource({
+        type: 'test',
+        id: 1,
+        content: 'wow'
+      });
+
+      let barLink = {
+        type: 'bar',
+        id: 1
+      };
+
+      pool.rmLinkage(resource1, 'bar', barLink, {
+        hasMany: true
+      });
+
+      pool.commit();
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        let deleteCall = sync.delete.getCall(0);
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 1
+          }]
+        });
+      });
+
+    });
+
+  });
+
   describe('#commit', function () {
 
     it('should commit current staged files', function () {
