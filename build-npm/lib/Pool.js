@@ -1,6 +1,6 @@
 'use strict';
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
@@ -12,27 +12,27 @@ Object.defineProperty(exports, '__esModule', {
 
 var _import = require('lodash');
 
-var _import2 = _interopRequireWildcard(_import);
+var _import2 = _interopRequireDefault(_import);
 
 var _Q = require('q');
 
-var _Q2 = _interopRequireWildcard(_Q);
+var _Q2 = _interopRequireDefault(_Q);
 
 var _urlJoin = require('url-join');
 
-var _urlJoin2 = _interopRequireWildcard(_urlJoin);
+var _urlJoin2 = _interopRequireDefault(_urlJoin);
 
 var _uuid = require('node-uuid');
 
-var _uuid2 = _interopRequireWildcard(_uuid);
+var _uuid2 = _interopRequireDefault(_uuid);
 
 var _Resource = require('./Resource');
 
-var _Resource2 = _interopRequireWildcard(_Resource);
+var _Resource2 = _interopRequireDefault(_Resource);
 
 var _RESTful = require('./RESTful');
 
-var _RESTful2 = _interopRequireWildcard(_RESTful);
+var _RESTful2 = _interopRequireDefault(_RESTful);
 
 var Pool = (function () {
   function Pool(options) {

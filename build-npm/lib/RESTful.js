@@ -1,6 +1,6 @@
 'use strict';
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 
 Object.defineProperty(exports, '__esModule', {
   value: true
@@ -8,19 +8,19 @@ Object.defineProperty(exports, '__esModule', {
 
 var _$ = require('jquery');
 
-var _$2 = _interopRequireWildcard(_$);
+var _$2 = _interopRequireDefault(_$);
 
 var _import = require('lodash');
 
-var _import2 = _interopRequireWildcard(_import);
+var _import2 = _interopRequireDefault(_import);
 
 var _Q = require('q');
 
-var _Q2 = _interopRequireWildcard(_Q);
+var _Q2 = _interopRequireDefault(_Q);
 
 var _Response = require('./Response');
 
-var _Response2 = _interopRequireWildcard(_Response);
+var _Response2 = _interopRequireDefault(_Response);
 
 var stringifyRequiredMethod = function stringifyRequiredMethod(method) {
   // these HTTP methods requires JSON.stringify
@@ -118,6 +118,11 @@ var RESTful = {
     contentType: 'application/vnd.api+json',
     processData: true
 
+  },
+
+  ajaxSetup: function ajaxSetup(options) {
+
+    _$2['default'].ajaxSetup(options);
   }
 
 };

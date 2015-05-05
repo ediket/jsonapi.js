@@ -1,6 +1,6 @@
 'use strict';
 
-var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 
 Object.defineProperty(exports, '__esModule', {
   value: true
@@ -8,19 +8,19 @@ Object.defineProperty(exports, '__esModule', {
 
 var _Resource = require('./lib/Resource');
 
-var _Resource2 = _interopRequireWildcard(_Resource);
+var _Resource2 = _interopRequireDefault(_Resource);
 
 var _Pool = require('./lib/Pool');
 
-var _Pool2 = _interopRequireWildcard(_Pool);
+var _Pool2 = _interopRequireDefault(_Pool);
 
 var _RESTful = require('./lib/RESTful');
 
-var _RESTful2 = _interopRequireWildcard(_RESTful);
+var _RESTful2 = _interopRequireDefault(_RESTful);
 
 var _Transaction = require('./lib/Transaction');
 
-var _Transaction2 = _interopRequireWildcard(_Transaction);
+var _Transaction2 = _interopRequireDefault(_Transaction);
 
 exports.Transaction = _Transaction2['default'];
 exports.Resource = _Resource2['default'];

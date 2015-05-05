@@ -3220,7 +3220,7 @@ process.umask = function() { return 0; };
 
 },{"underscore":1}],"jquery":[function(require,module,exports){
 /*!
- * jQuery JavaScript Library v2.1.3
+ * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
  *
  * Includes Sizzle.js
@@ -3230,7 +3230,7 @@ process.umask = function() { return 0; };
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2014-12-18T15:11Z
+ * Date: 2015-04-28T16:01Z
  */
 
 (function( global, factory ) {
@@ -3288,7 +3288,7 @@ var
 	// Use the correct document accordingly with window argument (sandbox)
 	document = window.document,
 
-	version = "2.1.3",
+	version = "2.1.4",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -3752,7 +3752,12 @@ jQuery.each("Boolean Number String Function Array Date RegExp Object Error".spli
 });
 
 function isArraylike( obj ) {
-	var length = obj.length,
+
+	// Support: iOS 8.2 (not reproducible in simulator)
+	// `in` check used to prevent JIT error (gh-2145)
+	// hasOwn isn't used here due to false negatives
+	// regarding Nodelist length in IE
+	var length = "length" in obj && obj.length,
 		type = jQuery.type( obj );
 
 	if ( type === "function" || jQuery.isWindow( obj ) ) {
@@ -24939,57 +24944,67 @@ var nextTick =(function () {
     var flushing = false;
     var requestTick = void 0;
     var isNodeJS = false;
+    // queue for late tasks, used by unhandled rejection tracking
+    var laterQueue = [];
 
     function flush() {
         /* jshint loopfunc: true */
+        var task, domain;
 
         while (head.next) {
             head = head.next;
-            var task = head.task;
+            task = head.task;
             head.task = void 0;
-            var domain = head.domain;
+            domain = head.domain;
 
             if (domain) {
                 head.domain = void 0;
                 domain.enter();
             }
+            runSingle(task, domain);
 
-            try {
-                task();
+        }
+        while (laterQueue.length) {
+            task = laterQueue.pop();
+            runSingle(task);
+        }
+        flushing = false;
+    }
+    // runs a single function in the async queue
+    function runSingle(task, domain) {
+        try {
+            task();
 
-            } catch (e) {
-                if (isNodeJS) {
-                    // In node, uncaught exceptions are considered fatal errors.
-                    // Re-throw them synchronously to interrupt flushing!
+        } catch (e) {
+            if (isNodeJS) {
+                // In node, uncaught exceptions are considered fatal errors.
+                // Re-throw them synchronously to interrupt flushing!
 
-                    // Ensure continuation if the uncaught exception is suppressed
-                    // listening "uncaughtException" events (as domains does).
-                    // Continue in next event to avoid tick recursion.
-                    if (domain) {
-                        domain.exit();
-                    }
-                    setTimeout(flush, 0);
-                    if (domain) {
-                        domain.enter();
-                    }
-
-                    throw e;
-
-                } else {
-                    // In browsers, uncaught exceptions are not fatal.
-                    // Re-throw them asynchronously to avoid slow-downs.
-                    setTimeout(function() {
-                       throw e;
-                    }, 0);
+                // Ensure continuation if the uncaught exception is suppressed
+                // listening "uncaughtException" events (as domains does).
+                // Continue in next event to avoid tick recursion.
+                if (domain) {
+                    domain.exit();
                 }
-            }
+                setTimeout(flush, 0);
+                if (domain) {
+                    domain.enter();
+                }
 
-            if (domain) {
-                domain.exit();
+                throw e;
+
+            } else {
+                // In browsers, uncaught exceptions are not fatal.
+                // Re-throw them asynchronously to avoid slow-downs.
+                setTimeout(function () {
+                    throw e;
+                }, 0);
             }
         }
 
-        flushing = false;
+        if (domain) {
+            domain.exit();
+        }
     }
 
     nextTick = function (task) {
@@ -25005,9 +25020,16 @@ var nextTick =(function () {
         }
     };
 
-    if (typeof process !== "undefined" && process.nextTick) {
-        // Node.js before 0.9. Note that some fake-Node environments, like the
-        // Mocha test runner, introduce a `process` global without a `nextTick`.
+    if (typeof process === "object" &&
+        process.toString() === "[object process]" && process.nextTick) {
+        // Ensure Q is in a real Node environment, with a `process.nextTick`.
+        // To see through fake Node environments:
+        // * Mocha test runner - exposes a `process` global without a `nextTick`
+        // * Browserify - exposes a `process.nexTick` function that uses
+        //   `setTimeout`. In this case `setImmediate` is preferred because
+        //    it is faster. Browserify's `process.toString()` yields
+        //   "[object Object]", while in a real Node environment
+        //   `process.nextTick()` yields "[object process]".
         isNodeJS = true;
 
         requestTick = function () {
@@ -25051,7 +25073,16 @@ var nextTick =(function () {
             setTimeout(flush, 0);
         };
     }
-
+    // runs a task after all other tasks have been run
+    // this is useful for unhandled rejection tracking that needs to happen
+    // after all `then`d tasks have been run.
+    nextTick.runAfter = function (task) {
+        laterQueue.push(task);
+        if (!flushing) {
+            flushing = true;
+            requestTick();
+        }
+    };
     return nextTick;
 })();
 
@@ -25545,9 +25576,9 @@ Promise.prototype.join = function (that) {
  */
 Q.race = race;
 function race(answerPs) {
-    return promise(function(resolve, reject) {
+    return promise(function (resolve, reject) {
         // Switch to this once we can assume at least ES5
-        // answerPs.forEach(function(answerP) {
+        // answerPs.forEach(function (answerP) {
         //     Q(answerP).then(resolve, reject);
         // });
         // Use this in the meantime
@@ -25845,6 +25876,7 @@ Promise.prototype.isRejected = function () {
 // shimmed environments, this would naturally be a `Set`.
 var unhandledReasons = [];
 var unhandledRejections = [];
+var reportedUnhandledRejections = [];
 var trackUnhandledRejections = true;
 
 function resetUnhandledRejections() {
@@ -25859,6 +25891,14 @@ function resetUnhandledRejections() {
 function trackRejection(promise, reason) {
     if (!trackUnhandledRejections) {
         return;
+    }
+    if (typeof process === "object" && typeof process.emit === "function") {
+        Q.nextTick.runAfter(function () {
+            if (array_indexOf(unhandledRejections, promise) !== -1) {
+                process.emit("unhandledRejection", reason, promise);
+                reportedUnhandledRejections.push(promise);
+            }
+        });
     }
 
     unhandledRejections.push(promise);
@@ -25876,6 +25916,15 @@ function untrackRejection(promise) {
 
     var at = array_indexOf(unhandledRejections, promise);
     if (at !== -1) {
+        if (typeof process === "object" && typeof process.emit === "function") {
+            Q.nextTick.runAfter(function () {
+                var atReport = array_indexOf(reportedUnhandledRejections, promise);
+                if (atReport !== -1) {
+                    process.emit("rejectionHandled", unhandledReasons[at], promise);
+                    reportedUnhandledRejections.splice(atReport, 1);
+                }
+            });
+        }
         unhandledRejections.splice(at, 1);
         unhandledReasons.splice(at, 1);
     }
@@ -26403,7 +26452,7 @@ function any(promises) {
 
     var deferred = Q.defer();
     var pendingCount = 0;
-    array_reduce(promises, function(prev, current, index) {
+    array_reduce(promises, function (prev, current, index) {
         var promise = promises[index];
 
         pendingCount++;
@@ -26432,7 +26481,7 @@ function any(promises) {
     return deferred.promise;
 }
 
-Promise.prototype.any = function() {
+Promise.prototype.any = function () {
     return any(this);
 };
 
