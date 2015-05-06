@@ -265,6 +265,22 @@ var Pool = (function () {
         throw new Error('pull when staged change is not exist');
       }
 
+      options = options || {};
+
+      var included = options.included;
+      if (included) {
+        options.included = included.join(',');
+      }
+
+      var fields = options.fields;
+      if (fields) {
+        _import2['default'].reduce(fields, function (options, fields, type) {
+          options['fields[' + type + ']'] = fields.join(',');
+          return options;
+        }, options);
+        delete options.fields;
+      }
+
       return this.sync.get(url, options).then(function (response) {
         return _this5._saveResponse(response);
       });
@@ -364,17 +380,22 @@ var Pool = (function () {
   }, {
     key: '_saveResponse',
     value: function _saveResponse(response, rid) {
+      var _this7 = this;
 
-      return this._saveData(this._fromResponse(response), rid);
+      var mainResource = this._saveData(response.data, rid);
+      var includedResources = _import2['default'].map(response.included, function (data) {
+        return _this7._saveData(data);
+      });
+      return mainResource;
     }
   }, {
     key: '_saveData',
     value: function _saveData(data, rid) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (_import2['default'].isArray(data)) {
         return _import2['default'].map(data, function (data) {
-          return _this7._saveData(data);
+          return _this8._saveData(data);
         });
       }
 
@@ -403,12 +424,6 @@ var Pool = (function () {
       return {
         data: serialized
       };
-    }
-  }, {
-    key: '_fromResponse',
-    value: function _fromResponse(response) {
-
-      return response.data;
     }
   }]);
 

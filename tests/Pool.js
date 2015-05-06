@@ -454,6 +454,52 @@ describe('Pool', function () {
 
     });
 
+    it('should handle included resource', function () {
+
+      sync.get.withArgs('/foo/').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            links: {
+              self: '/foo/1',
+              barlink: {
+                linkage: {
+                  type: 'bar',
+                  id: 2
+                },
+                related: '/foo/1/bar'
+              }
+            }
+          },
+          included: [{
+            type: 'bar',
+            id: 2,
+            links: {
+              self: '/bar/2'
+            }
+          }]
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.pull('foo', undefined, {
+        included: ['bar']
+      }))
+      .then(() => {
+        let resource = pool.get('bar', 2);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'bar',
+          id: 2,
+          links: {
+            self: '/bar/2'
+          }
+        });
+      });
+
+    });
+
   });
 
   describe('#pullByLink', function () {
