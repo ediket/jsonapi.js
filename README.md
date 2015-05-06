@@ -1,8 +1,7 @@
 # jsonapi.js
 
 __jsonapi.js__ is a Javascript implement of [jsonapi](http://jsonapi.org/).
-
-inspired by [Orbit.js](https://github.com/orbitjs/orbit.js). 
+It has simple interface like [Git](http://www.git-scm.com/).
 
 ## Installation
 
@@ -18,152 +17,62 @@ bower install jsonapi.js
 
 ## Usage
 
-if you want to use client side feature, use like this.
 ```javascript 
-var memoryPool = new JSONAPI.MemoryPool();
+var pool = new JSONAPI.Pool();
+pool.addRemote('foo', '/api/foo/');
 
-memoryPool.create({
+var resource = new Resource({
   type: 'foo',
-  content: 'hello'
-})
-.then(function (resource) {
-  return memoryPool.patch(resource, {
-    content: 'wow'
-  })
-})
-.then(function (resource) {
-  return memoryPool.remove(resource);
+  content: 'foo'
 });
 
-memoryPool.create({
-  type: 'bar',
+pool.add(resource);
+pool.commit();
+// it will make POST request.
+pool.push()
+.then(function () {
+  // it will make GET request.
+  return pool.pull('foo', resource.get('id'));
+});
+.then(function (fooResource) {
+  var isSame = pool.get(
+    fooResource.get('type'), 
+    fooResource.get('id')
+  ) === fooResource; // true
+  
+  fooResource.set({
+    'content': 'bar'
+  });
+  pool.add(fooResource);
+  pool.commit();
+  // it will make PATCH request.
+  return pool.push();
+})
+.then(function () {
+  var fooResource = pool.get('foo', 2);
+  
+  pool.rm(fooResource);
+  pool.commit()
+  // it will make DELETE request.
+  return pool.push();
+});
+
+
+var resource1 = new Resource({
+  type: 'foo',
+  id: 1,
   content: 'wow'
-})
-.then(function (resource) {
-  return memoryPool.find(function (findedResource) {
-    return findedResource.toJSON().content === resource.content;
-  });
-})
-.then(function (resource) {
-  // do something
-});
-```
-
-if you want to use HTTP RESTful feature, just use like this.
-```javascript 
-var restPool = new JSONAPI.RestPool([], {
-  typeToUrl: {
-    "foo": "/foo/"
-  }
 });
 
-/* 
-    POST /foo/
-    Content-Type: application/vnd.api+json
-    Accept: application/vnd.api+json
-
-    { 
-        "data": { 
-            "type": "foo", 
-            "content": "hello"  
-        }
-    }
-*/
-restPool.create({  
-  type: 'foo',
-  content: 'hello'
-})
-/* 
-    PATCH /foo/1
-    Content-Type: application/vnd.api+json
-    Accept: application/vnd.api+json
-
-    { 
-        "data": { 
-            "type": "foo", 
-            "id": "some-id"
-            "content": "wow",
-            "links": {
-                "self": "/foo/some-id"
-            }
-        }
-    }
-*/
-.then(function (resource) {  
-  return restPool.patch(resource, {
-    content: 'wow'
-  })
-})
-/* 
-    DELETE /foo/1
-*/
-.then(function (resource) {
-  return restPool.remove(resource);
+pool.addLinkage(resource1, 'bar', {
+  type: 'bar',
+  id: 1
+}, {
+  hasMany: true
 });
-
-/* 
-    GET /foo/1
-*/
-restPool.get('/resource/1')
-.then(function (resource) {
-  // do something
-});
-```
-
-if you want to collaborate them, use like this.
-```javascript 
-var memoryPool = new JSONAPI.MemoryPool();
-var restPool = new JSONAPI.RestPool([], {
-  typeToUrl: {
-    'foo': '/foo/'
-  }
-});
-var memory2RestConnector = new JSONAPI.PoolConnector(pools.memory, pools.rest);
-
-// fetch resource by GET request
-restPool.get(url)
-// and add to memoryPool
-.then(function (resource) {
-  return memoryPool.add(resource);
-});
-
-// create resource
-memoryPool.create({
-  type: 'foo',
-  content: 'bar'
-})
-// and make POST request
-.then(function (resource) {
-  return memory2RestConnector.flush()
-    .then(function () {
-      return resource;
-    });
-})
-// patch resource
-.then(function (resource) {
-  return memoryPool.patch(resource, {
-    type: 'foo',
-    content: 'bar'
-  });
-});
-// and make PATCH request
-.then(function (resource) {
-  return memory2RestConnector.flush()
-    .then(function () {
-      return resource;
-    });
-});
-// remove resource
-.then(function (resource) {
-  return memoryPool.remove(resource);
-});
-// and make DELETE request
-.then(function (resource) {
-  return memory2RestConnector.flush();
-});
-
-
-
+pool.commit();
+// it will make POST request to /api/foo/1/links/bar
+pool.push();
 ```
 
 # Contributing
