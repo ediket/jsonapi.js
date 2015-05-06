@@ -777,6 +777,46 @@ describe('Pool', function () {
 
     });
 
+    it('should not request anything', function () {
+
+      sync.post.withArgs('/foo/').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+      pool.add(new Resource({
+        type: 'foo',
+        content: 'test'
+      }));
+      pool.commit();
+
+      return Q.fcall(() => pool.push())
+      .then(() => {
+        sync.get.reset();
+        sync.post.reset();
+        sync.patch.reset();
+        sync.delete.reset();
+        pool.commit();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        expect(sync.get.getCall(0)).to.not.be.ok;
+        expect(sync.post.getCall(0)).to.not.be.ok;
+        expect(sync.patch.getCall(0)).to.not.be.ok;
+        expect(sync.delete.getCall(0)).to.not.be.ok;
+      })
+
+    });
+
   });
 
 });
