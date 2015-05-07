@@ -32,7 +32,7 @@ var makeAjaxRequest = function makeAjaxRequest(options) {
   options = options || {};
 
   if (stringifyRequiredMethod(options.type)) {
-    if (options.contentType === 'application/vnd.api+json') {
+    if (options.contentType === 'application/json') {
       options.data = JSON.stringify(options.data);
     }
   }
@@ -115,7 +115,7 @@ var RESTful = {
 
   defaultOptions: {
 
-    contentType: 'application/vnd.api+json',
+    contentType: 'application/json',
     processData: true
 
   },
