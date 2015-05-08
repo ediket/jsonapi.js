@@ -1,13 +1,13 @@
 {
   "name": "jsonapi.js",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "homepage": "https://github.com/ironhee/jsonapi.js",
   "authors": [
     "ironhee <iron@ediket.com>",
     "jeongsd <asdfg852456@gmail.com>"
   ],
   "description": "Javascript implement of JSONAPI",
-  "main": "./build-bower/jsonapi.js",
+  "main": "build-bower/jsonapi.js",
   "keywords": [
     "jsonapi",
     "resource",
@@ -29,6 +29,7 @@
     "jquery": "^2.1.3",
     "lodash": "^3.6.0",
     "node-uuid": "^1.4.3",
-    "q": "^1.2.0"
+    "q": "^1.2.0",
+    "url-join": "0.0.1"
   }
 }
