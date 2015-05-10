@@ -81,7 +81,7 @@ Install Dependencies: __mocha__ & __gulp__ & __babel__
 ```bash
 npm install -g mocha
 npm install -g gulp
-npm install -g babel
+npm install -g webpack
 ```  
 
 watch test

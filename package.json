@@ -11,7 +11,7 @@
       "email": "asdfg852456@gmail.com"
     }
   ],
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Javascript implement of JSONAPI",
   "keywords": [
     "jsonapi",
@@ -21,13 +21,10 @@
     "model",
     "linkage"
   ],
-  "main": "build-npm/index.js",
-  "files": [
-    "build-npm"
-  ],
+  "main": "build-npm/jsonapi.js",
   "scripts": {
-    "test": "mocha tests -w --recursive --compilers js:babel/register",
-    "build": "rm -rf build-npm; babel index.js -d build-npm; babel lib -d build-npm/lib; gulp build"
+    "test": "mocha tests/ -w --recursive --compilers js:babel/register",
+    "build": "rm -rf build-*; webpack --config webpack.npm.config.js; webpack --config webpack.bower.config.js; gulp;"
   },
   "license": "MIT",
   "dependencies": {
@@ -39,35 +36,18 @@
     "url-join": "0.0.1"
   },
   "devDependencies": {
-    "babel": "^5.1.10",
-    "babelify": "^6.0.2",
-    "browserify": "^9.0.8",
+    "babel-core": "^5.2.17",
+    "babel-loader": "^5.0.0",
     "chai": "^2.2.0",
     "gulp": "^3.8.11",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-watch": "^4.2.4",
-    "karma": "^0.12.31",
-    "karma-browserify": "^4.1.2",
-    "karma-chrome-launcher": "^0.1.8",
-    "karma-mocha": "^0.1.10",
-    "karma-mocha-reporter": "^1.0.2",
+    "main-bower-files": "^2.7.0",
     "mocha": "^2.2.4",
     "npm": "^2.8.3",
-    "run-sequence": "^1.0.2",
     "sinon": "^1.14.1",
-    "vinyl-source-stream": "^1.1.0"
+    "webpack": "^1.8.11"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ironhee/jsonapi.js.git"
-  },
-  "browserify": {
-    "debug": true,
-    "transform": [
-      "babelify"
-    ],
-    "extensions": [
-      ".js"
-    ]
   }
 }
