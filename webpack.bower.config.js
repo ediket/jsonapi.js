@@ -22,7 +22,7 @@ module.exports = {
     "lodash": "_",
     "node-uuid": "uuid",
     "q": "Q",
-    "url-join": "urlJoin"
+    "url-join": "urljoin"
   },
   module: {
     loaders: [

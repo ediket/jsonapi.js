@@ -11,7 +11,7 @@
       "email": "asdfg852456@gmail.com"
     }
   ],
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Javascript implement of JSONAPI",
   "keywords": [
     "jsonapi",
@@ -24,7 +24,7 @@
   "main": "build-npm/jsonapi.js",
   "scripts": {
     "test": "mocha tests/ -w --recursive --compilers js:babel/register",
-    "build": "rm -rf build-*; webpack --config webpack.npm.config.js; webpack --config webpack.bower.config.js; gulp;"
+    "build": "gulp build"
   },
   "license": "MIT",
   "dependencies": {
@@ -39,11 +39,16 @@
     "babel-core": "^5.2.17",
     "babel-loader": "^5.0.0",
     "chai": "^2.2.0",
+    "del": "^1.1.1",
     "gulp": "^3.8.11",
+    "gulp-util": "^3.0.4",
+    "gulp-concat": "^2.5.2",
+    "gulp-sourcemaps": "^1.5.2",
     "main-bower-files": "^2.7.0",
     "mocha": "^2.2.4",
     "npm": "^2.8.3",
     "sinon": "^1.14.1",
+    "vinyl-paths": "^1.0.0",
     "webpack": "^1.8.11"
   },
   "repository": {
