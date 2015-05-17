@@ -757,10 +757,7 @@ describe('Pool', function () {
           data: {
             type: 'foo',
             id: 1,
-            content: 'patch data',
-            links: {
-              self: '/foo/1'
-            }
+            content: 'patch data'
           }
         });
       });
