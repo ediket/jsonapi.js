@@ -820,6 +820,103 @@ describe('Pool', function () {
 
     });
 
+    it('should cancel commit when request is failed', function () {
+
+      sync.get.withArgs('/foo/1').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
+      );
+
+      sync.post.withArgs('/foo/').returns(
+        promiseValue({
+          errors: []
+        }, true)
+      );
+
+      sync.patch.withArgs('/foo/1').returns(
+        promiseValue({
+          errors: []
+        }, true)
+      );
+
+      sync.delete.withArgs('/foo/1').returns(
+        promiseValue({
+          errors: []
+        }, true)
+      );
+
+      pool.addRemote('foo', '/foo/');
+      return Q.fcall(() => pool.pull('foo', 1))
+      .then(resource => {
+        resource.set({
+          content: '123'
+        });
+        pool.add(resource);
+        pool.commit();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.get('content')).to.equal('test');
+      })
+      .then(() => {
+        sync.patch.reset();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        expect(sync.patch.getCall(0)).to.not.be.ok;
+      })
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        pool.rm(resource);
+        pool.commit();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.get('content')).to.equal('test');
+      })
+      .then(() => {
+        sync.delete.reset();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        expect(sync.delete.getCall(0)).to.not.be.ok;
+      })
+      .then(() => {
+        let resource = new Resource({
+          type: 'foo'
+        });
+        pool.add(resource);
+        pool.commit();
+        return resource;
+      })
+      .then(resource => {
+        pool.push();
+        return resource;
+      })
+      .then(resource => {
+        expect(pool.get(resource.get('type'), resource.get('id')))
+          .to.not.equal(resource);
+      })
+      .then(() => {
+        sync.post.reset();
+      })
+      .then(() => pool.push())
+      .then(() => {
+        expect(sync.post.getCall(0)).to.not.be.ok;
+      });
+
+    });
+
     it('should not request anything', function () {
 
       sync.post.withArgs('/foo/').returns(
@@ -856,7 +953,7 @@ describe('Pool', function () {
         expect(sync.post.getCall(0)).to.not.be.ok;
         expect(sync.patch.getCall(0)).to.not.be.ok;
         expect(sync.delete.getCall(0)).to.not.be.ok;
-      })
+      });
 
     });
 
