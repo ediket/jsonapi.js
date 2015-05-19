@@ -820,7 +820,42 @@ describe('Pool', function () {
 
     });
 
-    it('should cancel commit when request is failed', function () {
+    it('should cancel commit after POST when request is failed', function () {
+
+      sync.post.withArgs('/foo/').returns(
+        promiseValue({
+          errors: []
+        }, true)
+      );
+
+      pool.addRemote('foo', '/foo/');
+      return Q.fcall(() => {
+        let resource = new Resource({
+          type: 'foo'
+        });
+        pool.add(resource);
+        pool.commit();
+        return pool.push()
+        .then(
+          () => { throw new Error('should be rejected!'); },
+          () => resource
+        );
+      })
+      .then(resource => {
+        expect(pool.get(resource.get('type'), resource.get('id')))
+          .to.not.equal(resource);
+      })
+      .then(() => {
+        sync.post.reset();
+        return pool.push();
+      })
+      .then(() => {
+        expect(sync.post.getCall(0)).to.not.be.ok;
+      });
+
+    });
+
+    it('should cancel commit after PATCH when request is failed', function () {
 
       sync.get.withArgs('/foo/1').returns(
         promiseValue({
@@ -835,16 +870,54 @@ describe('Pool', function () {
         })
       );
 
-      sync.post.withArgs('/foo/').returns(
+      sync.patch.withArgs('/foo/1').returns(
         promiseValue({
           errors: []
         }, true)
       );
 
-      sync.patch.withArgs('/foo/1').returns(
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.pull('foo', 1))
+      .then(resource => {
+        resource.set({
+          content: '123'
+        });
+        pool.add(resource);
+        pool.commit();
+        return pool.push()
+        .then(
+          () => { throw new Error('should be rejected!'); },
+          () => resource
+        );
+      })
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.get('content')).to.equal('test');
+      })
+      .then(() => {
+        sync.patch.reset();
+        return pool.push();
+      })
+      .then(() => {
+        expect(sync.patch.getCall(0)).to.not.be.ok;
+      });
+
+    });
+
+    it('should cancel commit after DELETE when request is failed', function () {
+
+      sync.get.withArgs('/foo/1').returns(
         promiseValue({
-          errors: []
-        }, true)
+          data: {
+            type: 'foo',
+            id: 1,
+            content: 'test',
+            links: {
+              self: '/foo/1'
+            }
+          }
+        })
       );
 
       sync.delete.withArgs('/foo/1').returns(
@@ -855,64 +928,25 @@ describe('Pool', function () {
 
       pool.addRemote('foo', '/foo/');
       return Q.fcall(() => pool.pull('foo', 1))
-      .then(resource => {
-        resource.set({
-          content: '123'
-        });
-        pool.add(resource);
-        pool.commit();
-      })
-      .then(() => pool.push())
-      .then(() => {
-        let resource = pool.get('foo', 1);
-        expect(resource.get('content')).to.equal('test');
-      })
-      .then(() => {
-        sync.patch.reset();
-      })
-      .then(() => pool.push())
-      .then(() => {
-        expect(sync.patch.getCall(0)).to.not.be.ok;
-      })
       .then(() => {
         let resource = pool.get('foo', 1);
         pool.rm(resource);
         pool.commit();
+        return pool.push()
+        .then(
+          () => { throw new Error('should be rejected!'); },
+          () => resource
+        );
       })
-      .then(() => pool.push())
-      .then(() => {
-        let resource = pool.get('foo', 1);
-        expect(resource.get('content')).to.equal('test');
+      .then(resource => {
+        expect(pool.get('foo', 1).get('content')).to.equal('test');
       })
       .then(() => {
         sync.delete.reset();
+        return pool.push();
       })
-      .then(() => pool.push())
       .then(() => {
         expect(sync.delete.getCall(0)).to.not.be.ok;
-      })
-      .then(() => {
-        let resource = new Resource({
-          type: 'foo'
-        });
-        pool.add(resource);
-        pool.commit();
-        return resource;
-      })
-      .then(resource => {
-        pool.push();
-        return resource;
-      })
-      .then(resource => {
-        expect(pool.get(resource.get('type'), resource.get('id')))
-          .to.not.equal(resource);
-      })
-      .then(() => {
-        sync.post.reset();
-      })
-      .then(() => pool.push())
-      .then(() => {
-        expect(sync.post.getCall(0)).to.not.be.ok;
       });
 
     });
