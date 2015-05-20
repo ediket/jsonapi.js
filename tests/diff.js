@@ -141,4 +141,16 @@ describe('diff', function () {
 
   });
 
+  it('should diff long text', function () {
+
+    var delta = diff({
+      foo: _.times(80, () => 'a').join()
+    }, {
+      foo: _.times(80, () => 'b').join()
+    });
+
+    expect(delta.foo).to.deep.equal(_.times(80, () => 'b').join());
+
+  });
+
 });
