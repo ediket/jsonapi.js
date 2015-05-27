@@ -139,6 +139,15 @@ describe('Pool', function () {
 
     it('should add not hasMany linkage to pool', function () {
 
+      sync.post.withArgs('/test/1/links/bar').returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1
+          }
+        })
+      );
+
       pool.addRemote('test', '/test/');
 
       let resource1 = new Resource({
