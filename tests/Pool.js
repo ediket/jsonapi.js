@@ -139,7 +139,7 @@ describe('Pool', function () {
 
     it('should add not hasMany linkage to pool', function () {
 
-      pool.addRemote('test', '/test/')
+      pool.addRemote('test', '/test/');
 
       let resource1 = new Resource({
         type: 'test',
@@ -168,13 +168,31 @@ describe('Pool', function () {
             id: 1
           }
         });
+      })
+      .then(() => {
+        pool.addLinkage(resource1, 'bar', barLink, {
+          hasMany: false
+        });
+        pool.commit();
+        return pool.push();
+      })
+      .then(() => {
+        let postCall = sync.post.getCall(1);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
       });
 
     });
 
     it('should add hasMany linkage to pool', function () {
 
-      pool.addRemote('test', '/test/')
+      pool.addRemote('test', '/test/');
 
       let resource1 = new Resource({
         type: 'test',
@@ -234,6 +252,24 @@ describe('Pool', function () {
       return Q.fcall(() => pool.push())
       .then(() => {
         let deleteCall = sync.delete.getCall(0);
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        });
+      })
+      .then(() => {
+        pool.rmLinkage(resource1, 'bar', barLink, {
+          hasMany: false
+        });
+        pool.commit();
+        return pool.push();
+      })
+      .then(() => {
+        let deleteCall = sync.delete.getCall(1);
         expect(deleteCall).to.be.ok;
         expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
         expect(deleteCall.args[1]).to.deep.equal({
