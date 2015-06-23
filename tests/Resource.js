@@ -1,13 +1,14 @@
 import { expect } from 'chai';
-import matchJSON from './libs/matchJSON';
 import { Resource } from '../';
+
 
 describe('Resource', function() {
   it('should throw error when type is not provided', () => {
     expect(() => {
-      new Resource({
+      let resource = new Resource({
         content: 'foo'
       });
+      expect(resource).to.be.ok;
     }).to.throw(Error);
   });
 
@@ -15,12 +16,12 @@ describe('Resource', function() {
     let foo = new Resource({
       type: 'foo',
       id: 2,
-      content: 'foo'
+      attributes: {
+        content: 'foo'
+      }
     });
 
     expect(foo.attributes).to.deep.equal({
-      type: 'foo',
-      id: 2,
       content: 'foo'
     });
   });
@@ -33,95 +34,17 @@ describe('Resource', function() {
       }
     });
 
-    expect(foo.getLink('self')).to.equal('/foo/1');
+    expect(foo.links.self.href).to.equal('/foo/1');
   });
 
-  describe('#get', () => {
-    it('should return attribute', () => {
+  describe('#getIdentifier', () => {
+    it('should return it\'s identifier', () => {
       let foo = new Resource({
         type: 'foo',
-        a: 'b'
+        id: 1
       });
 
-      expect(foo.get('a')).to.equal('b');
-    });
-  });
-
-  describe('#set', () => {
-    it('should set attributes properly', () => {
-      let foo = new Resource({
-        type: 'foo'
-      });
-
-      foo.set({
-        a: 'b'
-      });
-
-      expect(foo.get('a')).to.equal('b');
-    });
-  });
-
-  describe('#getLink', () => {
-    it('should return link', () => {
-      let foo = new Resource({
-        type: 'foo',
-        links: {
-          self: '/foo/1'
-        }
-      });
-
-      expect(foo.getLink('self')).to.equal('/foo/1');
-    });
-  });
-
-  describe('#setLink', () => {
-    it('should set links properly', () => {
-      let foo = new Resource({
-        type: 'foo'
-      });
-
-      let bar = new Resource({
-        type: 'bar',
-        links: {
-          self: '/bar/1'
-        }
-      });
-
-      foo.setLink({
-        'barlink': bar.getLink()
-      });
-
-      expect(foo.getLink('barlink')).to.equal('/bar/1');
-    });
-  });
-
-  describe('#unsetLink', () => {
-    it('should unset link properly', () => {
-      let foo = new Resource({
-        type: 'foo',
-        links: {
-          self: '/foo/1',
-          test: '/test/1'
-        }
-      });
-
-      foo.unsetLink('test');
-
-      expect(foo.getLink('test')).to.be.empty;
-    });
-  });
-
-  describe('#getLinkage', () => {
-    it('should return it\'s linkage', () => {
-      let foo = new Resource({
-        type: 'foo',
-        id: 1,
-        links: {
-          self: '/foo/1'
-        }
-      });
-
-      expect(foo.getLinkage()).to.deep.equal({
+      expect(foo.getIdentifier()).to.deep.equal({
         type: 'foo',
         id: 1
       });
@@ -132,31 +55,41 @@ describe('Resource', function() {
     it('should serialize itself', () => {
       let newResource = new Resource({
         type: 'bar',
-        content: 'bar'
+        attributes: {
+          content: 'bar'
+        }
       });
 
       let savedResource = new Resource({
         id: 1,
         type: 'foo',
-        content: 'foo',
+        attributes: {
+          content: 'foo'
+        },
         links: {
           self: '/foo/1/'
         }
       });
 
-      expect(newResource.serialize()).to.satisfy(matchJSON({
+      expect(newResource.serialize()).to.deep.equal({
         type: 'bar',
-        content: 'bar'
-      }));
+        attributes: {
+          content: 'bar'
+        }
+      });
 
-      expect(savedResource.serialize()).to.satisfy(matchJSON({
+      expect(savedResource.serialize()).to.deep.equal({
         id: 1,
         type: 'foo',
-        content: 'foo',
+        attributes: {
+          content: 'foo'
+        },
         links: {
-          self: '/foo/1/'
+          self: {
+            href: '/foo/1/'
+          }
         }
-      }));
+      });
     });
   });
 
@@ -169,40 +102,26 @@ describe('Resource', function() {
       newResource.deserialize({
         id: 1,
         type: 'bar',
-        content: 'bar',
+        attributes: {
+          content: 'bar'
+        },
         links: {
           self: '/bar/1/'
         }
       });
 
-      expect(newResource.serialize()).to.satisfy(matchJSON({
+      expect(newResource.serialize()).to.deep.equal({
         id: 1,
         type: 'bar',
-        content: 'bar',
+        attributes: {
+          content: 'bar'
+        },
         links: {
-          self: '/bar/1/'
+          self: {
+            href: '/bar/1/'
+          }
         }
-      }));
-    });
-  });
-
-  describe('#clone', () => {
-    it('should clone itself', () => {
-      let resource = new Resource({
-        type: 'bar'
       });
-
-      let clonedResource = resource.clone();
-
-      expect(resource.serialize())
-        .to.deep.equal(clonedResource.serialize());
-
-      clonedResource.set({
-        content: 'wow'
-      });
-
-      expect(resource.get('content')).to.be.not.ok;
-      expect(clonedResource.get('content')).to.be.ok;
     });
   });
 });

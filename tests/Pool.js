@@ -42,12 +42,14 @@ describe('Pool', () => {
 
   describe('#fetch', () => {
     it('should fetch remote resource', () => {
-      sync.get.withArgs('/foo/1').returns(
+      sync.get.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
-            content: 'hello world',
+            attributes: {
+              content: 'hello world'
+            },
             links: {
               self: '/foo/1'
             }
@@ -63,21 +65,30 @@ describe('Pool', () => {
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'hello world',
+          attributes: {
+            content: 'hello world'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
+        let getCall = sync.get.getCall(0);
+        expect(getCall).to.be.ok;
+        expect(getCall.args[0]).to.equal('/foo/1');
       });
     });
 
     it('should fetch multiple remote resource', () => {
-      sync.get.withArgs('/foo/').returns(
+      sync.get.returns(
         promiseValue({
           data: [{
             type: 'foo',
             id: 1,
-            content: 'hello world',
+            attributes: {
+              content: 'hello world'
+            },
             links: {
               self: '/foo/1'
             }
@@ -93,28 +104,39 @@ describe('Pool', () => {
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'hello world',
+          attributes: {
+            content: 'hello world'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
+        let getCall = sync.get.getCall(0);
+        expect(getCall).to.be.ok;
+        expect(getCall.args[0]).to.equal('/foo/');
       });
     });
 
     it('should handle included resource', () => {
-      sync.get.withArgs('/foo/').returns(
+      sync.get.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
             links: {
-              self: '/foo/1',
+              self: '/foo/1'
+            },
+            relationships: {
               barlink: {
-                linkage: {
+                links: {
+                  related: '/foo/1/bar'
+                },
+                data: {
                   type: 'bar',
                   id: 2
-                },
-                related: '/foo/1/bar'
+                }
               }
             }
           },
@@ -139,23 +161,32 @@ describe('Pool', () => {
           type: 'bar',
           id: 2,
           links: {
-            self: '/bar/2'
+            self: {
+              href: '/bar/2'
+            }
           }
         });
+        let getCall = sync.get.getCall(0);
+        expect(getCall).to.be.ok;
+        expect(getCall.args[0]).to.equal('/foo/');
       });
     });
   });
 
   describe('#create', () => {
     it('should create resource', () => {
-      sync.post.withArgs('/foo/').returns(
+      sync.post.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
-            content: 'test',
+            attributes: {
+              content: 'bar'
+            },
             links: {
-              self: '/foo/1'
+              self: {
+                href: '/foo/1'
+              }
             }
           }
         })
@@ -164,30 +195,49 @@ describe('Pool', () => {
       pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.create('foo', {
-        content: 'bar'
+        attributes: {
+          content: 'bar'
+        }
       }))
       .then(resource => {
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'test',
+          attributes: {
+            content: 'bar'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
         expect(pool.get(resource.type, resource.id)).to.equal(resource);
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/foo/');
+        expect(postCall.args[1]).to.deep.equal({
+          data: {
+            type: 'foo',
+            attributes: {
+              content: 'bar'
+            }
+          }
+        });
       });
     });
   });
 
   describe('#remove', () => {
     it('should remove resource', () => {
-      sync.delete.withArgs('/foo/1').returns(
+      sync.delete.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
-            content: 'test',
+            attributes: {
+              content: 'test'
+            },
             links: {
               self: '/foo/1'
             }
@@ -200,7 +250,9 @@ describe('Pool', () => {
       return Q.fcall(() => pool.create('foo', {
         type: 'foo',
         id: 1,
-        content: 'bar'
+        attributes: {
+          content: 'bar'
+        }
       }, { sync: false }))
       .then(resource => pool.remove(resource.type, resource.id))
       .then(resource => {
@@ -214,12 +266,14 @@ describe('Pool', () => {
 
   describe('#update', () => {
     it('should update resource', () => {
-      sync.patch.withArgs('/foo/1').returns(
+      sync.patch.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
-            content: 'test',
+            attributes: {
+              content: 'test'
+            },
             links: {
               self: '/foo/1'
             }
@@ -232,31 +286,48 @@ describe('Pool', () => {
       return Q.fcall(() => pool.create('foo', {
         type: 'foo',
         id: 1,
-        content: 'bar'
+        attributes: {
+          content: 'bar'
+        }
       }, { sync: false }))
       .then(resource => pool.update(resource.type, resource.id, {
-        content: 'test'
+        attributes: {
+          content: 'test'
+        }
       }))
       .then(() => {
         let resource = pool.get('foo', 1);
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'test',
+          attributes: {
+            content: 'test'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
         let patchCall = sync.patch.getCall(0);
         expect(patchCall).to.be.ok;
         expect(patchCall.args[0]).to.equal('/foo/1');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: {
+            type: 'foo',
+            id: 1,
+            attributes: {
+              content: 'test'
+            }
+          }
+        });
       });
     });
   });
 
   describe('#createLinkage', () => {
     it('should create not hasMany linkage', () => {
-      sync.post.withArgs('/test/1/links/bar').returns(
+      sync.post.withArgs('/test/1/relationships/bar').returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -278,7 +349,7 @@ describe('Pool', () => {
       .then(() => {
         let postCall = sync.post.getCall(0);
         expect(postCall).to.be.ok;
-        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[0]).to.equal('/test/1/relationships/bar');
         expect(postCall.args[1]).to.deep.equal({
           data: {
             type: 'bar',
@@ -289,7 +360,7 @@ describe('Pool', () => {
     });
 
     it('should create hasMany linkage', () => {
-      sync.post.withArgs('/test/1/links/bar').returns(
+      sync.post.withArgs('/test/1/relationships/bar').returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -311,7 +382,7 @@ describe('Pool', () => {
       .then(() => {
         let postCall = sync.post.getCall(0);
         expect(postCall).to.be.ok;
-        expect(postCall.args[0]).to.equal('/test/1/links/bar');
+        expect(postCall.args[0]).to.equal('/test/1/relationships/bar');
         expect(postCall.args[1]).to.deep.equal({
           data: [{
             type: 'bar',
@@ -324,7 +395,7 @@ describe('Pool', () => {
 
   describe('#rmLinkage', () => {
     it('should remove not hasMany linkage to pool', () => {
-      sync.delete.withArgs('/test/1/links/bar').returns(
+      sync.delete.withArgs('/test/1/relationships/bar').returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -346,7 +417,7 @@ describe('Pool', () => {
       .then(() => {
         let deleteCall = sync.delete.getCall(0);
         expect(deleteCall).to.be.ok;
-        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[0]).to.equal('/test/1/relationships/bar');
         expect(deleteCall.args[1]).to.deep.equal({
           data: {
             type: 'bar',
@@ -357,7 +428,7 @@ describe('Pool', () => {
     });
 
     it('should remove hasMany linkage to pool', () => {
-      sync.delete.withArgs('/test/1/links/bar').returns(
+      sync.delete.withArgs('/test/1/relationships/bar').returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -379,7 +450,7 @@ describe('Pool', () => {
       .then(() => {
         let deleteCall = sync.delete.getCall(0);
         expect(deleteCall).to.be.ok;
-        expect(deleteCall.args[0]).to.equal('/test/1/links/bar');
+        expect(deleteCall.args[0]).to.equal('/test/1/relationships/bar');
         expect(deleteCall.args[1]).to.deep.equal({
           data: [{
             type: 'bar',
@@ -404,7 +475,9 @@ describe('Pool', () => {
           data: {
             type: 'foo',
             id: 1,
-            content: 'hello world',
+            attributes: {
+              content: 'hello world'
+            },
             links: {
               self: '/foo/1'
             }
@@ -420,9 +493,13 @@ describe('Pool', () => {
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'hello world',
+          attributes: {
+            content: 'hello world'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
         let resources = pool.get('foo');
@@ -430,9 +507,13 @@ describe('Pool', () => {
         expect(resources[0].serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
-          content: 'hello world',
+          attributes: {
+            content: 'hello world'
+          },
           links: {
-            self: '/foo/1'
+            self: {
+              href: '/foo/1'
+            }
           }
         });
       });

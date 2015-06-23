@@ -57,35 +57,49 @@ export default class Pool {
     .then(() => this.removeResourceFromPool(type, id));
   }
 
-  create(type, data, options={ sync: true }) {
-    data = _.extend({ type }, data);
+  create(type, attributes, options={ sync: true }) {
+    attributes = _.extend({ type }, attributes);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(data));
+      return Q.resolve(this.saveResourceToPool(attributes));
     }
 
     return this.sync.post(
-      this.getRemote(type), data
+      this.getRemote(type), {
+        data: attributes
+      }
     )
     .then(response => this.saveResponseToPool(response));
   }
 
-  update(type, id, data, options={ sync: true }) {
-    data = _.extend({ type }, data);
+  update(type, id, attributes, options={ sync: true }) {
+    attributes = _.extend({ type, id }, attributes);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(data));
+      return Q.resolve(this.saveResourceToPool(attributes));
     }
 
     return this.sync.patch(
-      this.getRemote(type, id), data
+      this.getRemote(type, id), {
+        data: attributes
+      }
     )
     .then(response => this.saveResponseToPool(response));
   }
 
-  createLinkage(type, id, relation, linkage, options) {
+  linkageOperation(operation, type, id, relationship, linkage) {
+    return this.sync[operation](
+      this.getRemote(type, id, relationship),
+      { data: linkage }
+    )
+    .then(() => {
+      // FIXME: add linkage
+    });
+  }
+
+  createLinkage(type, id, relationship, linkage, options) {
     return this.sync.post(
-      this.getRemote(type, id, relation),
+      this.getRemote(type, id, relationship),
       options.hasMany ?
         { data: [linkage] } :
         { data: linkage }
@@ -95,9 +109,9 @@ export default class Pool {
     });
   }
 
-  removeLinkage(type, id, relation, linkage, options) {
+  removeLinkage(type, id, relationship, linkage, options) {
     return this.sync.delete(
-      this.getRemote(type, id, relation),
+      this.getRemote(type, id, relationship),
       options.hasMany ?
         { data: [linkage] } :
         { data: linkage }
@@ -145,12 +159,12 @@ export default class Pool {
     this.remote[type] = url;
   }
 
-  getRemote(type, id, relation) {
+  getRemote(type, id, relationship) {
     let urlParts = _.compact([
       this.remote[type],
       id,
-      relation ? 'links' : undefined,
-      relation
+      relationship ? 'relationships' : undefined,
+      relationship
     ]);
     return urljoin.apply(null, urlParts);
   }
