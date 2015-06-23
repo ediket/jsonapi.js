@@ -325,9 +325,9 @@ describe('Pool', () => {
     });
   });
 
-  describe('#createLinkage', () => {
-    it('should create not hasMany linkage', () => {
-      sync.post.withArgs('/test/1/relationships/bar').returns(
+  describe('#linkageOperation', () => {
+    it('should create relationship', () => {
+      sync.post.returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -338,13 +338,8 @@ describe('Pool', () => {
 
       pool.addRemote('test', '/test/');
 
-      let linkage = {
-        type: 'bar',
-        id: 1
-      };
-
-      return Q.fcall(() => pool.createLinkage(
-        'test', 1, 'bar', linkage, { hasMany: false }
+      return Q.fcall(() => pool.linkageOperation(
+        'post', 'test', 1, 'bar', { type: 'bar', id: 1 }
       ))
       .then(() => {
         let postCall = sync.post.getCall(0);
@@ -359,8 +354,8 @@ describe('Pool', () => {
       });
     });
 
-    it('should create hasMany linkage', () => {
-      sync.post.withArgs('/test/1/relationships/bar').returns(
+    it('should create relationships', () => {
+      sync.post.returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -371,13 +366,8 @@ describe('Pool', () => {
 
       pool.addRemote('test', '/test/');
 
-      let linkage = {
-        type: 'bar',
-        id: 1
-      };
-
-      return Q.fcall(() => pool.createLinkage(
-        'test', 1, 'bar', linkage, { hasMany: true }
+      return Q.fcall(() => pool.linkageOperation(
+        'post', 'test', 1, 'bar', [{ type: 'bar', id: 1 }]
       ))
       .then(() => {
         let postCall = sync.post.getCall(0);
@@ -391,11 +381,9 @@ describe('Pool', () => {
         });
       });
     });
-  });
 
-  describe('#rmLinkage', () => {
-    it('should remove not hasMany linkage to pool', () => {
-      sync.delete.withArgs('/test/1/relationships/bar').returns(
+    it('should remove relationship', () => {
+      sync.patch.returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -406,29 +394,21 @@ describe('Pool', () => {
 
       pool.addRemote('test', '/test/');
 
-      let linkage = {
-        type: 'bar',
-        id: 1
-      };
-
-      return Q.fcall(() => pool.removeLinkage(
-        'test', 1, 'bar', linkage, { hasMany: false }
+      return Q.fcall(() => pool.linkageOperation(
+        'patch', 'test', 1, 'bar', null
       ))
       .then(() => {
-        let deleteCall = sync.delete.getCall(0);
-        expect(deleteCall).to.be.ok;
-        expect(deleteCall.args[0]).to.equal('/test/1/relationships/bar');
-        expect(deleteCall.args[1]).to.deep.equal({
-          data: {
-            type: 'bar',
-            id: 1
-          }
+        let patchCall = sync.patch.getCall(0);
+        expect(patchCall).to.be.ok;
+        expect(patchCall.args[0]).to.equal('/test/1/relationships/bar');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: null
         });
       });
     });
 
-    it('should remove hasMany linkage to pool', () => {
-      sync.delete.withArgs('/test/1/relationships/bar').returns(
+    it('should remove relationships', () => {
+      sync.delete.returns(
         promiseValue({
           data: {
             type: 'foo',
@@ -439,13 +419,8 @@ describe('Pool', () => {
 
       pool.addRemote('test', '/test/');
 
-      let linkage = {
-        type: 'bar',
-        id: 1
-      };
-
-      return Q.fcall(() => pool.removeLinkage(
-        'test', 1, 'bar', linkage, { hasMany: true }
+      return Q.fcall(() => pool.linkageOperation(
+        'delete', 'test', 1, 'bar', [{ type: 'bar', id: 1 }]
       ))
       .then(() => {
         let deleteCall = sync.delete.getCall(0);

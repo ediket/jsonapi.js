@@ -90,34 +90,10 @@ export default class Pool {
   linkageOperation(operation, type, id, relationship, linkage) {
     return this.sync[operation](
       this.getRemote(type, id, relationship),
-      { data: linkage }
+      !_.isUndefined(linkage) ? { data: linkage } : undefined
     )
     .then(() => {
-      // FIXME: add linkage
-    });
-  }
-
-  createLinkage(type, id, relationship, linkage, options) {
-    return this.sync.post(
-      this.getRemote(type, id, relationship),
-      options.hasMany ?
-        { data: [linkage] } :
-        { data: linkage }
-    )
-    .then(() => {
-      // FIXME: add linkage
-    });
-  }
-
-  removeLinkage(type, id, relationship, linkage, options) {
-    return this.sync.delete(
-      this.getRemote(type, id, relationship),
-      options.hasMany ?
-        { data: [linkage] } :
-        { data: linkage }
-    )
-    .then(() => {
-      // FIXME: remove linkage
+      // FIXME: linkage operation
     });
   }
 
