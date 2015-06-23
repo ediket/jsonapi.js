@@ -24,7 +24,7 @@ export default class Resource extends ResourceIdentifier {
       links: _.mapValues(this.links, link => link.serialize()),
       relationships: _.mapValues(this.relationships, relationship => relationship.serialize())
     })
-    .extend(super.serialize())
+    .extend(this.getIdentifier())
     .omit(attribute => _.isObject(attribute) ?
       _.isEmpty(attribute) : _.isUndefined(attribute))
     .value();
@@ -33,12 +33,10 @@ export default class Resource extends ResourceIdentifier {
   deserialize(data) {
     super.deserialize(data);
     this.attributes = data.attributes;
-    this.relationships = _.mapValues(data.relationships, relationship => {
-      return new Relationship(relationship);
-    });
-    this.links = _.mapValues(data.links, link => {
-      return new Link(link);
-    });
+    this.relationships = _.mapValues(data.relationships,
+      relationship => new Relationship(relationship));
+    this.links = _.mapValues(data.links,
+      link => new Link(link));
   }
 
 }
