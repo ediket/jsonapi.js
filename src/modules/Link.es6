@@ -4,8 +4,6 @@ import _ from 'lodash';
 export default class Link {
 
   constructor(link) {
-    this.href = null;
-    this.meta = null;
     this.deserialize(link);
   }
 
@@ -19,6 +17,7 @@ export default class Link {
   deserialize(link) {
     if (_.isString(link)) {
       this.href = link;
+      this.meta = {};
     }
     else {
       this.href = link.href;

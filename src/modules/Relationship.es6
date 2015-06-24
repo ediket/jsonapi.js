@@ -6,9 +6,6 @@ import ResourceIdentifier from './ResourceIdentifier';
 export default class Relationship {
 
   constructor(relationship) {
-    this.links = {};
-    this.data = _.isArray(relationship.data) ? [] : null;
-    this.meta = {};
     this.deserialize(relationship);
   }
 
@@ -21,6 +18,7 @@ export default class Relationship {
     .extend({
       data: this.data
     })
+    .omit(_.isUndefined)
     .value();
   }
 
@@ -28,16 +26,21 @@ export default class Relationship {
     this.links = _.mapValues(relationship.links, link => {
       return new Link(link);
     });
-    if (_.isArray(relationship.data)) {
-      this.data = _.map(relationship.data, data => new ResourceIdentifier(data));
-    }
-    else {
-      if (_.isNull(relationship.data)) {
-        this.data = null;
+    if (!_.isUndefined(this.data)) {
+      if (_.isArray(relationship.data)) {
+        this.data = _.map(relationship.data, data => new ResourceIdentifier(data));
       }
       else {
-        this.data = new ResourceIdentifier(relationship.data);
+        if (_.isNull(relationship.data)) {
+          this.data = null;
+        }
+        else {
+          this.data = new ResourceIdentifier(relationship.data);
+        }
       }
+    }
+    else {
+      this.data = undefined;
     }
     this.meta = relationship.meta;
   }

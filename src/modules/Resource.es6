@@ -8,9 +8,6 @@ export default class Resource extends ResourceIdentifier {
 
   constructor(data) {
     super(data);
-    this.attributes = {};
-    this.relationships = {};
-    this.links = {};
     this.deserialize(data);
   }
 
