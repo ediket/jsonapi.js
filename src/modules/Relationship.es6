@@ -18,7 +18,7 @@ export default class Relationship {
     .extend({
       data: _.isArray(this.data) ?
         _.map(this.data, identifier => identifier.serialize()) :
-        this.data.serialize()
+        this.data && this.data.serialize()
     })
     .omit(_.isUndefined)
     .value();

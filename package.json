@@ -11,7 +11,7 @@
       "email": "asdfg852456@gmail.com"
     }
   ],
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Javascript implementation of JSONAPI",
   "keywords": [
     "jsonapi",
