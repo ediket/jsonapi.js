@@ -15,6 +15,17 @@ export default class Resource extends ResourceIdentifier {
     return super.serialize();
   }
 
+  setRelationship(key, resource) {
+    this.relationships[key] = new Relationship({
+      links: resource.links,
+      data: resource.getIdentifier()
+    });
+  }
+
+  unsetRelationship(key) {
+    delete this.relationships[key];
+  }
+
   serialize() {
     return _.chain({
       attributes: this.attributes,

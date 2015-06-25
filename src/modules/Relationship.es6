@@ -11,12 +11,14 @@ export default class Relationship {
 
   serialize() {
     return _.chain({
-      links: this.links,
+      links: _.map(this.links, link => link.serialize()),
       meta: this.meta
     })
     .omit(_.isEmpty)
     .extend({
-      data: this.data
+      data: _.isArray(this.data) ?
+        _.map(this.data, identifier => identifier.serialize()) :
+        this.data.serialize()
     })
     .omit(_.isUndefined)
     .value();

@@ -110,7 +110,7 @@ export default class Pool {
       return _.map(data, data => this.saveResourceToPool(data));
     }
 
-    if (!data.type || !data.id) {
+    if (_.isUndefined(data.type) || _.isUndefined(data.id)) {
       throw new Error('invalid data');
     }
 
