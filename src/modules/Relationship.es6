@@ -11,7 +11,7 @@ export default class Relationship {
 
   serialize() {
     return _.chain({
-      links: _.map(this.links, link => link.serialize()),
+      links: _.mapValues(this.links, link => link.serialize()),
       meta: this.meta
     })
     .omit(_.isEmpty)
@@ -28,7 +28,7 @@ export default class Relationship {
     this.links = _.mapValues(relationship.links, link => {
       return new Link(link);
     });
-    if (!_.isUndefined(this.data)) {
+    if (!_.isUndefined(relationship.data)) {
       if (_.isArray(relationship.data)) {
         this.data = _.map(relationship.data, data => new ResourceIdentifier(data));
       }
