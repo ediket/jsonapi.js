@@ -151,6 +151,26 @@ export default class Pool {
       this.db(type).getById(id);
   }
 
+  getRelated(resource, relationship) {
+    if (_.isUndefined(resource.relationships)) {
+      throw new Error('resource have empty relationship');
+    }
+
+    let relationshipObj = resource.relationships[relationship];
+    if (_.isUndefined(relationshipObj)) {
+      throw new Error(`resource dose not have relationship: ${relationship}`);
+    }
+
+    let linkage = resource.relationships[relationship].data;
+    if (_.isUndefined(linkage)) {
+      throw new Error(`resource\'s relationship(${relationship}) dose not have linkage`);
+    }
+
+    return _.isArray(linkage) ?
+      _.map(linkage, linkage => this.get(linkage.type, linkage.id)) :
+      this.get(linkage.type, linkage.id);
+  }
+
   has(type, id) {
     if (!type || !id) {
       throw new Error('unenough arguments');

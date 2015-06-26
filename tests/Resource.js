@@ -51,6 +51,74 @@ describe('Resource', function() {
     });
   });
 
+  describe('#setRelationship', () => {
+    it('should create relationship', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      let bar = new Resource({
+        type: 'bar',
+        id: 1
+      });
+
+      foo.setRelationship('bar', bar);
+
+      expect(foo.relationships.bar.serialize()).to.deep.equal({
+        data: {
+          type: 'bar',
+          id: 1
+        }
+      });
+    });
+  });
+
+  describe('#unsetRelationship', () => {
+    it('should remove relationship', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      let bar = new Resource({
+        type: 'bar',
+        id: 1
+      });
+
+      foo.setRelationship('bar', bar);
+      foo.unsetRelationship('bar');
+
+      expect(foo.relationships.bar).to.not.ok;
+    });
+  });
+
+  describe('#flatten', () => {
+    it('should flatten identifier, relationships, attributes', () => {
+      let resource = new Resource({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          content: 'bar'
+        },
+        relationships: {
+          foo: {
+            data: { type: 'foo', id: 1 }
+          }
+        }
+      });
+
+      expect(resource.flatten()).to.deep.equal({
+        id: 1,
+        type: 'bar',
+        content: 'bar',
+        foo: {
+          data: { type: 'foo', id: 1 }
+        }
+      });
+    });
+  });
+
   describe('#serialize', () => {
     it('should serialize itself', () => {
       let newResource = new Resource({

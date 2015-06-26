@@ -26,6 +26,14 @@ export default class Resource extends ResourceIdentifier {
     delete this.relationships[key];
   }
 
+  flatten() {
+    return _.chain({})
+    .extend(this.getIdentifier())
+    .extend(this.attributes)
+    .extend(_.mapValues(this.relationships, relationship => relationship.serialize()))
+    .value();
+  }
+
   serialize() {
     return _.chain({
       attributes: this.attributes,

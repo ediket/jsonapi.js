@@ -494,4 +494,70 @@ describe('Pool', () => {
       });
     });
   });
+
+  describe('#getRelated', () => {
+    it('should get related resource in pool', () => {
+      let foo;
+      let bar;
+      return pool.create('foo', {
+        type: 'foo',
+        id: 1,
+        attributes: {
+          content: 123
+        },
+        relationships: {
+          'bar': {
+            data: { type: 'bar', id: 1 }
+          }
+        }
+      }, { sync: false })
+      .then(resource => {
+        foo = resource;
+
+        return pool.create('bar', {
+          type: 'bar',
+          id: 1,
+          attributes: {
+            content: 123
+          }
+        }, { sync: false });
+      })
+      .then(resource => {
+        bar = resource;
+        expect(bar).to.equal(pool.getRelated(foo, 'bar'));
+      });
+    });
+
+    it('should get related resources in pool', () => {
+      let foo;
+      let bar;
+      return pool.create('foo', {
+        type: 'foo',
+        id: 1,
+        attributes: {
+          content: 123
+        },
+        relationships: {
+          'bars': {
+            data: [{ type: 'bar', id: 1 }]
+          }
+        }
+      }, { sync: false })
+      .then(resource => {
+        foo = resource;
+
+        return pool.create('bar', {
+          type: 'bar',
+          id: 1,
+          attributes: {
+            content: 123
+          }
+        }, { sync: false });
+      })
+      .then(resource => {
+        bar = resource;
+        expect(bar).to.equal(pool.getRelated(foo, 'bars')[0]);
+      });
+    });
+  });
 });
