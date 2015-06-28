@@ -171,6 +171,75 @@ describe('Pool', () => {
         expect(getCall.args[0]).to.equal('/foo/');
       });
     });
+
+    it('should handle sparse fieldsets', () => {
+      sync.get.returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            attributes: {
+              a: 'before',
+              b: 'before'
+            },
+            relationships: {
+              foo: {
+                data: { type: 'foo', id: 1 }
+              },
+              bar: {
+                data: { type: 'bar', id: 1 }
+              }
+            }
+          }
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.fetch('foo', 1))
+      .then(() => {
+        sync.get.returns(
+          promiseValue({
+            data: {
+              type: 'foo',
+              id: 1,
+              attributes: {
+                a: 'after'
+              },
+              relationships: {
+                foo: {
+                  data: { type: 'foo', id: 10 }
+                }
+              }
+            }
+          })
+        );
+      })
+      .then(() => pool.fetch('foo', 1, {
+        fields: {
+          foo: ['a', 'foo']
+        }
+      }))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          attributes: {
+            a: 'after',
+            b: 'before'
+          },
+          relationships: {
+            foo: {
+              data: { type: 'foo', id: 10 }
+            },
+            bar: {
+              data: { type: 'bar', id: 1 }
+            }
+          }
+        });
+      });
+    });
   });
 
   describe('#create', () => {

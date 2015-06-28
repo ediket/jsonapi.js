@@ -21,24 +21,25 @@ export default class Pool {
   }
 
   fetch(type, id, options={}) {
-    let included = options.included;
+    let params = {};
+
+    let included = _.clone(options.included, true);
     if (included) {
-      options.included = included.join(',');
+      params.included = included.join(',');
     }
 
-    let fields = options.fields;
+    let fields = _.clone(options.fields, true);
     if (fields) {
-      _.reduce(fields, (options, fields, type) => {
-        options[`fields[${type}]`] = fields.join(',');
-        return options;
-      }, options);
-      delete options.fields;
+      _.reduce(fields, (result, fields, type) => {
+        result[`fields[${type}]`] = fields.join(',');
+        return result;
+      }, params);
     }
 
     return this.sync.get(
-      this.getRemote(type, id), options
+      this.getRemote(type, id), params
     )
-    .then(response => this.saveResponseToPool(response));
+    .then(response => this.saveResponseToPool(response, options.fields));
   }
 
   remove(type, id, options={ sync: true }) {
@@ -97,15 +98,20 @@ export default class Pool {
     });
   }
 
-  saveResponseToPool(response) {
-    let mainResource = this.saveResourceToPool(response.data);
+  saveResponseToPool(response, fields={}) {
+    let serializedList = [response.data];
     if (response.included) {
-      this.saveResourceToPool(response.included);
+      serializedList = serializedList.concat(response.included);
     }
-    return mainResource;
+
+    let resources = _.map(serializedList, serializedData => {
+      return this.saveResourceToPool(serializedData, fields[serializedData.type]);
+    });
+
+    return resources[0];
   }
 
-  saveResourceToPool(data) {
+  saveResourceToPool(data, fields) {
     if (_.isArray(data)) {
       return _.map(data, data => this.saveResourceToPool(data));
     }
@@ -121,6 +127,13 @@ export default class Pool {
       this.db(resource.type).insert(resource);
     }
     else {
+      if (_.isArray(fields)) {
+        let before = resource.serialize();
+        data = _.extend({}, data, {
+          attributes: _.extend({}, before.attributes, data.attributes),
+          relationships: _.extend({}, before.relationships, data.relationships)
+        });
+      }
       resource.deserialize(data);
     }
 
