@@ -23,18 +23,36 @@ export default class Pool {
   fetch(type, id, options={}) {
     let params = {};
 
-    let included = _.clone(options.included, true);
-    if (included) {
-      params.included = included.join(',');
+    if (options.sort) {
+      params.sort = options.sort.join(',');
     }
 
-    let fields = _.clone(options.fields, true);
-    if (fields) {
-      _.reduce(fields, (result, fields, type) => {
+    if (options.include) {
+      params.include = options.include.join(',');
+    }
+
+    if (options.page) {
+      params = _.extend(params, {
+        'page[number]': options.page.number,
+        'page[size]': options.page.size
+      });
+    }
+
+    if (options.fields) {
+      _.reduce(options.fields, (result, fields, type) => {
         result[`fields[${type}]`] = fields.join(',');
         return result;
       }, params);
     }
+
+    if (options.filter) {
+      _.reduce(options.filter, (result, filter, type) => {
+        result[`filter[${type}]`] = filter.join(',');
+        return result;
+      }, params);
+    }
+
+    params = _.omit(params, _.isUndefined);
 
     return this.sync.get(
       this.getRemote(type, id), params
@@ -99,7 +117,11 @@ export default class Pool {
   }
 
   saveResponseToPool(response, fields={}) {
-    let serializedList = [response.data];
+    if (!response.data) { return null; }
+
+    let serializedList = _.isArray(response.data) ?
+      response.data : [response.data];
+
     if (response.included) {
       serializedList = serializedList.concat(response.included);
     }
@@ -180,7 +202,7 @@ export default class Pool {
     }
 
     return _.isArray(linkage) ?
-      _.map(linkage, linkage => this.get(linkage.type, linkage.id)) :
+      _.map(linkage, _linkage => this.get(_linkage.type, _linkage.id)) :
       this.get(linkage.type, linkage.id);
   }
 

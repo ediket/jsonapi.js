@@ -10,7 +10,7 @@ describe('Pool', () => {
   let sync;
   let OriginSync;
 
-  before(() => {
+  beforeEach(() => {
     pool = new Pool();
     sync = {
       get: stubPromise(),
@@ -22,16 +22,8 @@ describe('Pool', () => {
     pool.sync = sync;
   });
 
-  after(() => {
+  afterEach(() => {
     pool.sync = OriginSync;
-  });
-
-  beforeEach(() => {
-    pool.resetAll();
-    sync.get.reset();
-    sync.post.reset();
-    sync.patch.reset();
-    sync.delete.reset();
   });
 
   describe('#reset', () => {
@@ -172,23 +164,17 @@ describe('Pool', () => {
       });
     });
 
-    it('should handle sparse fieldsets', () => {
+    it('should properly construct query string.', () => {
       sync.get.returns(
         promiseValue({
           data: {
             type: 'foo',
             id: 1,
             attributes: {
-              a: 'before',
-              b: 'before'
+              content: 'hello world'
             },
-            relationships: {
-              foo: {
-                data: { type: 'foo', id: 1 }
-              },
-              bar: {
-                data: { type: 'bar', id: 1 }
-              }
+            links: {
+              self: '/foo/1'
             }
           }
         })
@@ -196,28 +182,76 @@ describe('Pool', () => {
 
       pool.addRemote('foo', '/foo/');
 
-      return Q.fcall(() => pool.fetch('foo', 1))
+      return Q.fcall(() => pool.fetch('foo', 1, {
+        fields: {
+          foo: ['title', 'content']
+        },
+        filter: {
+          title: ['Hello world', 'Hi world']
+        },
+        page: {
+          number: 1,
+          size: 10
+        },
+        sort: ['id', '-title'],
+        include: ['bar', 'baz']
+      }))
       .then(() => {
-        sync.get.returns(
-          promiseValue({
-            data: {
-              type: 'foo',
-              id: 1,
-              attributes: {
-                a: 'after'
-              },
-              relationships: {
-                foo: {
-                  data: { type: 'foo', id: 10 }
-                }
-              }
+        let getCall = sync.get.getCall(0);
+        console.log(getCall.args);
+        expect(getCall).to.be.ok;
+        expect(getCall.args[0]).to.equal('/foo/1');
+        expect(getCall.args[1]).to.deep.equal({
+          sort: 'id,-title',
+          include: 'bar,baz',
+          'page[number]': 1,
+          'page[size]': 10,
+          'fields[foo]': 'title,content',
+          'filter[title]': 'Hello world,Hi world'
+        });
+      });
+    });
+
+    it('should handle sparse fieldsets', () => {
+      sync.get.withArgs('/foo/1', {
+        'fields[foo]': 'a,b'
+      }).returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            attributes: {
+              a: 'foo',
+              b: 'bar'
             }
-          })
-        );
-      })
+          }
+        })
+      );
+      sync.get.withArgs('/foo/1', {
+        'fields[foo]': 'b,c'
+      }).returns(
+        promiseValue({
+          data: {
+            type: 'foo',
+            id: 1,
+            attributes: {
+              b: 'bar',
+              c: 'baz'
+            }
+          }
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.fetch('foo', 1, {
+        fields: {
+          foo: ['a', 'b']
+        }
+      }))
       .then(() => pool.fetch('foo', 1, {
         fields: {
-          foo: ['a', 'foo']
+          foo: ['b', 'c']
         }
       }))
       .then(() => {
@@ -226,19 +260,22 @@ describe('Pool', () => {
           type: 'foo',
           id: 1,
           attributes: {
-            a: 'after',
-            b: 'before'
-          },
-          relationships: {
-            foo: {
-              data: { type: 'foo', id: 10 }
-            },
-            bar: {
-              data: { type: 'bar', id: 1 }
-            }
+            a: 'foo',
+            b: 'bar',
+            c: 'baz'
           }
         });
       });
+    });
+
+    it('should properly handle empty response', () => {
+      sync.get.returns(
+        promiseValue({})
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.fetch('foo'));
     });
   });
 
