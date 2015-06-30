@@ -57,7 +57,9 @@ export default class Pool {
     return this.sync.get(
       this.getRemote(type, id), params
     )
-    .then(response => this.saveResponseToPool(response, options.fields));
+    .then(response => this.saveResponseToPool(response, {
+      partialUpdateTypes: _.keys(options.fields)
+    }));
   }
 
   remove(type, id, options={ sync: true }) {
@@ -72,38 +74,46 @@ export default class Pool {
     return this.sync.delete(
       this.getRemote(type, id)
     )
-    .then(response => this.saveResponseToPool(response))
+    .then(response => {
+      return response.status !== 204 ?
+        this.saveResponseToPool(response) :
+        null;
+    })
     .then(() => this.removeResourceFromPool(type, id));
   }
 
-  create(type, attributes, options={ sync: true }) {
-    attributes = _.extend({ type }, attributes);
+  create(type, data, options={ sync: true }) {
+    data = _.extend({ type }, data);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(attributes));
+      return Q.resolve(this.saveResourceToPool(data));
     }
 
     return this.sync.post(
-      this.getRemote(type), {
-        data: attributes
-      }
+      this.getRemote(type), { data }
     )
-    .then(response => this.saveResponseToPool(response));
+    .then(response => {
+      return response.status === 204 ?
+        this.saveResourceToPool(data) :
+        this.saveResponseToPool(response);
+    });
   }
 
-  update(type, id, attributes, options={ sync: true }) {
-    attributes = _.extend({ type, id }, attributes);
+  update(type, id, data, options={ sync: true }) {
+    data = _.extend({ type, id }, data);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(attributes));
+      return Q.resolve(this.saveResourceToPool(data));
     }
 
     return this.sync.patch(
-      this.getRemote(type, id), {
-        data: attributes
-      }
+      this.getRemote(type, id), { data }
     )
-    .then(response => this.saveResponseToPool(response));
+    .then(response => {
+      return response.status === 204 ?
+        this.saveResourceToPool(data, true) :
+        this.saveResponseToPool(response);
+    });
   }
 
   linkageOperation(operation, type, id, relationship, linkage) {
@@ -116,40 +126,71 @@ export default class Pool {
     });
   }
 
-  saveResponseToPool(response, fields={}) {
-    if (!response.data) { return null; }
-
-    let serializedList = _.isArray(response.data) ?
-      response.data : [response.data];
-
-    if (response.included) {
-      serializedList = serializedList.concat(response.included);
-    }
-
-    let resources = _.map(serializedList, serializedData => {
-      return this.saveResourceToPool(serializedData, fields[serializedData.type]);
+  saveResponseToPool(response, options={}) {
+    options = _.defaults(options, {
+      partialUpdateTypes: []
     });
 
-    return resources[0];
-  }
+    let mainData = response.data;
+    let includedData = response.included;
 
-  saveResourceToPool(data, fields) {
-    if (_.isArray(data)) {
-      return _.map(data, data => this.saveResourceToPool(data));
+    let result;
+
+    /* Main Data */
+    if (_.isArray(mainData)) {
+      if (_.isEmpty(mainData)) {
+        result = [];
+      }
+      else {
+        result = _.map(mainData, data =>
+          this.saveResourceToPool(data, {
+            partialUpdate: _.contains(options.partialUpdateTypes, data.type)
+          })
+        );
+      }
+    }
+    else {
+      if (_.isNull(mainData)) {
+        result = null;
+      }
+      else {
+        result = this.saveResourceToPool(mainData, {
+          partialUpdate: _.contains(options.partialUpdateTypes, mainData.type)
+        });
+      }
     }
 
+    /* Included Data */
+    if (includedData) {
+      _.map(includedData, data => {
+        this.saveResourceToPool(data, {
+          partialUpdate: _.contains(options.partialUpdateTypes, data.type)
+        });
+      });
+    }
+
+    return result;
+  }
+
+  saveResourceToPool(data, options={}) {
+    options = _.defaults(options, {
+      partialUpdate: false
+    });
+
     if (_.isUndefined(data.type) || _.isUndefined(data.id)) {
-      throw new Error('invalid data');
+      throw new Error('Invalid data: type & id property should be given.');
     }
 
     let resource = this.get(data.type, data.id);
 
+    /* New Resource */
     if (!resource) {
       resource = new Resource(data);
       this.db(resource.type).insert(resource);
     }
+    /* Existing Resource */
     else {
-      if (_.isArray(fields)) {
+      if (options.partialUpdate) {
         let before = resource.serialize();
         data = _.extend({}, data, {
           attributes: _.extend({}, before.attributes, data.attributes),

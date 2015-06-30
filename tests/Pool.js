@@ -52,8 +52,9 @@ describe('Pool', () => {
       pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.fetch('foo', 1))
-      .then(() => {
+      .then((fetchedResource) => {
         let resource = pool.get('foo', 1);
+        expect(fetchedResource).to.equal(resource);
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
@@ -91,8 +92,9 @@ describe('Pool', () => {
       pool.addRemote('foo', '/foo/');
 
       return Q.fcall(() => pool.fetch('foo'))
-      .then(() => {
+      .then((fetchedResources) => {
         let resource = pool.get('foo', 1);
+        expect(fetchedResources).to.have.length(1);
         expect(resource.serialize()).to.deep.equal({
           type: 'foo',
           id: 1,
@@ -198,7 +200,6 @@ describe('Pool', () => {
       }))
       .then(() => {
         let getCall = sync.get.getCall(0);
-        console.log(getCall.args);
         expect(getCall).to.be.ok;
         expect(getCall.args[0]).to.equal('/foo/1');
         expect(getCall.args[1]).to.deep.equal({
@@ -267,16 +268,6 @@ describe('Pool', () => {
         });
       });
     });
-
-    it('should properly handle empty response', () => {
-      sync.get.returns(
-        promiseValue({})
-      );
-
-      pool.addRemote('foo', '/foo/');
-
-      return Q.fcall(() => pool.fetch('foo'));
-    });
   });
 
   describe('#create', () => {
@@ -332,6 +323,34 @@ describe('Pool', () => {
         });
       });
     });
+
+    it('should properly handle 204 response', () => {
+      sync.post.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.create('foo', {
+        type: 'foo',
+        id: 1,
+        attributes: {
+          content: 'bar'
+        }
+      }))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          attributes: {
+            content: 'bar'
+          }
+        });
+      });
+    });
   });
 
   describe('#remove', () => {
@@ -366,6 +385,39 @@ describe('Pool', () => {
         let deleteCall = sync.delete.getCall(0);
         expect(deleteCall).to.be.ok;
         expect(deleteCall.args[0]).to.equal('/foo/1');
+      });
+    });
+
+    it('should properly handle 204 response', () => {
+      sync.patch.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.create('foo', {
+        type: 'foo',
+        id: 1,
+        attributes: {
+          content: 'bar'
+        }
+      }, { sync: false }))
+      .then(() => pool.update('foo', 1, {
+        attributes: {
+          content: 'test'
+        }
+      }))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          type: 'foo',
+          id: 1,
+          attributes: {
+            content: 'test'
+          }
+        });
       });
     });
   });
@@ -427,6 +479,29 @@ describe('Pool', () => {
             }
           }
         });
+      });
+    });
+
+    it('should properly handle 204 response', () => {
+      sync.delete.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      pool.addRemote('foo', '/foo/');
+
+      return Q.fcall(() => pool.create('foo', {
+        type: 'foo',
+        id: 1,
+        attributes: {
+          content: 'bar'
+        }
+      }, { sync: false }))
+      .then(() => pool.remove('foo', 1))
+      .then(() => {
+        let resource = pool.get('foo', 1);
+        expect(resource).to.not.ok;
       });
     });
   });
