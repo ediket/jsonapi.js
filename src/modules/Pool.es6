@@ -57,9 +57,7 @@ export default class Pool {
     return this.sync.get(
       this.getRemote(type, id), params
     )
-    .then(response => this.saveResponseToPool(response, {
-      partialUpdateTypes: _.keys(options.fields)
-    }));
+    .then(response => this.saveResponseToPool(response));
   }
 
   remove(type, id, options={ sync: true }) {
@@ -116,7 +114,85 @@ export default class Pool {
     });
   }
 
+  replaceLinkage(relationship, linkage, options={ sync: true }) {
+    if (!options.sync) {
+      relationship.replaceLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links && relationship.links.self)) {
+      throw new Error('relationship should contain self link!');
+    }
+
+    return this.sync.patch(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(() => {
+      relationship.replaceLinkage(linkage);
+      return relationship;
+    });
+  }
+
+  /* To-Many Relationships only */
+  addLinkage(relationship, linkage, options={ sync: true }) {
+    if (!_.isArray(linkage)) {
+      throw new Error('linkage should be array!');
+    }
+
+    if (!_.isArray(relationship.data)) {
+      throw new Error('relationship should be array');
+    }
+
+    if (!options.sync) {
+      relationship.addLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links && relationship.links.self)) {
+      throw new Error('relationship should contain self link!');
+    }
+
+    return this.sync.post(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(() => {
+      relationship.addLinkage(linkage);
+      return relationship;
+    });
+  }
+
+  /* To-Many Relationships only */
+  removeLinkage(relationship, linkage, options={ sync: true }) {
+    if (!_.isArray(linkage)) {
+      throw new Error('linkage should be array!');
+    }
+
+    if (!_.isArray(relationship.data)) {
+      throw new Error('relationship should be array');
+    }
+
+    if (!options.sync) {
+      relationship.removeLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links && relationship.links.self)) {
+      throw new Error('relationship should contain self link!');
+    }
+
+    return this.sync.delete(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(() => {
+      relationship.removeLinkage(linkage);
+      return relationship;
+    });
+  }
+
   linkageOperation(operation, type, id, relationship, linkage) {
+    console.warn('this method is deprecated. ' +
+      'use addLinkage, removeLinkage, replaceLinkage instead.');
+
     return this.sync[operation](
       this.getRemote(type, id, relationship),
       !_.isUndefined(linkage) ? { data: linkage } : undefined
@@ -126,11 +202,7 @@ export default class Pool {
     });
   }
 
-  saveResponseToPool(response, options={}) {
-    options = _.defaults(options, {
-      partialUpdateTypes: []
-    });
-
+  saveResponseToPool(response) {
     let mainData = response.data;
     let includedData = response.included;
 
@@ -143,9 +215,7 @@ export default class Pool {
       }
       else {
         result = _.map(mainData, data =>
-          this.saveResourceToPool(data, {
-            partialUpdate: _.contains(options.partialUpdateTypes, data.type)
-          })
+          this.saveResourceToPool(data)
         );
       }
     }
@@ -154,29 +224,21 @@ export default class Pool {
         result = null;
       }
       else {
-        result = this.saveResourceToPool(mainData, {
-          partialUpdate: _.contains(options.partialUpdateTypes, mainData.type)
-        });
+        result = this.saveResourceToPool(mainData);
       }
     }
 
     /* Included Data */
     if (includedData) {
       _.map(includedData, data => {
-        this.saveResourceToPool(data, {
-          partialUpdate: _.contains(options.partialUpdateTypes, data.type)
-        });
+        this.saveResourceToPool(data);
       });
     }
 
     return result;
   }
 
-  saveResourceToPool(data, options={}) {
-    options = _.defaults(options, {
-      partialUpdate: false
-    });
-
+  saveResourceToPool(data) {
     if (_.isUndefined(data.type) || _.isUndefined(data.id)) {
       throw new Error('Invalid data: type & id property should be given.');
     }
@@ -190,13 +252,11 @@ export default class Pool {
     }
     /* Existing Resource */
     else {
-      if (options.partialUpdate) {
-        let before = resource.serialize();
-        data = _.extend({}, data, {
-          attributes: _.extend({}, before.attributes, data.attributes),
-          relationships: _.extend({}, before.relationships, data.relationships)
-        });
-      }
+      let before = resource.serialize();
+      data = _.extend({}, data, {
+        attributes: _.extend({}, before.attributes, data.attributes),
+        relationships: _.extend({}, before.relationships, data.relationships)
+      });
       resource.deserialize(data);
     }
 

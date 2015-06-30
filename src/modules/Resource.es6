@@ -39,6 +39,24 @@ export default class Resource extends ResourceIdentifier {
     delete this.relationships[key];
   }
 
+  setRelationships(relationships) {
+    _.each(relationships, (relationship, key) => {
+      this.setRelationship(key, relationship);
+    });
+  }
+
+  setAttribute(key, value) {
+    this.attributes[key] = value;
+  }
+
+  unsetAttribute(key) {
+    delete this.attributes[key];
+  }
+
+  setAttributes(attributes) {
+    _.extend(this.attributes, attributes);
+  }
+
   flatten() {
     return _.chain({})
     .extend(this.getIdentifier())

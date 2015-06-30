@@ -152,6 +152,116 @@ describe('Resource', function() {
     });
   });
 
+  describe('#setRelationships', () => {
+    it('should set relationships', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      let bar = new Resource({
+        type: 'bar',
+        id: 1
+      });
+
+      let baz = new Resource({
+        type: 'baz',
+        id: 1
+      });
+
+      foo.setRelationships({
+        bar: bar,
+        baz: baz
+      });
+
+      expect(foo.serialize().relationships).to.deep.equal({
+        bar: {
+          data: {
+            type: 'bar',
+            id: 1
+          }
+        },
+        baz: {
+          data: {
+            type: 'baz',
+            id: 1
+          }
+        }
+      });
+    });
+  });
+
+  describe('#setAttribute', () => {
+    it('should set attribute', () => {
+      let resource = new Resource({
+        type: 'bar',
+        id: 1,
+        attributes: {}
+      });
+
+      resource.setAttribute('a', 'b');
+
+      expect(resource.serialize()).to.deep.equal({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          a: 'b'
+        }
+      });
+    });
+  });
+
+  describe('#unsetAttribute', () => {
+    it('should unset attribute', () => {
+      let resource = new Resource({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          a: 'b',
+          c: 'd'
+        }
+      });
+
+      resource.unsetAttribute('a');
+
+      expect(resource.serialize()).to.deep.equal({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          c: 'd'
+        }
+      });
+    });
+  });
+
+  describe('#setAttributes', () => {
+    it('should unset attributes', () => {
+      let resource = new Resource({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          a: 'b',
+          c: 'd'
+        }
+      });
+
+      resource.setAttributes({
+        a: 1,
+        b: 2
+      });
+
+      expect(resource.serialize()).to.deep.equal({
+        type: 'bar',
+        id: 1,
+        attributes: {
+          a: 1,
+          b: 2,
+          c: 'd'
+        }
+      });
+    });
+  });
+
   describe('#flatten', () => {
     it('should flatten identifier, relationships, attributes', () => {
       let resource = new Resource({

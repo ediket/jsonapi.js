@@ -24,22 +24,56 @@ export default class Relationship {
     .value();
   }
 
+  replaceLinkage(linkage) {
+    if (_.isArray(linkage)) {
+      this.data = _.map(linkage,
+        linkage => new ResourceIdentifier(linkage));
+    }
+    else {
+      if (_.isNull(linkage)) {
+        this.data = null;
+      }
+      else {
+        this.data = new ResourceIdentifier(linkage);
+      }
+    }
+  }
+
+  addLinkage(linkage) {
+    if (!_.isArray(this.data)) {
+      throw new Error('relationship should be array');
+    }
+
+    if (!_.isArray(linkage)) {
+      throw new Error('linkage should be array!');
+    }
+
+    this.removeLinkage(linkage);
+    this.data = this.data.concat(
+      _.map(linkage, linkage => new ResourceIdentifier(linkage))
+    );
+  }
+
+  removeLinkage(linkage) {
+    if (!_.isArray(this.data)) {
+      throw new Error('relationship should be array');
+    }
+
+    if (!_.isArray(linkage)) {
+      throw new Error('linkage should be array!');
+    }
+
+    _.remove(this.data, identifier => {
+      return _.findWhere(linkage, identifier);
+    });
+  }
+
   deserialize(relationship) {
     this.links = _.mapValues(relationship.links, link => {
       return new Link(link);
     });
     if (!_.isUndefined(relationship.data)) {
-      if (_.isArray(relationship.data)) {
-        this.data = _.map(relationship.data, data => new ResourceIdentifier(data));
-      }
-      else {
-        if (_.isNull(relationship.data)) {
-          this.data = null;
-        }
-        else {
-          this.data = new ResourceIdentifier(relationship.data);
-        }
-      }
+      this.replaceLinkage(relationship.data);
     }
     else {
       this.data = undefined;

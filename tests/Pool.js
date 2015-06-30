@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Q from 'q';
 import stubPromise from './libs/stubPromise';
 import promiseValue from './libs/promiseValue';
-import { Pool } from '../';
+import { Pool, Relationship } from '../';
 
 
 describe('Pool', () => {
@@ -502,6 +502,248 @@ describe('Pool', () => {
       .then(() => {
         let resource = pool.get('foo', 1);
         expect(resource).to.not.ok;
+      });
+    });
+  });
+
+  describe('#replaceLinkage', () => {
+    it('should replace linkage of To-One relationship', () => {
+      sync.patch.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      let relationship = new Relationship({
+        links: {
+          self: '/foo/relationships/bar'
+        },
+        data: {
+          type: 'bar',
+          id: 1
+        }
+      });
+
+      return Q.fcall(() => {
+        return pool.replaceLinkage(relationship, {
+          type: 'bar',
+          id: 2
+        });
+      })
+      .then(() => {
+        let patchCall = sync.patch.getCall(0);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bar'
+            }
+          },
+          data: {
+            type: 'bar',
+            id: 2
+          }
+        });
+        expect(patchCall).to.be.ok;
+        expect(patchCall.args[0]).to.equal('/foo/relationships/bar');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: {
+            type: 'bar',
+            id: 2
+          }
+        });
+      })
+      .then(() => {
+        return pool.replaceLinkage(relationship, null);
+      })
+      .then(() => {
+        let patchCall = sync.patch.getCall(1);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bar'
+            }
+          },
+          data: null
+        });
+        expect(patchCall).to.be.ok;
+        expect(patchCall.args[0]).to.equal('/foo/relationships/bar');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: null
+        });
+      });
+    });
+
+    it('should replace linkage of To-Many relationship', () => {
+      sync.patch.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      let relationship = new Relationship({
+        links: {
+          self: '/foo/relationships/bars'
+        },
+        data: [{
+          type: 'bar',
+          id: 1
+        }]
+      });
+
+      return Q.fcall(() => {
+        return pool.replaceLinkage(relationship, [{
+          type: 'bar',
+          id: 2
+        }]);
+      })
+      .then(() => {
+        let patchCall = sync.patch.getCall(0);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bars'
+            }
+          },
+          data: [{
+            type: 'bar',
+            id: 2
+          }]
+        });
+        expect(patchCall).to.be.ok;
+        expect(patchCall.args[0]).to.equal('/foo/relationships/bars');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 2
+          }]
+        });
+      })
+      .then(() => {
+        return pool.replaceLinkage(relationship, []);
+      })
+      .then(() => {
+        let patchCall = sync.patch.getCall(1);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bars'
+            }
+          },
+          data: []
+        });
+        expect(patchCall).to.be.ok;
+        expect(patchCall.args[0]).to.equal('/foo/relationships/bars');
+        expect(patchCall.args[1]).to.deep.equal({
+          data: []
+        });
+      });
+    });
+  });
+
+  describe('#addLinkage', () => {
+    it('should throw error when to-one relationship call it\'s method', () => {
+      let foo = new Relationship({
+        data: { type: 'foo', id: 1 }
+      });
+
+      expect(() => {
+        foo.addLinkage([{ type: 'foo', id: 2 }]);
+      }).to.throw(Error);
+    });
+
+    it('should create linkage of relationship', () => {
+      sync.post.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      let relationship = new Relationship({
+        links: {
+          self: '/foo/relationships/bars'
+        },
+        data: [{
+          type: 'bar',
+          id: 1
+        }]
+      });
+
+      return Q.fcall(() => {
+        return pool.addLinkage(relationship, [{
+          type: 'bar',
+          id: 2
+        }]);
+      })
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bars'
+            }
+          },
+          data: [{
+            type: 'bar',
+            id: 1
+          }, {
+            type: 'bar',
+            id: 2
+          }]
+        });
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/foo/relationships/bars');
+        expect(postCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 2
+          }]
+        });
+      });
+    });
+  });
+
+  describe('#removeLinkage', () => {
+    it('should remove linkage of relationship', () => {
+      sync.delete.returns(
+        promiseValue({
+          status: 204
+        })
+      );
+
+      let relationship = new Relationship({
+        links: {
+          self: '/foo/relationships/bars'
+        },
+        data: [{
+          type: 'bar',
+          id: 1
+        }]
+      });
+
+      return Q.fcall(() => {
+        return pool.removeLinkage(relationship, [{
+          type: 'bar',
+          id: 1
+        }]);
+      })
+      .then(() => {
+        let deleteCall = sync.delete.getCall(0);
+        expect(relationship.serialize()).to.deep.equal({
+          links: {
+            self: {
+              href: '/foo/relationships/bars'
+            }
+          },
+          data: []
+        });
+        expect(deleteCall).to.be.ok;
+        expect(deleteCall.args[0]).to.equal('/foo/relationships/bars');
+        expect(deleteCall.args[1]).to.deep.equal({
+          data: [{
+            type: 'bar',
+            id: 1
+          }]
+        });
       });
     });
   });
