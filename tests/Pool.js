@@ -700,6 +700,53 @@ describe('Pool', () => {
         });
       });
     });
+
+    it('should handle included resource', () => {
+      sync.post.returns(
+        promiseValue({
+          status: 200,
+          included: [{
+            id: 1,
+            type: 'foo',
+            links: {
+              self: {
+                href: '/foo/1'
+              }
+            }
+          }]
+        })
+      );
+
+      let relationship = new Relationship({
+        links: {
+          self: '/foo/relationships/bars'
+        },
+        data: []
+      });
+
+      return Q.fcall(() => {
+        return pool.addLinkage(relationship, [{
+          type: 'bar',
+          id: 2
+        }]);
+      })
+      .then(() => {
+        let postCall = sync.post.getCall(0);
+        expect(postCall).to.be.ok;
+        expect(postCall.args[0]).to.equal('/foo/relationships/bars');
+        let resource = pool.get('foo', 1);
+        expect(resource.serialize()).to.deep.equal({
+          id: 1,
+          type: 'foo',
+          links: {
+            self: {
+              href: '/foo/1'
+            }
+          }
+        });
+      });
+
+    });
   });
 
   describe('#removeLinkage', () => {

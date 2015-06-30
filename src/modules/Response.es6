@@ -65,7 +65,7 @@ export default class Response {
     this.included = _parseIncluded(xhr);
     this.errors = _parseErrors(xhr);
     this.headers = _parseHeaders(xhr);
-    this.satus = xhr.status;
+    this.status = xhr.status;
     this.nativeXHR = xhr;
   }
 

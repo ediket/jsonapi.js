@@ -1,10 +1,11 @@
 {
   "name": "jsonapi.js",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "https://github.com/ironhee/jsonapi.js",
   "authors": [
     "ironhee <iron@ediket.com>",
-    "jeongsd <asdfg852456@gmail.com>"
+    "jeongsd <asdfg852456@gmail.com>",
+    "JW <jw@ediket.com>"
   ],
   "description": "Javascript implementation of JSONAPI",
   "main": "dist/jsonapi.js",

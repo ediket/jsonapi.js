@@ -127,8 +127,20 @@ export default class Pool {
     return this.sync.patch(
       relationship.links.self.href, { data: linkage }
     )
-    .then(() => {
-      relationship.replaceLinkage(linkage);
+    .then(response => {
+      if (response.status === 204) {
+        relationship.replaceLinkage(linkage);
+      }
+      else {
+        if (response.data) {
+          relationship.replaceLinkage(response.data);
+        }
+        if (response.included) {
+          _.map(response.included, data => {
+            this.saveResourceToPool(data);
+          });
+        }
+      }
       return relationship;
     });
   }
@@ -155,8 +167,20 @@ export default class Pool {
     return this.sync.post(
       relationship.links.self.href, { data: linkage }
     )
-    .then(() => {
-      relationship.addLinkage(linkage);
+    .then(response => {
+      if (response.status === 204) {
+        relationship.addLinkage(linkage);
+      }
+      else {
+        if (response.data) {
+          relationship.addLinkage(response.data);
+        }
+        if (response.included) {
+          _.map(response.included, data => {
+            this.saveResourceToPool(data);
+          });
+        }
+      }
       return relationship;
     });
   }
@@ -183,8 +207,20 @@ export default class Pool {
     return this.sync.delete(
       relationship.links.self.href, { data: linkage }
     )
-    .then(() => {
-      relationship.removeLinkage(linkage);
+    .then(response => {
+      if (response.status === 204) {
+        relationship.removeLinkage(linkage);
+      }
+      else {
+        if (response.data) {
+          relationship.removeLinkage(response.data);
+        }
+        if (response.included) {
+          _.map(response.included, data => {
+            this.saveResourceToPool(data);
+          });
+        }
+      }
       return relationship;
     });
   }
@@ -220,7 +256,7 @@ export default class Pool {
       }
     }
     else {
-      if (_.isNull(mainData)) {
+      if (!mainData) {
         result = null;
       }
       else {
