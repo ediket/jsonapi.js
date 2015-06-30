@@ -208,13 +208,8 @@ export default class Pool {
       relationship.links.self.href, { data: linkage }
     )
     .then(response => {
-      if (response.status === 204) {
-        relationship.removeLinkage(linkage);
-      }
-      else {
-        if (response.data) {
-          relationship.removeLinkage(response.data);
-        }
+      relationship.removeLinkage(linkage);
+      if (response.status !== 204) {
         if (response.included) {
           _.map(response.included, data => {
             this.saveResourceToPool(data);
