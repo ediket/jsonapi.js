@@ -1,3 +1,4 @@
+/* eslint no-unused-vars: [0] */
 import _ from 'lodash';
 
 
@@ -45,9 +46,12 @@ function _parseHeaders(xhr) {
   let headersString = xhr.getAllResponseHeaders();
   let findResult;
 
-  while ((findResult = headerRegex.exec(headersString)) !== null) {
-    result.push(findResult.slice(1));
-  }
+  do {
+    findResult = headerRegex.exec(headersString);
+    if (findResult) {
+      result.push(findResult.slice(1));
+    }
+  } while (findResult !== null)
 
   return _.object(result);
 }

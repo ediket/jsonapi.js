@@ -52,7 +52,7 @@ describe('Resource', function() {
   });
 
   describe('#setRelationship', () => {
-    it('should create relationship', () => {
+    it('should create relationship with resource', () => {
       let foo = new Resource({
         type: 'foo',
         id: 1
@@ -70,6 +70,65 @@ describe('Resource', function() {
           type: 'bar',
           id: 1
         }
+      });
+    });
+
+    it('should create relationship with linkage', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      foo.setRelationship('bar', {
+        type: 'bar',
+        id: 1
+      });
+
+      expect(foo.relationships.bar.serialize()).to.deep.equal({
+        data: {
+          type: 'bar',
+          id: 1
+        }
+      });
+    });
+
+    it('should create relationship of collection with resource', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      let bar = [new Resource({
+        type: 'bar',
+        id: 1
+      })];
+
+      foo.setRelationship('bar', bar);
+
+      expect(foo.relationships.bar.serialize()).to.deep.equal({
+        data: [{
+          type: 'bar',
+          id: 1
+        }]
+      });
+    });
+
+    it('should create relationship of collection with linakge', () => {
+      let foo = new Resource({
+        type: 'foo',
+        id: 1
+      });
+
+      foo.setRelationship('bar', [{
+        type: 'bar',
+        id: 1
+      }]);
+
+      expect(foo.relationships.bar.serialize()).to.deep.equal({
+        data: [{
+          type: 'bar',
+          id: 1
+        }]
       });
     });
   });

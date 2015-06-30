@@ -16,10 +16,23 @@ export default class Resource extends ResourceIdentifier {
   }
 
   setRelationship(key, resource) {
-    this.relationships[key] = new Relationship({
-      links: resource.links,
-      data: resource.getIdentifier()
-    });
+    if (_.isArray(resource)) {
+      this.relationships[key] = new Relationship({
+        data: _.map(resource, resource =>
+          resource instanceof Resource ?
+            resource.getIdentifier() :
+            resource
+        )
+      });
+    }
+    else {
+      this.relationships[key] = new Relationship({
+        links: resource.links,
+        data: resource instanceof Resource ?
+          resource.getIdentifier() :
+          resource
+      });
+    }
   }
 
   unsetRelationship(key) {

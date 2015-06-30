@@ -5,8 +5,7 @@
   },
   "rules": {
     "strict": [2, "global"],
-    "no-reserved-keys": 0,
-    "no-shadow": 1,
+    "no-shadow": 0,
     "no-shadow-restricted-names": 2,
     "no-unused-vars": [2, {
       "vars": "local",
@@ -30,7 +29,7 @@
     "no-invalid-regexp": 2,
     "no-irregular-whitespace": 2,
     "no-obj-calls": 2,
-    "no-reserved-keys": 2,
+    "no-reserved-keys": 0,
     "no-sparse-arrays": 2,
     "no-unreachable": 2,
     "use-isnan": 2,
