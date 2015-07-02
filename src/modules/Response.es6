@@ -1,23 +1,33 @@
 /* eslint no-unused-vars: [0] */
 import _ from 'lodash';
 
+/**
+ * @external {jqXHR} https://api.jquery.com/jQuery.ajax/#jqXHR
+ */
+
+/**
+ * @see http://jsonapi.org/format/#errors
+ * @typedef {object} ErrorObject
+ * @property {?(string|number)} id
+ * @property {?LinkObject} links
+ * @property {?string} status
+ * @property {?string} code
+ * @property {?string} title
+ * @property {?string} detail
+ * @property {?ErrorSourceObject} source
+ * @property {?MetaObject} meta
+ */
+
+/**
+ * @see http://jsonapi.org/format/#errors
+ * @typedef {object} ErrorSourceObject
+ * @property {?string} pointer
+ * @property {?string} parameter
+ */
+
 
 function _isResponseError(status) {
   return status => 400 && status < 600;
-}
-
-function _parseData(xhr) {
-  if (!xhr.responseJSON) {
-    return null;
-  }
-  return xhr.responseJSON.data;
-}
-
-function _parseIncluded(xhr) {
-  if (!xhr.responseJSON) {
-    return null;
-  }
-  return xhr.responseJSON.included;
 }
 
 function _parseErrors(xhr) {
@@ -57,16 +67,36 @@ function _parseHeaders(xhr) {
 }
 
 
+/**
+ * @see http://jsonapi.org/format/#document-top-level
+ * @desc The response object of jsonapi. used in {@link RESTful}.
+ */
 export default class Response {
 
-  constructor(xhr) {
-    this.responseJSON = xhr.responseJSON;
-    this.data = _parseData(xhr);
-    this.included = _parseIncluded(xhr);
-    this.errors = _parseErrors(xhr);
-    this.headers = _parseHeaders(xhr);
-    this.status = xhr.status;
-    this.nativeXHR = xhr;
+  /**
+   * @param {jqXHR} jqXHR
+   */
+  constructor(jqXHR) {
+    let body = jqXHR.responseJSON || {};
+    /** @type {?(ResourceObject|ResourceObject[]|ResourceIdentifierObject|ResourceIdentifierObject[]|null)} */
+    this.data = body.data || null;
+    /** @type {?ErrorObject[]} */
+    this.errors = _parseErrors(jqXHR);
+    /** @type {?MetaObject} */
+    this.meta = body.included || null;
+    /** @type {?Object} */
+    this.jsonapi = body.jsonapi || null;
+    /** @type {?LinkObject} */
+    this.links = body.links || null;
+    /** @type {?ResourceObject[]} */
+    this.included = body.included || null;
+
+    /** @type {!Object} */
+    this.headers = _parseHeaders(jqXHR);
+    /** @type {!string} */
+    this.status = jqXHR.status;
+    /** @type {!jqXHR} */
+    this.jqXHR = jqXHR;
   }
 
 }

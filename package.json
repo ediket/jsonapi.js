@@ -15,7 +15,7 @@
       "email": "jw@ediket.com"
     }
   ],
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Javascript implementation of JSONAPI",
   "keywords": [
     "jsonapi",

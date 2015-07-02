@@ -6,20 +6,75 @@ import RESTful from './RESTful';
 import Resource from './Resource';
 
 
+/**
+ * @example
+ * pool.addRemote('foo', '/foo/');
+ *
+ * // Fetch Many Resources
+ * pool.fetch('foo')
+ * .then(resources => {
+ *   resources === pool.get('foo');  // true
+ * });
+ *
+ * // Fetch One Resource
+ * pool.fetch('foo', 1)
+ * .then(resource => {
+ *   resource === pool.get('foo', 1);  // true
+ * });
+ *
+ * // Create Resource
+ * pool.create('foo', {
+ *   attributes: {
+ *     content: 'bar'
+ *   }
+ * })
+ * .then(resource => {
+ *   resource === pool.get('foo', resource.id);  // true
+ * });
+ *
+ * // Update Resource
+ * pool.update('foo', 1, {
+ *   attributes: {
+ *     content: 'bar'
+ *   }
+ * })
+ *
+ * // Remove Resource
+ * pool.remove('foo', 1)
+ * .then(() => {
+ *   undefined === pool.get('foo', 1);  // true
+ * });
+ */
 export default class Pool {
 
   constructor() {
+    /** @type {LowDB} */
     this.db = new DB();
+    /** @type {RESTful} */
     this.sync = RESTful;
-    this.resetAll();
+    this._resetAll();
+    /** @type {Object<string, string>} */
     this.remote = {};
   }
 
-  resetAll() {
+  _resetAll() {
     this.remote = {};
     this.db.object = {};
   }
 
+  /**
+   * @param {!string} type
+   * @param {?(string|number)} id
+   * @param {?object} options
+   * @param {?string[]} options.sort
+   * @param {?string[]} options.include
+   * @param {?object} options.page
+   * @param {?number} options.page.number
+   * @param {?number} options.page.size
+   * @param {?fields[]} options.fields
+   * @param {?filter[]} options.filter
+   * @return {Promise}
+   */
   fetch(type, id, options={}) {
     let params = {};
 
@@ -57,16 +112,23 @@ export default class Pool {
     return this.sync.get(
       this.getRemote(type, id), params
     )
-    .then(response => this.saveResponseToPool(response));
+    .then(response => this._saveResponseToPool(response));
   }
 
+  /**
+   * @param {!string} type
+   * @param {!(string|number)} id
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
   remove(type, id, options={ sync: true }) {
     if (!type || !id) {
       throw new Error('unenough arguments');
     }
 
     if (!options.sync) {
-      return Q.resolve(this.removeResourceFromPool(type, id));
+      return Q.resolve(this._removeResourceFromPool(type, id));
     }
 
     return this.sync.delete(
@@ -74,34 +136,55 @@ export default class Pool {
     )
     .then(response => {
       return response.status !== 204 ?
-        this.saveResponseToPool(response) :
+        this._saveResponseToPool(response) :
         null;
     })
-    .then(() => this.removeResourceFromPool(type, id));
+    .then(() => this._removeResourceFromPool(type, id));
   }
 
+  /**
+   * @param {!string} type
+   * @param {?ResourceObject} data
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
   create(type, data, options={ sync: true }) {
+    if (!type) {
+      throw new Error('unenough arguments');
+    }
+
     data = _.extend({ type }, data);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(data));
+      return Q.resolve(this._saveResourceToPool(data));
     }
 
     return this.sync.post(
       this.getRemote(type), { data }
     )
     .then(response => {
-      return response.status === 204 ?
-        this.saveResourceToPool(data) :
-        this.saveResponseToPool(response);
+      return this._saveResponseToPool(response);
     });
   }
 
+  /**
+   * @param {!string} type
+   * @param {!(string|number)} id
+   * @param {?ResourceObject} data
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
   update(type, id, data, options={ sync: true }) {
+    if (!type || !id) {
+      throw new Error('unenough arguments');
+    }
+
     data = _.extend({ type, id }, data);
 
     if (!options.sync) {
-      return Q.resolve(this.saveResourceToPool(data));
+      return Q.resolve(this._saveResourceToPool(data));
     }
 
     return this.sync.patch(
@@ -109,11 +192,17 @@ export default class Pool {
     )
     .then(response => {
       return response.status === 204 ?
-        this.saveResourceToPool(data, true) :
-        this.saveResponseToPool(response);
+        this._saveResourceToPool(data, true) :
+        this._saveResponseToPool(response);
     });
   }
 
+  /**
+   * @param {!Relationship} relationship
+   * @param {!ResourceLinkage} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
   replaceLinkage(relationship, linkage, options={ sync: true }) {
     if (!options.sync) {
       relationship.replaceLinkage(linkage);
@@ -137,7 +226,7 @@ export default class Pool {
         }
         if (response.included) {
           _.map(response.included, data => {
-            this.saveResourceToPool(data);
+            this._saveResourceToPool(data);
           });
         }
       }
@@ -145,7 +234,13 @@ export default class Pool {
     });
   }
 
-  /* To-Many Relationships only */
+  /**
+   * @desc To-Many Relationships only
+   * @param {!Relationship} relationship
+   * @param {!ResourceIdentifierObject[]} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
   addLinkage(relationship, linkage, options={ sync: true }) {
     if (!_.isArray(linkage)) {
       throw new Error('linkage should be array!');
@@ -177,7 +272,7 @@ export default class Pool {
         }
         if (response.included) {
           _.map(response.included, data => {
-            this.saveResourceToPool(data);
+            this._saveResourceToPool(data);
           });
         }
       }
@@ -185,7 +280,13 @@ export default class Pool {
     });
   }
 
-  /* To-Many Relationships only */
+  /**
+   * @desc To-Many Relationships only
+   * @param {!Relationship} relationship
+   * @param {!ResourceIdentifierObject[]} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
   removeLinkage(relationship, linkage, options={ sync: true }) {
     if (!_.isArray(linkage)) {
       throw new Error('linkage should be array!');
@@ -212,7 +313,7 @@ export default class Pool {
       if (response.status !== 204) {
         if (response.included) {
           _.map(response.included, data => {
-            this.saveResourceToPool(data);
+            this._saveResourceToPool(data);
           });
         }
       }
@@ -220,6 +321,10 @@ export default class Pool {
     });
   }
 
+  /**
+   * @deprecated use replaceLinkage, addLinkage, removeLinkage
+   * instead of this.
+   */
   linkageOperation(operation, type, id, relationship, linkage) {
     console.warn('this method is deprecated. ' +
       'use addLinkage, removeLinkage, replaceLinkage instead.');
@@ -233,7 +338,7 @@ export default class Pool {
     });
   }
 
-  saveResponseToPool(response) {
+  _saveResponseToPool(response) {
     let mainData = response.data;
     let includedData = response.included;
 
@@ -246,7 +351,7 @@ export default class Pool {
       }
       else {
         result = _.map(mainData, data =>
-          this.saveResourceToPool(data)
+          this._saveResourceToPool(data)
         );
       }
     }
@@ -255,21 +360,21 @@ export default class Pool {
         result = null;
       }
       else {
-        result = this.saveResourceToPool(mainData);
+        result = this._saveResourceToPool(mainData);
       }
     }
 
     /* Included Data */
     if (includedData) {
       _.map(includedData, data => {
-        this.saveResourceToPool(data);
+        this._saveResourceToPool(data);
       });
     }
 
     return result;
   }
 
-  saveResourceToPool(data) {
+  _saveResourceToPool(data) {
     if (_.isUndefined(data.type) || _.isUndefined(data.id)) {
       throw new Error('Invalid data: type & id property should be given.');
     }
@@ -294,14 +399,27 @@ export default class Pool {
     return resource;
   }
 
-  removeResourceFromPool(type, id) {
+  _removeResourceFromPool(type, id) {
     return this.db(type).removeById(id);
   }
 
+  /**
+   * @param {!string} type
+   * @param {!string} url
+   */
   addRemote(type, url) {
+    if (!type || !url) {
+      throw new Error('unenough arguments');
+    }
     this.remote[type] = url;
   }
 
+  /**
+   * @param {!string} type
+   * @param {?(string|number)} id
+   * @param {?string} relationship
+   * @return {string} url
+   */
   getRemote(type, id, relationship) {
     let urlParts = _.compact([
       this.remote[type],
@@ -312,12 +430,22 @@ export default class Pool {
     return urljoin.apply(null, urlParts);
   }
 
+  /**
+   * @param {!type} type
+   * @param {?(string|number)} id
+   * @return {(Resource|Resource[])} resource
+   */
   get(type, id) {
     return id === undefined ?
       this.db(type).value() :
       this.db(type).getById(id);
   }
 
+  /**
+   * @param {!type} type
+   * @param {!string} relationship
+   * @return {(Resource|Resource[])} resource
+   */
   getRelated(resource, relationship) {
     if (_.isUndefined(resource.relationships)) {
       throw new Error('resource have empty relationship');
@@ -338,6 +466,11 @@ export default class Pool {
       this.get(linkage.type, linkage.id);
   }
 
+  /**
+   * @param {!type} type
+   * @param {!string} id
+   * @return {boolean}
+   */
   has(type, id) {
     if (!type || !id) {
       throw new Error('unenough arguments');

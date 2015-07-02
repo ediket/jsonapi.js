@@ -323,34 +323,6 @@ describe('Pool', () => {
         });
       });
     });
-
-    it('should properly handle 204 response', () => {
-      sync.post.returns(
-        promiseValue({
-          status: 204
-        })
-      );
-
-      pool.addRemote('foo', '/foo/');
-
-      return Q.fcall(() => pool.create('foo', {
-        type: 'foo',
-        id: 1,
-        attributes: {
-          content: 'bar'
-        }
-      }))
-      .then(() => {
-        let resource = pool.get('foo', 1);
-        expect(resource.serialize()).to.deep.equal({
-          type: 'foo',
-          id: 1,
-          attributes: {
-            content: 'bar'
-          }
-        });
-      });
-    });
   });
 
   describe('#remove', () => {

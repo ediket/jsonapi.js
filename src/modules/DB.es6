@@ -1,6 +1,10 @@
 import lodash from 'lodash';
 import underscoreDB from 'underscore-db';
 
+/**
+ * @external {LowDB} https://github.com/typicode/lowdb
+ */
+
 
 function lowChain(_, array) {
   let chain = _.chain(array);
@@ -17,6 +21,13 @@ function lowChain(_, array) {
 }
 
 
+/**
+ * @desc client-side database.
+ * @return {LowDB}
+ * @example
+ * let db = new DB();
+ * db('comment').insert({ content: 'hello' });
+ */
 function DB() {
   let _ = lodash.runInContext();
   _.mixin(underscoreDB);

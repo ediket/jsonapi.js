@@ -5,6 +5,11 @@ import Relationship from './modules/Relationship';
 import Link from './modules/Link';
 import RESTful from './modules/RESTful';
 
+/**
+ * @see http://jsonapi.org/format/#document-meta
+ * @typedef {object} MetaObject
+ */
+
 export default {
   Pool,
   Resource,
