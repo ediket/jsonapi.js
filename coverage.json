@@ -1,0 +1,39 @@
+{
+  "coverage": "98.66%",
+  "expectCount": 75,
+  "actualCount": 74,
+  "files": {
+    "src/modules/DB.es6": {
+      "expectCount": 1,
+      "actualCount": 1
+    },
+    "src/modules/Link.es6": {
+      "expectCount": 6,
+      "actualCount": 6
+    },
+    "src/modules/Pool.es6": {
+      "expectCount": 18,
+      "actualCount": 17
+    },
+    "src/modules/RESTful.es6": {
+      "expectCount": 8,
+      "actualCount": 8
+    },
+    "src/modules/Relationship.es6": {
+      "expectCount": 10,
+      "actualCount": 10
+    },
+    "src/modules/Resource.es6": {
+      "expectCount": 15,
+      "actualCount": 15
+    },
+    "src/modules/ResourceIdentifier.es6": {
+      "expectCount": 6,
+      "actualCount": 6
+    },
+    "src/modules/Response.es6": {
+      "expectCount": 11,
+      "actualCount": 11
+    }
+  }
+}

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/modules/RESTful.es6 | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/ironhee/jsonapi.js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/src/modules/Link.es6~Link.html">Link</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Pool.es6~Pool.html">Pool</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/RESTful.es6~RESTful.html">RESTful</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Relationship.es6~Relationship.html">Relationship</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Resource.es6~Resource.html">Resource</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/ResourceIdentifier.es6~ResourceIdentifier.html">ResourceIdentifier</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Response.es6~Response.html">Response</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="functionWrap">
+  <h2><a href="function/">Function</a></h2>
+  <ul>
+    
+  <li data-ice="functionDoc"><span><a href="function/index.html#static-function-DB">DB</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="typedefWrap">
+  <h2><a href="typedef/">Typedef</a></h2>
+  <ul>
+    
+  <li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorObject">ErrorObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorSourceObject">ErrorSourceObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinkObject">LinkObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinksObject">LinksObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-MetaObject">MetaObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-RelationshipObject">RelationshipObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceIdentifierObject">ResourceIdentifierObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceLinkage">ResourceLinkage</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceObject">ResourceObject</a></span></li>
+</ul>
+</div>
+
+<div data-ice="externalWrap">
+  <h2>External</h2>
+  <ul>
+    
+  <li data-ice="externalDoc"><span><a href="http://jsonapi.org/format/#document-resource-object-fields">Fields</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/typicode/lowdb">LowDB</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://api.jquery.com/jQuery.ajax/#jqXHR">jqXHR</a></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/modules/RESTful.es6</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">import $ from &apos;jquery&apos;;
+import _ from &apos;lodash&apos;;
+import Q from &apos;q&apos;;
+import Response from &apos;./Response&apos;;
+
+
+let stringifyRequiredMethod = function(method) {
+  // these HTTP methods requires JSON.stringify
+  return (/^(POST|PUT|PATCH|DELETE)$/.test(method.toUpperCase()));
+};
+
+function makeAjaxRequest(options) {
+  options = options || {};
+
+  if (stringifyRequiredMethod(options.type)) {
+    if (options.contentType === &apos;application/json&apos;) {
+      options.data = JSON.stringify(options.data);
+    }
+  }
+
+  options.url = options.url.replace(/\/?$/, &apos;/&apos;);
+
+  // https://github.com/kriskowal/q/wiki/Coming-from-jQuery
+  return Q.promise(function(resolve, reject) {
+    $.ajax(options)
+      .then(function(data, textStatus, jqXHR) {
+        delete jqXHR.then; // treat xhr as a non-promise
+        let response = new Response(jqXHR);
+        resolve(response);
+      })
+      .fail(function(jqXHR) {
+        delete jqXHR.then; // treat xhr as a non-promise
+        let response = new Response(jqXHR);
+        reject(response);
+      });
+  });
+}
+
+
+/**
+ * @desc wrapper function to make RESTful ajax request.
+ * @example
+ * // Fetch comment 1
+ * RESTful.get(&apos;/comments/1&apos;)
+ * .then(response =&gt; {
+ *   let resource = new Resource(response.data);
+ * })
+ *
+ * // Create comment
+ * RESTful.post(&apos;/comments&apos;, {
+ *   type: &apos;comment&apos;,
+ *   attributes: {
+ *     content: &apos;hello world&apos;
+ *   }
+ * })
+ * .then(response =&gt; {
+ *   let resource = new Resource(response.data);
+ * })
+ *
+ * // Update content of comment 2
+ * RESTful.patch(&apos;/comments/2&apos;, {
+ *   type: &apos;comment&apos;,
+ *   id: 2,
+ *   attributes: {
+ *     content: &apos;fix&apos;
+ *   }
+ * })
+ *
+ * // Remove comment 2
+ * RESTful.delete(&apos;/comments/1&apos;)
+ */
+class RESTful {
+  /**
+   * @desc make http HEAD request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static head(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;HEAD&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @desc make http GET request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static get(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;GET&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @desc make http POST request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static post(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;POST&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @desc make http PUT request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static put(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;PUT&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @desc make http PATCH request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static patch(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;PATCH&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @desc make http DELETE request
+   * @param {string} url URL for ajax request
+   * @param {object} data body of request
+   * @param {object} options overide options for $.ajax.
+   * @return {Response}
+   */
+  static delete(url, data, options) {
+    options = _.extend({
+      url: url,
+      type: &apos;DELETE&apos;,
+      data: data
+    }, this.defaultOptions, options);
+    return makeAjaxRequest(options);
+  }
+
+  /**
+   * @see https://api.jquery.com/jQuery.ajaxSetup/
+   * @desc wrapper function for $.ajaxSetup
+   * @param {object} options options for $.ajaxSetup
+   */
+  static ajaxSetup(options) {
+    $.ajaxSetup(options);
+  }
+}
+
+RESTful.defaultOptions = {
+  contentType: &apos;application/json&apos;,
+  processData: true
+};
+
+
+export default RESTful;
+</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.2)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

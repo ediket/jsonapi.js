@@ -1,0 +1,4134 @@
+[
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/jsonapi.es6",
+    "memberof": null,
+    "longname": "src/jsonapi.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import Pool from './modules/Pool';\nimport Resource from './modules/Resource';\nimport ResourceIdentifier from './modules/ResourceIdentifier';\nimport Relationship from './modules/Relationship';\nimport Link from './modules/Link';\nimport RESTful from './modules/RESTful';\n\n/**\n * @see http://jsonapi.org/format/#document-meta\n * @typedef {object} MetaObject\n */\n\nexport default {\n  Pool,\n  Resource,\n  ResourceIdentifier,\n  Relationship,\n  Link,\n  RESTful\n};\n"
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "MetaObject",
+    "memberof": "src/jsonapi.es6",
+    "longname": "src/jsonapi.es6~MetaObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-meta"
+    ],
+    "lineNumber": 13,
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "MetaObject"
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/DB.es6",
+    "memberof": null,
+    "longname": "src/modules/DB.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import lodash from 'lodash';\nimport underscoreDB from 'underscore-db';\n\n/**\n * @external {LowDB} https://github.com/typicode/lowdb\n */\n\n\nfunction lowChain(_, array) {\n  let chain = _.chain(array);\n\n  _.functions(chain)\n  .forEach(function(method) {\n    chain[method] = _.flow(chain[method], function(arg) {\n      let res = arg.value ? arg.value() : arg;\n      return res;\n    });\n  });\n\n  return chain;\n}\n\n\n/**\n * @desc client-side database.\n * @return {LowDB}\n * @example\n * let db = new DB();\n * db('comment').insert({ content: 'hello' });\n */\nfunction DB() {\n  let _ = lodash.runInContext();\n  _.mixin(underscoreDB);\n\n  let value = _.prototype.value;\n  _.prototype.value = function() {\n    let res = value.apply(this, arguments);\n    return res;\n  };\n\n  function db(key) {\n    let array;\n    if (db.object[key]) {\n      array = db.object[key];\n    }\n    else {\n      array = db.object[key] = [];\n    }\n\n    let short = lowChain(_, array);\n    short.chain = function() {\n      return _.chain(array);\n    };\n    return short;\n  }\n\n  // Expose lodash instance\n  db._ = _;\n\n  // Expose database object\n  db.object = {};\n\n  return db;\n}\n\nDB.stringify = function(obj) {\n  return JSON.stringify(obj, null, 2);\n};\n\nDB.parse = function(str) {\n  return JSON.parse(str);\n};\n\n\nexport default DB;\n"
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "LowDB",
+    "externalLink": "https://github.com/typicode/lowdb",
+    "memberof": "src/modules/DB.es6",
+    "longname": "src/modules/DB.es6~LowDB",
+    "access": null,
+    "description": null,
+    "lineNumber": 9
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "stringify",
+    "memberof": "src/modules/DB.es6",
+    "longname": "src/modules/DB.es6~stringify",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/DB.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 66,
+    "undocument": true,
+    "params": [
+      {
+        "name": "obj",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "parse",
+    "memberof": "src/modules/DB.es6",
+    "longname": "src/modules/DB.es6~parse",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/DB.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 70,
+    "undocument": true,
+    "params": [
+      {
+        "name": "str",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "DB",
+    "memberof": "src/modules/DB.es6",
+    "longname": "src/modules/DB.es6~DB",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/DB.es6",
+    "importStyle": "DB",
+    "description": "client-side database.",
+    "examples": [
+      "let db = new DB();\ndb('comment').insert({ content: 'hello' });"
+    ],
+    "lineNumber": 31,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "LowDB"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/Link.es6",
+    "memberof": null,
+    "longname": "src/modules/Link.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import _ from 'lodash';\n\n/**\n * @see http://jsonapi.org/format/#document-links\n * @typedef {(object|string)} LinkObject\n * @property {!string} href\n * @property {?MetaObject} meta\n */\n\n/**\n * @see http://jsonapi.org/format/#document-links\n * @example\n * let link1 = new Link('/api/resource');\n * let link2 = new Link({\n *   href: '/api/resource',\n *   meta: {\n *     foo: 'bar'\n *   }\n * });\n * link1.href === link2.href  // true\n * link1.serialize()  // { href: 'api/resource' };\n * link2.serialize()  // { href: 'api/resource', meta: { foo: 'bar' } };\n */\nexport default class Link {\n\n  /**\n   * @param {LinkObject} link\n   */\n  constructor(link) {\n    /** @type {string} */\n    this.href = null;\n    /** @type {MetaObject} */\n    this.meta = null;\n    this.deserialize(link);\n  }\n\n  /**\n   * @return {LinkObject} link\n   */\n  serialize() {\n    return _.omit({\n      href: this.href,\n      meta: this.meta\n    }, _.isEmpty);\n  }\n\n  /**\n   * @param {LinkObject} link\n   */\n  deserialize(link) {\n    if (_.isString(link)) {\n      this.href = link;\n      this.meta = {};\n    }\n    else {\n      this.href = link.href;\n      this.meta = link.meta;\n    }\n  }\n\n}\n"
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "LinkObject",
+    "memberof": "src/modules/Link.es6",
+    "longname": "src/modules/Link.es6~LinkObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-links"
+    ],
+    "properties": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "href",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "MetaObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "meta",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object",
+        "string"
+      ],
+      "optional": false,
+      "name": "LinkObject"
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Link",
+    "memberof": "src/modules/Link.es6",
+    "longname": "src/modules/Link.es6~Link",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/Link.es6",
+    "importStyle": "Link",
+    "description": null,
+    "examples": [
+      "let link1 = new Link('/api/resource');\nlet link2 = new Link({\n  href: '/api/resource',\n  meta: {\n    foo: 'bar'\n  }\n});\nlink1.href === link2.href  // true\nlink1.serialize()  // { href: 'api/resource' };\nlink2.serialize()  // { href: 'api/resource', meta: { foo: 'bar' } };"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#document-links"
+    ],
+    "lineNumber": 24,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 29,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "LinkObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "link",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "href",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#href",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 33,
+    "type": {
+      "nullable": null,
+      "types": [
+        "MetaObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "serialize",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#serialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 40,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "LinkObject"
+      ],
+      "spread": false,
+      "description": "link"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "deserialize",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#deserialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 50,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "LinkObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "link",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "href",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#href",
+    "access": null,
+    "description": null,
+    "lineNumber": 52,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 53,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "href",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#href",
+    "access": null,
+    "description": null,
+    "lineNumber": 56,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Link.es6~Link",
+    "longname": "src/modules/Link.es6~Link#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 57,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/Pool.es6",
+    "memberof": null,
+    "longname": "src/modules/Pool.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import _ from 'lodash';\nimport Q from 'q';\nimport urljoin from 'url-join';\nimport DB from './DB';\nimport RESTful from './RESTful';\nimport Resource from './Resource';\n\n\n/**\n * @example\n * pool.addRemote('foo', '/foo/');\n *\n * // Fetch Many Resources\n * pool.fetch('foo')\n * .then(resources => {\n *   resources === pool.get('foo');  // true\n * });\n *\n * // Fetch One Resource\n * pool.fetch('foo', 1)\n * .then(resource => {\n *   resource === pool.get('foo', 1);  // true\n * });\n *\n * // Create Resource\n * pool.create('foo', {\n *   attributes: {\n *     content: 'bar'\n *   }\n * })\n * .then(resource => {\n *   resource === pool.get('foo', resource.id);  // true\n * });\n *\n * // Update Resource\n * pool.update('foo', 1, {\n *   attributes: {\n *     content: 'bar'\n *   }\n * })\n *\n * // Remove Resource\n * pool.remove('foo', 1)\n * .then(() => {\n *   undefined === pool.get('foo', 1);  // true\n * });\n */\nexport default class Pool {\n\n  constructor() {\n    /** @type {LowDB} */\n    this.db = new DB();\n    /** @type {RESTful} */\n    this.sync = RESTful;\n    this._resetAll();\n    /** @type {Object<string, string>} */\n    this.remote = {};\n  }\n\n  _resetAll() {\n    this.remote = {};\n    this.db.object = {};\n  }\n\n  /**\n   * @param {!string} type\n   * @param {?(string|number)} id\n   * @param {?object} options\n   * @param {?string[]} options.sort\n   * @param {?string[]} options.include\n   * @param {?object} options.page\n   * @param {?number} options.page.number\n   * @param {?number} options.page.size\n   * @param {?fields[]} options.fields\n   * @param {?filter[]} options.filter\n   * @return {Promise}\n   */\n  fetch(type, id, options={}) {\n    let params = {};\n\n    if (options.sort) {\n      params.sort = options.sort.join(',');\n    }\n\n    if (options.include) {\n      params.include = options.include.join(',');\n    }\n\n    if (options.page) {\n      params = _.extend(params, {\n        'page[number]': options.page.number,\n        'page[size]': options.page.size\n      });\n    }\n\n    if (options.fields) {\n      _.reduce(options.fields, (result, fields, type) => {\n        result[`fields[${type}]`] = fields.join(',');\n        return result;\n      }, params);\n    }\n\n    if (options.filter) {\n      _.reduce(options.filter, (result, filter, type) => {\n        result[`filter[${type}]`] = filter.join(',');\n        return result;\n      }, params);\n    }\n\n    params = _.omit(params, _.isUndefined);\n\n    return this.sync.get(\n      this.getRemote(type, id), params\n    )\n    .then(response => this._saveResponseToPool(response));\n  }\n\n  /**\n   * @param {!string} type\n   * @param {!(string|number)} id\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   * @return {Promise}\n   */\n  remove(type, id, options={ sync: true }) {\n    if (!type || !id) {\n      throw new Error('unenough arguments');\n    }\n\n    if (!options.sync) {\n      return Q.resolve(this._removeResourceFromPool(type, id));\n    }\n\n    return this.sync.delete(\n      this.getRemote(type, id)\n    )\n    .then(response => {\n      return response.status !== 204 ?\n        this._saveResponseToPool(response) :\n        null;\n    })\n    .then(() => this._removeResourceFromPool(type, id));\n  }\n\n  /**\n   * @param {!string} type\n   * @param {?ResourceObject} data\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   * @return {Promise}\n   */\n  create(type, data, options={ sync: true }) {\n    if (!type) {\n      throw new Error('unenough arguments');\n    }\n\n    data = _.extend({ type }, data);\n\n    if (!options.sync) {\n      return Q.resolve(this._saveResourceToPool(data));\n    }\n\n    return this.sync.post(\n      this.getRemote(type), { data }\n    )\n    .then(response => {\n      return this._saveResponseToPool(response);\n    });\n  }\n\n  /**\n   * @param {!string} type\n   * @param {!(string|number)} id\n   * @param {?ResourceObject} data\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   * @return {Promise}\n   */\n  update(type, id, data, options={ sync: true }) {\n    if (!type || !id) {\n      throw new Error('unenough arguments');\n    }\n\n    data = _.extend({ type, id }, data);\n\n    if (!options.sync) {\n      return Q.resolve(this._saveResourceToPool(data));\n    }\n\n    return this.sync.patch(\n      this.getRemote(type, id), { data }\n    )\n    .then(response => {\n      return response.status === 204 ?\n        this._saveResourceToPool(data, true) :\n        this._saveResponseToPool(response);\n    });\n  }\n\n  /**\n   * @param {!Relationship} relationship\n   * @param {!ResourceLinkage} linkage\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   */\n  replaceLinkage(relationship, linkage, options={ sync: true }) {\n    if (!options.sync) {\n      relationship.replaceLinkage(linkage);\n      return Q.resolve(relationship);\n    }\n\n    if (!(relationship.links && relationship.links.self)) {\n      throw new Error('relationship should contain self link!');\n    }\n\n    return this.sync.patch(\n      relationship.links.self.href, { data: linkage }\n    )\n    .then(response => {\n      if (response.status === 204) {\n        relationship.replaceLinkage(linkage);\n      }\n      else {\n        if (response.data) {\n          relationship.replaceLinkage(response.data);\n        }\n        if (response.included) {\n          _.map(response.included, data => {\n            this._saveResourceToPool(data);\n          });\n        }\n      }\n      return relationship;\n    });\n  }\n\n  /**\n   * @desc To-Many Relationships only\n   * @param {!Relationship} relationship\n   * @param {!ResourceIdentifierObject[]} linkage\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   */\n  addLinkage(relationship, linkage, options={ sync: true }) {\n    if (!_.isArray(linkage)) {\n      throw new Error('linkage should be array!');\n    }\n\n    if (!_.isArray(relationship.data)) {\n      throw new Error('relationship should be array');\n    }\n\n    if (!options.sync) {\n      relationship.addLinkage(linkage);\n      return Q.resolve(relationship);\n    }\n\n    if (!(relationship.links && relationship.links.self)) {\n      throw new Error('relationship should contain self link!');\n    }\n\n    return this.sync.post(\n      relationship.links.self.href, { data: linkage }\n    )\n    .then(response => {\n      if (response.status === 204) {\n        relationship.addLinkage(linkage);\n      }\n      else {\n        if (response.data) {\n          relationship.addLinkage(response.data);\n        }\n        if (response.included) {\n          _.map(response.included, data => {\n            this._saveResourceToPool(data);\n          });\n        }\n      }\n      return relationship;\n    });\n  }\n\n  /**\n   * @desc To-Many Relationships only\n   * @param {!Relationship} relationship\n   * @param {!ResourceIdentifierObject[]} linkage\n   * @param {?object} options\n   * @param {boolean} [options.sync=true]\n   */\n  removeLinkage(relationship, linkage, options={ sync: true }) {\n    if (!_.isArray(linkage)) {\n      throw new Error('linkage should be array!');\n    }\n\n    if (!_.isArray(relationship.data)) {\n      throw new Error('relationship should be array');\n    }\n\n    if (!options.sync) {\n      relationship.removeLinkage(linkage);\n      return Q.resolve(relationship);\n    }\n\n    if (!(relationship.links && relationship.links.self)) {\n      throw new Error('relationship should contain self link!');\n    }\n\n    return this.sync.delete(\n      relationship.links.self.href, { data: linkage }\n    )\n    .then(response => {\n      relationship.removeLinkage(linkage);\n      if (response.status !== 204) {\n        if (response.included) {\n          _.map(response.included, data => {\n            this._saveResourceToPool(data);\n          });\n        }\n      }\n      return relationship;\n    });\n  }\n\n  /**\n   * @deprecated use replaceLinkage, addLinkage, removeLinkage\n   * instead of this.\n   */\n  linkageOperation(operation, type, id, relationship, linkage) {\n    console.warn('this method is deprecated. ' +\n      'use addLinkage, removeLinkage, replaceLinkage instead.');\n\n    return this.sync[operation](\n      this.getRemote(type, id, relationship),\n      !_.isUndefined(linkage) ? { data: linkage } : undefined\n    )\n    .then(() => {\n      // FIXME: linkage operation\n    });\n  }\n\n  _saveResponseToPool(response) {\n    let mainData = response.data;\n    let includedData = response.included;\n\n    let result;\n\n    /* Main Data */\n    if (_.isArray(mainData)) {\n      if (_.isEmpty(mainData)) {\n        result = [];\n      }\n      else {\n        result = _.map(mainData, data =>\n          this._saveResourceToPool(data)\n        );\n      }\n    }\n    else {\n      if (!mainData) {\n        result = null;\n      }\n      else {\n        result = this._saveResourceToPool(mainData);\n      }\n    }\n\n    /* Included Data */\n    if (includedData) {\n      _.map(includedData, data => {\n        this._saveResourceToPool(data);\n      });\n    }\n\n    return result;\n  }\n\n  _saveResourceToPool(data) {\n    if (_.isUndefined(data.type) || _.isUndefined(data.id)) {\n      throw new Error('Invalid data: type & id property should be given.');\n    }\n\n    let resource = this.get(data.type, data.id);\n\n    /* New Resource */\n    if (!resource) {\n      resource = new Resource(data);\n      this.db(resource.type).insert(resource);\n    }\n    /* Existing Resource */\n    else {\n      let before = resource.serialize();\n      data = _.extend({}, data, {\n        attributes: _.extend({}, before.attributes, data.attributes),\n        relationships: _.extend({}, before.relationships, data.relationships)\n      });\n      resource.deserialize(data);\n    }\n\n    return resource;\n  }\n\n  _removeResourceFromPool(type, id) {\n    return this.db(type).removeById(id);\n  }\n\n  /**\n   * @param {!string} type\n   * @param {!string} url\n   */\n  addRemote(type, url) {\n    if (!type || !url) {\n      throw new Error('unenough arguments');\n    }\n    this.remote[type] = url;\n  }\n\n  /**\n   * @param {!string} type\n   * @param {?(string|number)} id\n   * @param {?string} relationship\n   * @return {string} url\n   */\n  getRemote(type, id, relationship) {\n    let urlParts = _.compact([\n      this.remote[type],\n      id,\n      relationship ? 'relationships' : undefined,\n      relationship\n    ]);\n    return urljoin.apply(null, urlParts);\n  }\n\n  /**\n   * @param {!type} type\n   * @param {?(string|number)} id\n   * @return {(Resource|Resource[])} resource\n   */\n  get(type, id) {\n    return id === undefined ?\n      this.db(type).value() :\n      this.db(type).getById(id);\n  }\n\n  /**\n   * @param {!type} type\n   * @param {!string} relationship\n   * @return {(Resource|Resource[])} resource\n   */\n  getRelated(resource, relationship) {\n    if (_.isUndefined(resource.relationships)) {\n      throw new Error('resource have empty relationship');\n    }\n\n    let relationshipObj = resource.relationships[relationship];\n    if (_.isUndefined(relationshipObj)) {\n      throw new Error(`resource dose not have relationship: ${relationship}`);\n    }\n\n    let linkage = resource.relationships[relationship].data;\n    if (_.isUndefined(linkage)) {\n      throw new Error(`resource\\'s relationship(${relationship}) dose not have linkage`);\n    }\n\n    return _.isArray(linkage) ?\n      _.map(linkage, _linkage => this.get(_linkage.type, _linkage.id)) :\n      this.get(linkage.type, linkage.id);\n  }\n\n  /**\n   * @param {!type} type\n   * @param {!string} id\n   * @return {boolean}\n   */\n  has(type, id) {\n    if (!type || !id) {\n      throw new Error('unenough arguments');\n    }\n\n    let result = this.db(type).getById(id);\n    return !!result;\n  }\n\n}\n"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Pool",
+    "memberof": "src/modules/Pool.es6",
+    "longname": "src/modules/Pool.es6~Pool",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/Pool.es6",
+    "importStyle": "Pool",
+    "description": null,
+    "examples": [
+      "pool.addRemote('foo', '/foo/');\n\n// Fetch Many Resources\npool.fetch('foo')\n.then(resources => {\n  resources === pool.get('foo');  // true\n});\n\n// Fetch One Resource\npool.fetch('foo', 1)\n.then(resource => {\n  resource === pool.get('foo', 1);  // true\n});\n\n// Create Resource\npool.create('foo', {\n  attributes: {\n    content: 'bar'\n  }\n})\n.then(resource => {\n  resource === pool.get('foo', resource.id);  // true\n});\n\n// Update Resource\npool.update('foo', 1, {\n  attributes: {\n    content: 'bar'\n  }\n})\n\n// Remove Resource\npool.remove('foo', 1)\n.then(() => {\n  undefined === pool.get('foo', 1);  // true\n});"
+    ],
+    "lineNumber": 48,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 50,
+    "undocument": true,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "db",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#db",
+    "access": null,
+    "description": null,
+    "lineNumber": 52,
+    "type": {
+      "nullable": null,
+      "types": [
+        "LowDB"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "sync",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#sync",
+    "access": null,
+    "description": null,
+    "lineNumber": 54,
+    "type": {
+      "nullable": null,
+      "types": [
+        "RESTful"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "remote",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#remote",
+    "access": null,
+    "description": null,
+    "lineNumber": 57,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object<string, string>"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_resetAll",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#_resetAll",
+    "access": null,
+    "description": null,
+    "lineNumber": 60,
+    "undocument": true,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "remote",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#remote",
+    "access": null,
+    "description": null,
+    "lineNumber": 61,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "fetch",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#fetch",
+    "access": null,
+    "description": null,
+    "lineNumber": 78,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.sort",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.include",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.page",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.page.number",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.page.size",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "fields[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.fields",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "filter[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.filter",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "remove",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#remove",
+    "access": null,
+    "description": null,
+    "lineNumber": 125,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "create",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#create",
+    "access": null,
+    "description": null,
+    "lineNumber": 152,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "ResourceObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "update",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#update",
+    "access": null,
+    "description": null,
+    "lineNumber": 179,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "ResourceObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "replaceLinkage",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#replaceLinkage",
+    "access": null,
+    "description": null,
+    "lineNumber": 206,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "Relationship"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "ResourceLinkage"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "addLinkage",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#addLinkage",
+    "access": null,
+    "description": "To-Many Relationships only",
+    "lineNumber": 244,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "Relationship"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "ResourceIdentifierObject[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "removeLinkage",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#removeLinkage",
+    "access": null,
+    "description": "To-Many Relationships only",
+    "lineNumber": 290,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "Relationship"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "ResourceIdentifierObject[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "boolean"
+        ],
+        "spread": false,
+        "optional": true,
+        "defaultValue": "true",
+        "defaultRaw": true,
+        "name": "options.sync",
+        "description": ""
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "linkageOperation",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#linkageOperation",
+    "access": null,
+    "description": null,
+    "lineNumber": 328,
+    "deprecated": "use replaceLinkage, addLinkage, removeLinkage\ninstead of this.",
+    "params": [
+      {
+        "name": "operation",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "type",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "id",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "relationship",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "linkage",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_saveResponseToPool",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#_saveResponseToPool",
+    "access": null,
+    "description": null,
+    "lineNumber": 341,
+    "undocument": true,
+    "params": [
+      {
+        "name": "response",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_saveResourceToPool",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#_saveResourceToPool",
+    "access": null,
+    "description": null,
+    "lineNumber": 377,
+    "undocument": true,
+    "params": [
+      {
+        "name": "data",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "_removeResourceFromPool",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#_removeResourceFromPool",
+    "access": null,
+    "description": null,
+    "lineNumber": 402,
+    "undocument": true,
+    "params": [
+      {
+        "name": "type",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "id",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "addRemote",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#addRemote",
+    "access": null,
+    "description": null,
+    "lineNumber": 410,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getRemote",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#getRemote",
+    "access": null,
+    "description": null,
+    "lineNumber": 423,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "url"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "get",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#get",
+    "access": null,
+    "description": null,
+    "lineNumber": 438,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "type"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Resource",
+        "Resource[]"
+      ],
+      "spread": false,
+      "description": "resource"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getRelated",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#getRelated",
+    "access": null,
+    "description": null,
+    "lineNumber": 449,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "type"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Resource",
+        "Resource[]"
+      ],
+      "spread": false,
+      "description": "resource"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "has",
+    "memberof": "src/modules/Pool.es6~Pool",
+    "longname": "src/modules/Pool.es6~Pool#has",
+    "access": null,
+    "description": null,
+    "lineNumber": 474,
+    "params": [
+      {
+        "nullable": false,
+        "types": [
+          "type"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "boolean"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/RESTful.es6",
+    "memberof": null,
+    "longname": "src/modules/RESTful.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import $ from 'jquery';\nimport _ from 'lodash';\nimport Q from 'q';\nimport Response from './Response';\n\n\nlet stringifyRequiredMethod = function(method) {\n  // these HTTP methods requires JSON.stringify\n  return (/^(POST|PUT|PATCH|DELETE)$/.test(method.toUpperCase()));\n};\n\nfunction makeAjaxRequest(options) {\n  options = options || {};\n\n  if (stringifyRequiredMethod(options.type)) {\n    if (options.contentType === 'application/json') {\n      options.data = JSON.stringify(options.data);\n    }\n  }\n\n  options.url = options.url.replace(/\\/?$/, '/');\n\n  // https://github.com/kriskowal/q/wiki/Coming-from-jQuery\n  return Q.promise(function(resolve, reject) {\n    $.ajax(options)\n      .then(function(data, textStatus, jqXHR) {\n        delete jqXHR.then; // treat xhr as a non-promise\n        let response = new Response(jqXHR);\n        resolve(response);\n      })\n      .fail(function(jqXHR) {\n        delete jqXHR.then; // treat xhr as a non-promise\n        let response = new Response(jqXHR);\n        reject(response);\n      });\n  });\n}\n\n\n/**\n * @desc wrapper function to make RESTful ajax request.\n * @example\n * // Fetch comment 1\n * RESTful.get('/comments/1')\n * .then(response => {\n *   let resource = new Resource(response.data);\n * })\n *\n * // Create comment\n * RESTful.post('/comments', {\n *   type: 'comment',\n *   attributes: {\n *     content: 'hello world'\n *   }\n * })\n * .then(response => {\n *   let resource = new Resource(response.data);\n * })\n *\n * // Update content of comment 2\n * RESTful.patch('/comments/2', {\n *   type: 'comment',\n *   id: 2,\n *   attributes: {\n *     content: 'fix'\n *   }\n * })\n *\n * // Remove comment 2\n * RESTful.delete('/comments/1')\n */\nclass RESTful {\n  /**\n   * @desc make http HEAD request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static head(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'HEAD',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @desc make http GET request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static get(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'GET',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @desc make http POST request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static post(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'POST',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @desc make http PUT request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static put(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'PUT',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @desc make http PATCH request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static patch(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'PATCH',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @desc make http DELETE request\n   * @param {string} url URL for ajax request\n   * @param {object} data body of request\n   * @param {object} options overide options for $.ajax.\n   * @return {Response}\n   */\n  static delete(url, data, options) {\n    options = _.extend({\n      url: url,\n      type: 'DELETE',\n      data: data\n    }, this.defaultOptions, options);\n    return makeAjaxRequest(options);\n  }\n\n  /**\n   * @see https://api.jquery.com/jQuery.ajaxSetup/\n   * @desc wrapper function for $.ajaxSetup\n   * @param {object} options options for $.ajaxSetup\n   */\n  static ajaxSetup(options) {\n    $.ajaxSetup(options);\n  }\n}\n\nRESTful.defaultOptions = {\n  contentType: 'application/json',\n  processData: true\n};\n\n\nexport default RESTful;\n"
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "stringifyRequiredMethod",
+    "memberof": "src/modules/RESTful.es6",
+    "longname": "src/modules/RESTful.es6~stringifyRequiredMethod",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/RESTful.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "params": [
+      {
+        "name": "method",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "makeAjaxRequest",
+    "memberof": "src/modules/RESTful.es6",
+    "longname": "src/modules/RESTful.es6~makeAjaxRequest",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/RESTful.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 12,
+    "undocument": true,
+    "params": [
+      {
+        "name": "options",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "RESTful",
+    "memberof": "src/modules/RESTful.es6",
+    "longname": "src/modules/RESTful.es6~RESTful",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/RESTful.es6",
+    "importStyle": "RESTful",
+    "description": "wrapper function to make RESTful ajax request.",
+    "examples": [
+      "// Fetch comment 1\nRESTful.get('/comments/1')\n.then(response => {\n  let resource = new Resource(response.data);\n})\n\n// Create comment\nRESTful.post('/comments', {\n  type: 'comment',\n  attributes: {\n    content: 'hello world'\n  }\n})\n.then(response => {\n  let resource = new Resource(response.data);\n})\n\n// Update content of comment 2\nRESTful.patch('/comments/2', {\n  type: 'comment',\n  id: 2,\n  attributes: {\n    content: 'fix'\n  }\n})\n\n// Remove comment 2\nRESTful.delete('/comments/1')"
+    ],
+    "lineNumber": 72,
+    "interface": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "head",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.head",
+    "access": null,
+    "description": "make http HEAD request",
+    "lineNumber": 80,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "get",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.get",
+    "access": null,
+    "description": "make http GET request",
+    "lineNumber": 96,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "post",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.post",
+    "access": null,
+    "description": "make http POST request",
+    "lineNumber": 112,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "put",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.put",
+    "access": null,
+    "description": "make http PUT request",
+    "lineNumber": 128,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "patch",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.patch",
+    "access": null,
+    "description": "make http PATCH request",
+    "lineNumber": 144,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "delete",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.delete",
+    "access": null,
+    "description": "make http DELETE request",
+    "lineNumber": 160,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "url",
+        "description": "URL for ajax request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "body of request"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "overide options for $.ajax."
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Response"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": true,
+    "variation": null,
+    "name": "ajaxSetup",
+    "memberof": "src/modules/RESTful.es6~RESTful",
+    "longname": "src/modules/RESTful.es6~RESTful.ajaxSetup",
+    "access": null,
+    "description": "wrapper function for $.ajaxSetup",
+    "see": [
+      "https://api.jquery.com/jQuery.ajaxSetup/"
+    ],
+    "lineNumber": 174,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "options for $.ajaxSetup"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/Relationship.es6",
+    "memberof": null,
+    "longname": "src/modules/Relationship.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import _ from 'lodash';\nimport Link from './Link';\nimport ResourceIdentifier from './ResourceIdentifier';\n\n/**\n * @see http://jsonapi.org/format/#document-resource-object-relationships\n * @typedef {object} RelationshipObject\n * @property {?LinksObject} links\n * @property {?ResourceLinkage} data\n * @property {?MetaObject} meta\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-object-relationships\n * @typedef {object} LinksObject\n * @property {?LinksObject} self\n * @property {?LinksObject} related\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-object-linkage\n * @typedef {?(null|ResourceIdentifierObject[]|ResourceIdentifierObject)} ResourceLinkage\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-object-relationships\n * @example\n * let toOneRelationship = new Relationship({\n *   data: {\n *     type: 'foo',\n *     id: 1\n *   }\n * });\n * let toManyRelationship = new Relationship({\n *   data: [{\n *     type: 'foo',\n *     id: 1\n *   }]\n * });\n */\nexport default class Relationship {\n\n  /**\n   * @param {RelationshipObject} relationship\n   */\n  constructor(relationship) {\n    /** @type {ResourceLinkage} */\n    this.data = null;\n    /** @type {LinksObject} */\n    this.links = null;\n    /** @type {MetaObject} */\n    this.meta = null;\n    this.deserialize(relationship);\n  }\n\n  /**\n   * @desc completely replace every member of the relationship.\n   * @param {ResourceLinkage} linkage\n   * @see http://jsonapi.org/format/#crud-updating-relationships\n   * @example\n   * // Updating To-One Relationships\n   * let toOneRelationship = new Relationship({\n   *   data: { type: 'foo', id: 1 }\n   * });\n   * toOneRelationship.replaceLinkage({ type: 'foo', id: 2 });\n   * toOneRelationship.replaceLinkage(null);\n   *\n   * // Updating To-Many Relationships\n   * let toManyRelationship = new Relationship({\n   *   data: [\n   *     { type: 'foo', id: 1 }\n   *   ]\n   * });\n   * toManyRelationship.replaceLinkage([\n   *   { type: 'foo', id: 2 }\n   * ]);\n   * toManyRelationship.replaceLinkage([]);\n   */\n  replaceLinkage(linkage) {\n    if (_.isArray(linkage)) {\n      this.data = _.map(linkage,\n        linkage => new ResourceIdentifier(linkage));\n    }\n    else {\n      if (_.isNull(linkage)) {\n        this.data = null;\n      }\n      else {\n        this.data = new ResourceIdentifier(linkage);\n      }\n    }\n  }\n\n  /**\n   * @desc add the specified members to the relationship unless they are already present.\n   * @param {ResourceIdentifierObject[]} linkage\n   * @see http://jsonapi.org/format/#crud-updating-to-many-relationships\n   * @example\n   * let toManyRelationship = new Relationship({\n   *   data: [\n   *     { type: 'foo', id: 1 }\n   *   ]\n   * });\n   * toManyRelationship.addLinkage([\n   *   { type: 'foo', id: 1 },\n   *   { type: 'foo', id: 2 }\n   * ]);\n   */\n  addLinkage(linkage) {\n    if (!_.isArray(this.data)) {\n      throw new Error('relationship should be array');\n    }\n\n    if (!_.isArray(linkage)) {\n      throw new Error('linkage should be array!');\n    }\n\n    this.removeLinkage(linkage);\n    this.data = this.data.concat(\n      _.map(linkage, linkage => new ResourceIdentifier(linkage))\n    );\n  }\n\n  /**\n   * @desc delete the specified members from the relationship.\n   * @param {ResourceIdentifierObject[]} linkage\n   * @see http://jsonapi.org/format/#crud-updating-to-many-relationships\n   * @example\n   * let toManyRelationship = new Relationship({\n   *   data: [\n   *     { type: 'foo', id: 1 }\n   *   ]\n   * });\n   * toManyRelationship.removeLinkage([\n   *   { type: 'foo', id: 1 }\n   * ]);\n   */\n  removeLinkage(linkage) {\n    if (!_.isArray(this.data)) {\n      throw new Error('relationship should be array');\n    }\n\n    if (!_.isArray(linkage)) {\n      throw new Error('linkage should be array!');\n    }\n\n    _.remove(this.data, identifier => {\n      return _.findWhere(linkage, identifier);\n    });\n  }\n\n  /**\n   * @desc serialize relationship.\n   * @return {RelationshipObject} relationship\n   */\n  serialize() {\n    return _.chain({\n      links: _.mapValues(this.links, link => link.serialize()),\n      meta: this.meta\n    })\n    .omit(_.isEmpty)\n    .extend({\n      data: _.isArray(this.data) ?\n        _.map(this.data, identifier => identifier.serialize()) :\n        this.data && this.data.serialize()\n    })\n    .omit(_.isUndefined)\n    .value();\n  }\n\n  /**\n   * @desc deserialize relationship.\n   * @param {RelationshipObject} relationship\n   */\n  deserialize(relationship) {\n    this.links = _.mapValues(relationship.links, link => {\n      return new Link(link);\n    });\n    if (!_.isUndefined(relationship.data)) {\n      this.replaceLinkage(relationship.data);\n    }\n    else {\n      this.data = undefined;\n    }\n    this.meta = relationship.meta;\n  }\n\n}\n"
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "RelationshipObject",
+    "memberof": "src/modules/Relationship.es6",
+    "longname": "src/modules/Relationship.es6~RelationshipObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-resource-object-relationships"
+    ],
+    "properties": [
+      {
+        "nullable": true,
+        "types": [
+          "LinksObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "links",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "ResourceLinkage"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "MetaObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "meta",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "RelationshipObject"
+    }
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "LinksObject",
+    "memberof": "src/modules/Relationship.es6",
+    "longname": "src/modules/Relationship.es6~LinksObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-resource-object-relationships"
+    ],
+    "properties": [
+      {
+        "nullable": true,
+        "types": [
+          "LinksObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "self",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "LinksObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "related",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "LinksObject"
+    }
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "ResourceLinkage",
+    "memberof": "src/modules/Relationship.es6",
+    "longname": "src/modules/Relationship.es6~ResourceLinkage",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-resource-object-linkage"
+    ],
+    "type": {
+      "types": [
+        "null",
+        "ResourceIdentifierObject[]",
+        "ResourceIdentifierObject"
+      ],
+      "optional": false,
+      "name": "ResourceLinkage"
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Relationship",
+    "memberof": "src/modules/Relationship.es6",
+    "longname": "src/modules/Relationship.es6~Relationship",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/Relationship.es6",
+    "importStyle": "Relationship",
+    "description": null,
+    "examples": [
+      "let toOneRelationship = new Relationship({\n  data: {\n    type: 'foo',\n    id: 1\n  }\n});\nlet toManyRelationship = new Relationship({\n  data: [{\n    type: 'foo',\n    id: 1\n  }]\n});"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#document-resource-object-relationships"
+    ],
+    "lineNumber": 41,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 46,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "RelationshipObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 48,
+    "type": {
+      "nullable": null,
+      "types": [
+        "ResourceLinkage"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "links",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#links",
+    "access": null,
+    "description": null,
+    "lineNumber": 50,
+    "type": {
+      "nullable": null,
+      "types": [
+        "LinksObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 52,
+    "type": {
+      "nullable": null,
+      "types": [
+        "MetaObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "replaceLinkage",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#replaceLinkage",
+    "access": null,
+    "description": "completely replace every member of the relationship.",
+    "examples": [
+      "// Updating To-One Relationships\nlet toOneRelationship = new Relationship({\n  data: { type: 'foo', id: 1 }\n});\ntoOneRelationship.replaceLinkage({ type: 'foo', id: 2 });\ntoOneRelationship.replaceLinkage(null);\n\n// Updating To-Many Relationships\nlet toManyRelationship = new Relationship({\n  data: [\n    { type: 'foo', id: 1 }\n  ]\n});\ntoManyRelationship.replaceLinkage([\n  { type: 'foo', id: 2 }\n]);\ntoManyRelationship.replaceLinkage([]);"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#crud-updating-relationships"
+    ],
+    "lineNumber": 79,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceLinkage"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 81,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 86,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 89,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "addLinkage",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#addLinkage",
+    "access": null,
+    "description": "add the specified members to the relationship unless they are already present.",
+    "examples": [
+      "let toManyRelationship = new Relationship({\n  data: [\n    { type: 'foo', id: 1 }\n  ]\n});\ntoManyRelationship.addLinkage([\n  { type: 'foo', id: 1 },\n  { type: 'foo', id: 2 }\n]);"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#crud-updating-to-many-relationships"
+    ],
+    "lineNumber": 109,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceIdentifierObject[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 119,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "removeLinkage",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#removeLinkage",
+    "access": null,
+    "description": "delete the specified members from the relationship.",
+    "examples": [
+      "let toManyRelationship = new Relationship({\n  data: [\n    { type: 'foo', id: 1 }\n  ]\n});\ntoManyRelationship.removeLinkage([\n  { type: 'foo', id: 1 }\n]);"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#crud-updating-to-many-relationships"
+    ],
+    "lineNumber": 138,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceIdentifierObject[]"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "linkage",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "serialize",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#serialize",
+    "access": null,
+    "description": "serialize relationship.",
+    "lineNumber": 156,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "RelationshipObject"
+      ],
+      "spread": false,
+      "description": "relationship"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "deserialize",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#deserialize",
+    "access": null,
+    "description": "deserialize relationship.",
+    "lineNumber": 175,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "RelationshipObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationship",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "links",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#links",
+    "access": null,
+    "description": null,
+    "lineNumber": 176,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 183,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Relationship.es6~Relationship",
+    "longname": "src/modules/Relationship.es6~Relationship#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 185,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/Resource.es6",
+    "memberof": null,
+    "longname": "src/modules/Resource.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import _ from 'lodash';\nimport Link from './Link';\nimport Relationship from './Relationship';\nimport ResourceIdentifier from './ResourceIdentifier';\n\n/**\n * @external {Fields} http://jsonapi.org/format/#document-resource-object-fields\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-objects\n * @typedef {object} ResourceObject\n * @property {!string} type\n * @property {?(string|integer)} id\n * @property {?object} attributes\n * @property {?Object<string, RelationshipObject>} relationships\n * @property {?LinksObject} links\n * @property {?MetaObject} meta\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-objects\n * @example\n * let foo = new Resource({\n *   type: 'foo',\n *   id: 2,\n *   attributes: {\n *     content: 'foo'\n *   }\n *   relationships: {\n *     bars: {\n *       data: [\n *         { type: 'bar', id: 1 }\n *       ]\n *     }\n *   }\n * });\n *\n * let bar = new Resource({\n *   type: 'bar',\n *   id: 2,\n *   attributes: {\n *     content: 'hello'\n *   }\n * });\n *\n * foo.setRelationship('bar', bar);\n * foo.setRelationship('bar', bar.getIdentifier());\n * foo.setRelationship('bars', [bar]);\n * foo.unsetRelationship('bar');\n * foo.unsetRelationship('bars');\n *\n * foo.setAttribute('key', 'value');\n * foo.unsetAttribute('key');\n */\nexport default class Resource extends ResourceIdentifier {\n\n  /**\n   * @param {ResourceObject} data\n   */\n  constructor(data) {\n    super(data);\n    /** @type {?Object} */\n    this.attributes = null;\n    /** @type {?Object<string, RelationshipObject>} */\n    this.relationships = null;\n    /** @type {?LinksObject} */\n    this.links = null;\n    this.deserialize(data);\n  }\n\n  /**\n   * @return {ResourceIdentifier}\n   */\n  getIdentifier() {\n    return super.serialize();\n  }\n\n  /**\n   * @param {string} key\n   * @param {ResourceLinkage} resource\n   */\n  setRelationship(key, resource) {\n    if (_.isArray(resource)) {\n      this.relationships[key] = new Relationship({\n        data: _.map(resource, resource => ({\n          type: resource.type,\n          id: resource.id\n        }))\n      });\n    }\n    else {\n      this.relationships[key] = new Relationship({\n        links: resource.links,\n        data: {\n          type: resource.type,\n          id: resource.id\n        }\n      });\n    }\n  }\n\n  /**\n   * @param {string} key\n   */\n  unsetRelationship(key) {\n    delete this.relationships[key];\n  }\n\n  /**\n   * @param {Object<string, ResourceLinkage>} relationships\n   */\n  setRelationships(relationships) {\n    _.each(relationships, (relationship, key) => {\n      this.setRelationship(key, relationship);\n    });\n  }\n\n  /**\n   * @param {string} key\n   * @param {anything} value\n   */\n  setAttribute(key, value) {\n    this.attributes[key] = value;\n  }\n\n  /**\n   * @param {string} key\n   */\n  unsetAttribute(key) {\n    delete this.attributes[key];\n  }\n\n  /**\n   * @param {Object<string, anything>>} key\n   */\n  setAttributes(attributes) {\n    _.extend(this.attributes, attributes);\n  }\n\n  /**\n   * @return {Fields}\n   * @example\n   * let foo = new Resource({\n   *   type: 'foo',\n   *   id: 2,\n   *   attributes: {\n   *     content: 'foo'\n   *   }\n   *   relationships: {\n   *     bars: {\n   *       data: [\n   *         { type: 'bar', id: 1 }\n   *       ]\n   *     }\n   *   }\n   * });\n   * // True\n   * _.isEqual(foo.flatten() === {\n   *   type: 'foo',\n   *   id: 2,\n   *   content: 'foo',\n   *   bars: {\n   *     data: [\n   *       { type: 'bar', id: 1 }\n   *     ]\n   *   }\n   * });\n   */\n  flatten() {\n    return _.chain({})\n    .extend(this.getIdentifier())\n    .extend(this.attributes)\n    .extend(_.mapValues(this.relationships, relationship => relationship.serialize()))\n    .value();\n  }\n\n  /**\n   * @return {ResourceObject}\n   */\n  serialize() {\n    return _.chain({\n      attributes: this.attributes,\n      links: _.mapValues(this.links, link => link.serialize()),\n      relationships: _.mapValues(this.relationships, relationship => relationship.serialize())\n    })\n    .extend(this.getIdentifier())\n    .omit(attribute => _.isObject(attribute) ?\n      _.isEmpty(attribute) : _.isUndefined(attribute))\n    .value();\n  }\n\n  /**\n   * @param {ResourceObject} data\n   */\n  deserialize(data) {\n    super.deserialize(data);\n    this.attributes = data.attributes;\n    this.relationships = _.mapValues(data.relationships,\n      relationship => new Relationship(relationship));\n    this.links = _.mapValues(data.links,\n      link => new Link(link));\n  }\n\n}\n"
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Fields",
+    "externalLink": "http://jsonapi.org/format/#document-resource-object-fields",
+    "memberof": "src/modules/Resource.es6",
+    "longname": "src/modules/Resource.es6~Fields",
+    "access": null,
+    "description": null
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "ResourceObject",
+    "memberof": "src/modules/Resource.es6",
+    "longname": "src/modules/Resource.es6~ResourceObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-resource-objects"
+    ],
+    "properties": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "integer"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "attributes",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "Object<string, RelationshipObject>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationships",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "LinksObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "links",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "MetaObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "meta",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "ResourceObject"
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Resource",
+    "memberof": "src/modules/Resource.es6",
+    "longname": "src/modules/Resource.es6~Resource",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/Resource.es6",
+    "importStyle": "Resource",
+    "description": null,
+    "examples": [
+      "let foo = new Resource({\n  type: 'foo',\n  id: 2,\n  attributes: {\n    content: 'foo'\n  }\n  relationships: {\n    bars: {\n      data: [\n        { type: 'bar', id: 1 }\n      ]\n    }\n  }\n});\n\nlet bar = new Resource({\n  type: 'bar',\n  id: 2,\n  attributes: {\n    content: 'hello'\n  }\n});\n\nfoo.setRelationship('bar', bar);\nfoo.setRelationship('bar', bar.getIdentifier());\nfoo.setRelationship('bars', [bar]);\nfoo.unsetRelationship('bar');\nfoo.unsetRelationship('bars');\n\nfoo.setAttribute('key', 'value');\nfoo.unsetAttribute('key');"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#document-resource-objects"
+    ],
+    "lineNumber": 56,
+    "interface": false,
+    "extends": [
+      "src/modules/ResourceIdentifier~ResourceIdentifier"
+    ]
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 61,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "attributes",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#attributes",
+    "access": null,
+    "description": null,
+    "lineNumber": 64,
+    "type": {
+      "nullable": true,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "relationships",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#relationships",
+    "access": null,
+    "description": null,
+    "lineNumber": 66,
+    "type": {
+      "nullable": true,
+      "types": [
+        "Object<string, RelationshipObject>"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "links",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#links",
+    "access": null,
+    "description": null,
+    "lineNumber": 68,
+    "type": {
+      "nullable": true,
+      "types": [
+        "LinksObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getIdentifier",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#getIdentifier",
+    "access": null,
+    "description": null,
+    "lineNumber": 75,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "ResourceIdentifier"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setRelationship",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#setRelationship",
+    "access": null,
+    "description": null,
+    "lineNumber": 83,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "key",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "ResourceLinkage"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "resource",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "unsetRelationship",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#unsetRelationship",
+    "access": null,
+    "description": null,
+    "lineNumber": 106,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "key",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setRelationships",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#setRelationships",
+    "access": null,
+    "description": null,
+    "lineNumber": 113,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object<string, ResourceLinkage>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "relationships",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setAttribute",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#setAttribute",
+    "access": null,
+    "description": null,
+    "lineNumber": 123,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "key",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "anything"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "value",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "unsetAttribute",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#unsetAttribute",
+    "access": null,
+    "description": null,
+    "lineNumber": 130,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "key",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setAttributes",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#setAttributes",
+    "access": null,
+    "description": null,
+    "lineNumber": 137,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object<string, anything>>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "key",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "flatten",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#flatten",
+    "access": null,
+    "description": null,
+    "examples": [
+      "let foo = new Resource({\n  type: 'foo',\n  id: 2,\n  attributes: {\n    content: 'foo'\n  }\n  relationships: {\n    bars: {\n      data: [\n        { type: 'bar', id: 1 }\n      ]\n    }\n  }\n});\n// True\n_.isEqual(foo.flatten() === {\n  type: 'foo',\n  id: 2,\n  content: 'foo',\n  bars: {\n    data: [\n      { type: 'bar', id: 1 }\n    ]\n  }\n});"
+    ],
+    "lineNumber": 170,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Fields"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "serialize",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#serialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 181,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "ResourceObject"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "deserialize",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#deserialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 196,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "attributes",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#attributes",
+    "access": null,
+    "description": null,
+    "lineNumber": 198,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "relationships",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#relationships",
+    "access": null,
+    "description": null,
+    "lineNumber": 199,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "links",
+    "memberof": "src/modules/Resource.es6~Resource",
+    "longname": "src/modules/Resource.es6~Resource#links",
+    "access": null,
+    "description": null,
+    "lineNumber": 201,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/ResourceIdentifier.es6",
+    "memberof": null,
+    "longname": "src/modules/ResourceIdentifier.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import _ from 'lodash';\n\n/**\n * @see http://jsonapi.org/format/#document-resource-identifier-objects\n * @typedef {Object} ResourceIdentifierObject\n * @property {!string} type\n * @property {?(string|number)} id\n * @property {?MetaObject} meta\n */\n\n/**\n * @see http://jsonapi.org/format/#document-resource-identifier-objects\n * @example\n * let identifier = new ResourceIdentifier({ type: 'foo', id: 1 });\n */\nexport default class ResourceIdentifier {\n\n  /**\n   * @param {ResourceIdentifierObject} resourceIdentifier\n   */\n  constructor(resourceIdentifier) {\n    /** @type {!string} */\n    this.type = null;\n    /** @type {?(string|number)} */\n    this.id = null;\n    this.deserialize(resourceIdentifier);\n  }\n\n  /**\n   * @return {ResourceIdentifierObject} resourceIdentifier\n   */\n  serialize() {\n    return _.omit({\n      type: this.type,\n      id: this.id\n    }, _.isUndefined);\n  }\n\n  /**\n   * @param {ResourceIdentifierObject} resourceIdentifier\n   */\n  deserialize(resourceIdentifier) {\n    if (!(resourceIdentifier && resourceIdentifier.type)) {\n      throw new Error('invalid data!');\n    }\n    this.type = resourceIdentifier.type;\n    this.id = resourceIdentifier.id;\n  }\n\n}\n"
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "ResourceIdentifierObject",
+    "memberof": "src/modules/ResourceIdentifier.es6",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifierObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#document-resource-identifier-objects"
+    ],
+    "properties": [
+      {
+        "nullable": false,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "MetaObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "meta",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "Object"
+      ],
+      "optional": false,
+      "name": "ResourceIdentifierObject"
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "ResourceIdentifier",
+    "memberof": "src/modules/ResourceIdentifier.es6",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/ResourceIdentifier.es6",
+    "importStyle": "ResourceIdentifier",
+    "description": null,
+    "examples": [
+      "let identifier = new ResourceIdentifier({ type: 'foo', id: 1 });"
+    ],
+    "see": [
+      "http://jsonapi.org/format/#document-resource-identifier-objects"
+    ],
+    "lineNumber": 16,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 21,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceIdentifierObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "resourceIdentifier",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "type",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#type",
+    "access": null,
+    "description": null,
+    "lineNumber": 23,
+    "type": {
+      "nullable": false,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "id",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#id",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": true,
+      "types": [
+        "string",
+        "number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "serialize",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#serialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 32,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "ResourceIdentifierObject"
+      ],
+      "spread": false,
+      "description": "resourceIdentifier"
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "deserialize",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#deserialize",
+    "access": null,
+    "description": null,
+    "lineNumber": 42,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "ResourceIdentifierObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "resourceIdentifier",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "type",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#type",
+    "access": null,
+    "description": null,
+    "lineNumber": 46,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "id",
+    "memberof": "src/modules/ResourceIdentifier.es6~ResourceIdentifier",
+    "longname": "src/modules/ResourceIdentifier.es6~ResourceIdentifier#id",
+    "access": null,
+    "description": null,
+    "lineNumber": 47,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/modules/Response.es6",
+    "memberof": null,
+    "longname": "src/modules/Response.es6",
+    "access": null,
+    "description": null,
+    "lineNumber": 2,
+    "content": "/* eslint no-unused-vars: [0] */\nimport _ from 'lodash';\n\n/**\n * @external {jqXHR} https://api.jquery.com/jQuery.ajax/#jqXHR\n */\n\n/**\n * @see http://jsonapi.org/format/#errors\n * @typedef {object} ErrorObject\n * @property {?(string|number)} id\n * @property {?LinkObject} links\n * @property {?string} status\n * @property {?string} code\n * @property {?string} title\n * @property {?string} detail\n * @property {?ErrorSourceObject} source\n * @property {?MetaObject} meta\n */\n\n/**\n * @see http://jsonapi.org/format/#errors\n * @typedef {object} ErrorSourceObject\n * @property {?string} pointer\n * @property {?string} parameter\n */\n\n\nfunction _isResponseError(status) {\n  return status => 400 && status < 600;\n}\n\nfunction _parseErrors(xhr) {\n  if (!(xhr.responseJSON && xhr.responseJSON.errors )) {\n    if (_isResponseError(xhr.status)) {\n      return [{\n        status: '' + xhr.status\n      }];\n    }\n    return null;\n  }\n\n  let errors = xhr.responseJSON.errors;\n\n  return _.map(errors, function(error) {\n    return _.extend({\n      status: '' + xhr.status\n    }, error);\n  });\n}\n\nfunction _parseHeaders(xhr) {\n  let result = [];\n\n  let headerRegex = /^(.*?):[ \\t]*([^\\r\\n]*)$/mg;\n  let headersString = xhr.getAllResponseHeaders();\n  let findResult;\n\n  do {\n    findResult = headerRegex.exec(headersString);\n    if (findResult) {\n      result.push(findResult.slice(1));\n    }\n  } while (findResult !== null)\n\n  return _.object(result);\n}\n\n\n/**\n * @see http://jsonapi.org/format/#document-top-level\n * @desc The response object of jsonapi. used in {@link RESTful}.\n */\nexport default class Response {\n\n  /**\n   * @param {jqXHR} jqXHR\n   */\n  constructor(jqXHR) {\n    let body = jqXHR.responseJSON || {};\n    /** @type {?(ResourceObject|ResourceObject[]|ResourceIdentifierObject|ResourceIdentifierObject[]|null)} */\n    this.data = body.data || null;\n    /** @type {?ErrorObject[]} */\n    this.errors = _parseErrors(jqXHR);\n    /** @type {?MetaObject} */\n    this.meta = body.included || null;\n    /** @type {?Object} */\n    this.jsonapi = body.jsonapi || null;\n    /** @type {?LinkObject} */\n    this.links = body.links || null;\n    /** @type {?ResourceObject[]} */\n    this.included = body.included || null;\n\n    /** @type {!Object} */\n    this.headers = _parseHeaders(jqXHR);\n    /** @type {!string} */\n    this.status = jqXHR.status;\n    /** @type {!jqXHR} */\n    this.jqXHR = jqXHR;\n  }\n\n}\n"
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "jqXHR",
+    "externalLink": "https://api.jquery.com/jQuery.ajax/#jqXHR",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~jqXHR",
+    "access": null,
+    "description": null
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "ErrorObject",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~ErrorObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#errors"
+    ],
+    "properties": [
+      {
+        "nullable": true,
+        "types": [
+          "string",
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "LinkObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "links",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "status",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "code",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "title",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "detail",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "ErrorSourceObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "source",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "MetaObject"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "meta",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "ErrorObject"
+    }
+  },
+  {
+    "kind": "typedef",
+    "static": true,
+    "variation": null,
+    "name": "ErrorSourceObject",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~ErrorSourceObject",
+    "access": null,
+    "description": null,
+    "see": [
+      "http://jsonapi.org/format/#errors"
+    ],
+    "lineNumber": 29,
+    "properties": [
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "pointer",
+        "description": ""
+      },
+      {
+        "nullable": true,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "parameter",
+        "description": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "object"
+      ],
+      "optional": false,
+      "name": "ErrorSourceObject"
+    }
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "_parseErrors",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~_parseErrors",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/Response.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 33,
+    "undocument": true,
+    "params": [
+      {
+        "name": "xhr",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "function",
+    "static": true,
+    "variation": null,
+    "name": "_parseHeaders",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~_parseHeaders",
+    "access": null,
+    "export": false,
+    "importPath": "jsonapi.js/src/modules/Response.es6",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 52,
+    "undocument": true,
+    "params": [
+      {
+        "name": "xhr",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Response",
+    "memberof": "src/modules/Response.es6",
+    "longname": "src/modules/Response.es6~Response",
+    "access": null,
+    "export": true,
+    "importPath": "jsonapi.js/src/modules/Response.es6",
+    "importStyle": "Response",
+    "description": "The response object of jsonapi. used in {@link RESTful}.",
+    "see": [
+      "http://jsonapi.org/format/#document-top-level"
+    ],
+    "lineNumber": 74,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#constructor",
+    "access": null,
+    "description": null,
+    "lineNumber": 79,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "jqXHR"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "jqXHR",
+        "description": ""
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "data",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#data",
+    "access": null,
+    "description": null,
+    "lineNumber": 82,
+    "type": {
+      "nullable": true,
+      "types": [
+        "ResourceObject",
+        "ResourceObject[]",
+        "ResourceIdentifierObject",
+        "ResourceIdentifierObject[]",
+        "null"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "errors",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#errors",
+    "access": null,
+    "description": null,
+    "lineNumber": 84,
+    "type": {
+      "nullable": true,
+      "types": [
+        "ErrorObject[]"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "meta",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#meta",
+    "access": null,
+    "description": null,
+    "lineNumber": 86,
+    "type": {
+      "nullable": true,
+      "types": [
+        "MetaObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "jsonapi",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#jsonapi",
+    "access": null,
+    "description": null,
+    "lineNumber": 88,
+    "type": {
+      "nullable": true,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "links",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#links",
+    "access": null,
+    "description": null,
+    "lineNumber": 90,
+    "type": {
+      "nullable": true,
+      "types": [
+        "LinkObject"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "included",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#included",
+    "access": null,
+    "description": null,
+    "lineNumber": 92,
+    "type": {
+      "nullable": true,
+      "types": [
+        "ResourceObject[]"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "headers",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#headers",
+    "access": null,
+    "description": null,
+    "lineNumber": 95,
+    "type": {
+      "nullable": false,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "status",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#status",
+    "access": null,
+    "description": null,
+    "lineNumber": 97,
+    "type": {
+      "nullable": false,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "jqXHR",
+    "memberof": "src/modules/Response.es6~Response",
+    "longname": "src/modules/Response.es6~Response#jqXHR",
+    "access": null,
+    "description": null,
+    "lineNumber": 99,
+    "type": {
+      "nullable": false,
+      "types": [
+        "jqXHR"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  }
+]

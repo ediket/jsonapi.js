@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/modules/DB.es6 | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/ironhee/jsonapi.js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/src/modules/Link.es6~Link.html">Link</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Pool.es6~Pool.html">Pool</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/RESTful.es6~RESTful.html">RESTful</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Relationship.es6~Relationship.html">Relationship</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Resource.es6~Resource.html">Resource</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/ResourceIdentifier.es6~ResourceIdentifier.html">ResourceIdentifier</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Response.es6~Response.html">Response</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="functionWrap">
+  <h2><a href="function/">Function</a></h2>
+  <ul>
+    
+  <li data-ice="functionDoc"><span><a href="function/index.html#static-function-DB">DB</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="typedefWrap">
+  <h2><a href="typedef/">Typedef</a></h2>
+  <ul>
+    
+  <li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorObject">ErrorObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorSourceObject">ErrorSourceObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinkObject">LinkObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinksObject">LinksObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-MetaObject">MetaObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-RelationshipObject">RelationshipObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceIdentifierObject">ResourceIdentifierObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceLinkage">ResourceLinkage</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceObject">ResourceObject</a></span></li>
+</ul>
+</div>
+
+<div data-ice="externalWrap">
+  <h2>External</h2>
+  <ul>
+    
+  <li data-ice="externalDoc"><span><a href="http://jsonapi.org/format/#document-resource-object-fields">Fields</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/typicode/lowdb">LowDB</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://api.jquery.com/jQuery.ajax/#jqXHR">jqXHR</a></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/modules/DB.es6</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">import lodash from &apos;lodash&apos;;
+import underscoreDB from &apos;underscore-db&apos;;
+
+/**
+ * @external {LowDB} https://github.com/typicode/lowdb
+ */
+
+
+function lowChain(_, array) {
+  let chain = _.chain(array);
+
+  _.functions(chain)
+  .forEach(function(method) {
+    chain[method] = _.flow(chain[method], function(arg) {
+      let res = arg.value ? arg.value() : arg;
+      return res;
+    });
+  });
+
+  return chain;
+}
+
+
+/**
+ * @desc client-side database.
+ * @return {LowDB}
+ * @example
+ * let db = new DB();
+ * db(&apos;comment&apos;).insert({ content: &apos;hello&apos; });
+ */
+function DB() {
+  let _ = lodash.runInContext();
+  _.mixin(underscoreDB);
+
+  let value = _.prototype.value;
+  _.prototype.value = function() {
+    let res = value.apply(this, arguments);
+    return res;
+  };
+
+  function db(key) {
+    let array;
+    if (db.object[key]) {
+      array = db.object[key];
+    }
+    else {
+      array = db.object[key] = [];
+    }
+
+    let short = lowChain(_, array);
+    short.chain = function() {
+      return _.chain(array);
+    };
+    return short;
+  }
+
+  // Expose lodash instance
+  db._ = _;
+
+  // Expose database object
+  db.object = {};
+
+  return db;
+}
+
+DB.stringify = function(obj) {
+  return JSON.stringify(obj, null, 2);
+};
+
+DB.parse = function(str) {
+  return JSON.parse(str);
+};
+
+
+export default DB;
+</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.2)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

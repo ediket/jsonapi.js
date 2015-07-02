@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/modules/Pool.es6 | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/ironhee/jsonapi.js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/src/modules/Link.es6~Link.html">Link</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Pool.es6~Pool.html">Pool</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/RESTful.es6~RESTful.html">RESTful</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Relationship.es6~Relationship.html">Relationship</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Resource.es6~Resource.html">Resource</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/ResourceIdentifier.es6~ResourceIdentifier.html">ResourceIdentifier</a></span></li>
+<li data-ice="classDoc"><span><a href="class/src/modules/Response.es6~Response.html">Response</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="functionWrap">
+  <h2><a href="function/">Function</a></h2>
+  <ul>
+    
+  <li data-ice="functionDoc"><span><a href="function/index.html#static-function-DB">DB</a></span></li>
+</ul>
+</div>
+
+
+
+<div data-ice="typedefWrap">
+  <h2><a href="typedef/">Typedef</a></h2>
+  <ul>
+    
+  <li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorObject">ErrorObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ErrorSourceObject">ErrorSourceObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinkObject">LinkObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-LinksObject">LinksObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-MetaObject">MetaObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-RelationshipObject">RelationshipObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceIdentifierObject">ResourceIdentifierObject</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceLinkage">ResourceLinkage</a></span></li>
+<li data-ice="typedefDoc"><span><a href="typedef/index.html#static-typedef-ResourceObject">ResourceObject</a></span></li>
+</ul>
+</div>
+
+<div data-ice="externalWrap">
+  <h2>External</h2>
+  <ul>
+    
+  <li data-ice="externalDoc"><span><a href="http://jsonapi.org/format/#document-resource-object-fields">Fields</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://github.com/typicode/lowdb">LowDB</a></span></li>
+<li data-ice="externalDoc"><span><a href="https://api.jquery.com/jQuery.ajax/#jqXHR">jqXHR</a></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/modules/Pool.es6</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">import _ from &apos;lodash&apos;;
+import Q from &apos;q&apos;;
+import urljoin from &apos;url-join&apos;;
+import DB from &apos;./DB&apos;;
+import RESTful from &apos;./RESTful&apos;;
+import Resource from &apos;./Resource&apos;;
+
+
+/**
+ * @example
+ * pool.addRemote(&apos;foo&apos;, &apos;/foo/&apos;);
+ *
+ * // Fetch Many Resources
+ * pool.fetch(&apos;foo&apos;)
+ * .then(resources =&gt; {
+ *   resources === pool.get(&apos;foo&apos;);  // true
+ * });
+ *
+ * // Fetch One Resource
+ * pool.fetch(&apos;foo&apos;, 1)
+ * .then(resource =&gt; {
+ *   resource === pool.get(&apos;foo&apos;, 1);  // true
+ * });
+ *
+ * // Create Resource
+ * pool.create(&apos;foo&apos;, {
+ *   attributes: {
+ *     content: &apos;bar&apos;
+ *   }
+ * })
+ * .then(resource =&gt; {
+ *   resource === pool.get(&apos;foo&apos;, resource.id);  // true
+ * });
+ *
+ * // Update Resource
+ * pool.update(&apos;foo&apos;, 1, {
+ *   attributes: {
+ *     content: &apos;bar&apos;
+ *   }
+ * })
+ *
+ * // Remove Resource
+ * pool.remove(&apos;foo&apos;, 1)
+ * .then(() =&gt; {
+ *   undefined === pool.get(&apos;foo&apos;, 1);  // true
+ * });
+ */
+export default class Pool {
+
+  constructor() {
+    /** @type {LowDB} */
+    this.db = new DB();
+    /** @type {RESTful} */
+    this.sync = RESTful;
+    this._resetAll();
+    /** @type {Object&lt;string, string&gt;} */
+    this.remote = {};
+  }
+
+  _resetAll() {
+    this.remote = {};
+    this.db.object = {};
+  }
+
+  /**
+   * @param {!string} type
+   * @param {?(string|number)} id
+   * @param {?object} options
+   * @param {?string[]} options.sort
+   * @param {?string[]} options.include
+   * @param {?object} options.page
+   * @param {?number} options.page.number
+   * @param {?number} options.page.size
+   * @param {?fields[]} options.fields
+   * @param {?filter[]} options.filter
+   * @return {Promise}
+   */
+  fetch(type, id, options={}) {
+    let params = {};
+
+    if (options.sort) {
+      params.sort = options.sort.join(&apos;,&apos;);
+    }
+
+    if (options.include) {
+      params.include = options.include.join(&apos;,&apos;);
+    }
+
+    if (options.page) {
+      params = _.extend(params, {
+        &apos;page[number]&apos;: options.page.number,
+        &apos;page[size]&apos;: options.page.size
+      });
+    }
+
+    if (options.fields) {
+      _.reduce(options.fields, (result, fields, type) =&gt; {
+        result[`fields[${type}]`] = fields.join(&apos;,&apos;);
+        return result;
+      }, params);
+    }
+
+    if (options.filter) {
+      _.reduce(options.filter, (result, filter, type) =&gt; {
+        result[`filter[${type}]`] = filter.join(&apos;,&apos;);
+        return result;
+      }, params);
+    }
+
+    params = _.omit(params, _.isUndefined);
+
+    return this.sync.get(
+      this.getRemote(type, id), params
+    )
+    .then(response =&gt; this._saveResponseToPool(response));
+  }
+
+  /**
+   * @param {!string} type
+   * @param {!(string|number)} id
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
+  remove(type, id, options={ sync: true }) {
+    if (!type || !id) {
+      throw new Error(&apos;unenough arguments&apos;);
+    }
+
+    if (!options.sync) {
+      return Q.resolve(this._removeResourceFromPool(type, id));
+    }
+
+    return this.sync.delete(
+      this.getRemote(type, id)
+    )
+    .then(response =&gt; {
+      return response.status !== 204 ?
+        this._saveResponseToPool(response) :
+        null;
+    })
+    .then(() =&gt; this._removeResourceFromPool(type, id));
+  }
+
+  /**
+   * @param {!string} type
+   * @param {?ResourceObject} data
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
+  create(type, data, options={ sync: true }) {
+    if (!type) {
+      throw new Error(&apos;unenough arguments&apos;);
+    }
+
+    data = _.extend({ type }, data);
+
+    if (!options.sync) {
+      return Q.resolve(this._saveResourceToPool(data));
+    }
+
+    return this.sync.post(
+      this.getRemote(type), { data }
+    )
+    .then(response =&gt; {
+      return this._saveResponseToPool(response);
+    });
+  }
+
+  /**
+   * @param {!string} type
+   * @param {!(string|number)} id
+   * @param {?ResourceObject} data
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   * @return {Promise}
+   */
+  update(type, id, data, options={ sync: true }) {
+    if (!type || !id) {
+      throw new Error(&apos;unenough arguments&apos;);
+    }
+
+    data = _.extend({ type, id }, data);
+
+    if (!options.sync) {
+      return Q.resolve(this._saveResourceToPool(data));
+    }
+
+    return this.sync.patch(
+      this.getRemote(type, id), { data }
+    )
+    .then(response =&gt; {
+      return response.status === 204 ?
+        this._saveResourceToPool(data, true) :
+        this._saveResponseToPool(response);
+    });
+  }
+
+  /**
+   * @param {!Relationship} relationship
+   * @param {!ResourceLinkage} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
+  replaceLinkage(relationship, linkage, options={ sync: true }) {
+    if (!options.sync) {
+      relationship.replaceLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links &amp;&amp; relationship.links.self)) {
+      throw new Error(&apos;relationship should contain self link!&apos;);
+    }
+
+    return this.sync.patch(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(response =&gt; {
+      if (response.status === 204) {
+        relationship.replaceLinkage(linkage);
+      }
+      else {
+        if (response.data) {
+          relationship.replaceLinkage(response.data);
+        }
+        if (response.included) {
+          _.map(response.included, data =&gt; {
+            this._saveResourceToPool(data);
+          });
+        }
+      }
+      return relationship;
+    });
+  }
+
+  /**
+   * @desc To-Many Relationships only
+   * @param {!Relationship} relationship
+   * @param {!ResourceIdentifierObject[]} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
+  addLinkage(relationship, linkage, options={ sync: true }) {
+    if (!_.isArray(linkage)) {
+      throw new Error(&apos;linkage should be array!&apos;);
+    }
+
+    if (!_.isArray(relationship.data)) {
+      throw new Error(&apos;relationship should be array&apos;);
+    }
+
+    if (!options.sync) {
+      relationship.addLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links &amp;&amp; relationship.links.self)) {
+      throw new Error(&apos;relationship should contain self link!&apos;);
+    }
+
+    return this.sync.post(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(response =&gt; {
+      if (response.status === 204) {
+        relationship.addLinkage(linkage);
+      }
+      else {
+        if (response.data) {
+          relationship.addLinkage(response.data);
+        }
+        if (response.included) {
+          _.map(response.included, data =&gt; {
+            this._saveResourceToPool(data);
+          });
+        }
+      }
+      return relationship;
+    });
+  }
+
+  /**
+   * @desc To-Many Relationships only
+   * @param {!Relationship} relationship
+   * @param {!ResourceIdentifierObject[]} linkage
+   * @param {?object} options
+   * @param {boolean} [options.sync=true]
+   */
+  removeLinkage(relationship, linkage, options={ sync: true }) {
+    if (!_.isArray(linkage)) {
+      throw new Error(&apos;linkage should be array!&apos;);
+    }
+
+    if (!_.isArray(relationship.data)) {
+      throw new Error(&apos;relationship should be array&apos;);
+    }
+
+    if (!options.sync) {
+      relationship.removeLinkage(linkage);
+      return Q.resolve(relationship);
+    }
+
+    if (!(relationship.links &amp;&amp; relationship.links.self)) {
+      throw new Error(&apos;relationship should contain self link!&apos;);
+    }
+
+    return this.sync.delete(
+      relationship.links.self.href, { data: linkage }
+    )
+    .then(response =&gt; {
+      relationship.removeLinkage(linkage);
+      if (response.status !== 204) {
+        if (response.included) {
+          _.map(response.included, data =&gt; {
+            this._saveResourceToPool(data);
+          });
+        }
+      }
+      return relationship;
+    });
+  }
+
+  /**
+   * @deprecated use replaceLinkage, addLinkage, removeLinkage
+   * instead of this.
+   */
+  linkageOperation(operation, type, id, relationship, linkage) {
+    console.warn(&apos;this method is deprecated. &apos; +
+      &apos;use addLinkage, removeLinkage, replaceLinkage instead.&apos;);
+
+    return this.sync[operation](
+      this.getRemote(type, id, relationship),
+      !_.isUndefined(linkage) ? { data: linkage } : undefined
+    )
+    .then(() =&gt; {
+      // FIXME: linkage operation
+    });
+  }
+
+  _saveResponseToPool(response) {
+    let mainData = response.data;
+    let includedData = response.included;
+
+    let result;
+
+    /* Main Data */
+    if (_.isArray(mainData)) {
+      if (_.isEmpty(mainData)) {
+        result = [];
+      }
+      else {
+        result = _.map(mainData, data =&gt;
+          this._saveResourceToPool(data)
+        );
+      }
+    }
+    else {
+      if (!mainData) {
+        result = null;
+      }
+      else {
+        result = this._saveResourceToPool(mainData);
+      }
+    }
+
+    /* Included Data */
+    if (includedData) {
+      _.map(includedData, data =&gt; {
+        this._saveResourceToPool(data);
+      });
+    }
+
+    return result;
+  }
+
+  _saveResourceToPool(data) {
+    if (_.isUndefined(data.type) || _.isUndefined(data.id)) {
+      throw new Error(&apos;Invalid data: type &amp; id property should be given.&apos;);
+    }
+
+    let resource = this.get(data.type, data.id);
+
+    /* New Resource */
+    if (!resource) {
+      resource = new Resource(data);
+      this.db(resource.type).insert(resource);
+    }
+    /* Existing Resource */
+    else {
+      let before = resource.serialize();
+      data = _.extend({}, data, {
+        attributes: _.extend({}, before.attributes, data.attributes),
+        relationships: _.extend({}, before.relationships, data.relationships)
+      });
+      resource.deserialize(data);
+    }
+
+    return resource;
+  }
+
+  _removeResourceFromPool(type, id) {
+    return this.db(type).removeById(id);
+  }
+
+  /**
+   * @param {!string} type
+   * @param {!string} url
+   */
+  addRemote(type, url) {
+    if (!type || !url) {
+      throw new Error(&apos;unenough arguments&apos;);
+    }
+    this.remote[type] = url;
+  }
+
+  /**
+   * @param {!string} type
+   * @param {?(string|number)} id
+   * @param {?string} relationship
+   * @return {string} url
+   */
+  getRemote(type, id, relationship) {
+    let urlParts = _.compact([
+      this.remote[type],
+      id,
+      relationship ? &apos;relationships&apos; : undefined,
+      relationship
+    ]);
+    return urljoin.apply(null, urlParts);
+  }
+
+  /**
+   * @param {!type} type
+   * @param {?(string|number)} id
+   * @return {(Resource|Resource[])} resource
+   */
+  get(type, id) {
+    return id === undefined ?
+      this.db(type).value() :
+      this.db(type).getById(id);
+  }
+
+  /**
+   * @param {!type} type
+   * @param {!string} relationship
+   * @return {(Resource|Resource[])} resource
+   */
+  getRelated(resource, relationship) {
+    if (_.isUndefined(resource.relationships)) {
+      throw new Error(&apos;resource have empty relationship&apos;);
+    }
+
+    let relationshipObj = resource.relationships[relationship];
+    if (_.isUndefined(relationshipObj)) {
+      throw new Error(`resource dose not have relationship: ${relationship}`);
+    }
+
+    let linkage = resource.relationships[relationship].data;
+    if (_.isUndefined(linkage)) {
+      throw new Error(`resource\&apos;s relationship(${relationship}) dose not have linkage`);
+    }
+
+    return _.isArray(linkage) ?
+      _.map(linkage, _linkage =&gt; this.get(_linkage.type, _linkage.id)) :
+      this.get(linkage.type, linkage.id);
+  }
+
+  /**
+   * @param {!type} type
+   * @param {!string} id
+   * @return {boolean}
+   */
+  has(type, id) {
+    if (!type || !id) {
+      throw new Error(&apos;unenough arguments&apos;);
+    }
+
+    let result = this.db(type).getById(id);
+    return !!result;
+  }
+
+}
+</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.2)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
