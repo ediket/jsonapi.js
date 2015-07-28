@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Link from './Link';
-import Relationship from './Relationship';
-import ResourceIdentifier from './ResourceIdentifier';
+import Link from 'modules/Link';
+import Relationship from 'modules/Relationship';
+import ResourceIdentifier from 'modules/ResourceIdentifier';
 
 /**
  * @external {Fields} http://jsonapi.org/format/#document-resource-object-fields

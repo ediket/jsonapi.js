@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import Q from 'q';
-import Response from './Response';
+import Response from 'modules/Response';
 
 
 let stringifyRequiredMethod = function(method) {

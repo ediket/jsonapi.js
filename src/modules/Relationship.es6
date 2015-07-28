@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Link from './Link';
-import ResourceIdentifier from './ResourceIdentifier';
+import Link from 'modules/Link';
+import ResourceIdentifier from 'modules/ResourceIdentifier';
 
 /**
  * @see http://jsonapi.org/format/#document-resource-object-relationships
