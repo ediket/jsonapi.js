@@ -63,7 +63,7 @@ export default class Pagination {
     if (resources.length !== segmentSize) {
       throw new Error('unmatched size!');
     }
-    
+
     _.reduce(resources, (memo, resource, index) => {
       return _.set(memo, startIndex + index, resource);
     }, this.collection);
