@@ -19,6 +19,7 @@ function transformUMDExternal(externals) {
 module.exports = {
   devtool: 'eval-source-map',
   resolve: {
+    modulesDirectories: ['src', 'node_modules'],
     extensions: ['', '.js', '.es6']
   },
   entry: {

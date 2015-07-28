@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import Q from 'q';
 import urljoin from 'url-join';
-import DB from './DB';
-import RESTful from './RESTful';
-import Resource from './Resource';
+import toParams from 'utils/toParams';
+import DB from 'modules/DB';
+import RESTful from 'modules/RESTful';
+import Resource from 'modules/Resource';
 
 
 /**
@@ -76,41 +77,8 @@ export default class Pool {
    * @return {Promise}
    */
   fetch(type, id, options={}) {
-    let params = {};
-
-    if (options.sort) {
-      params.sort = options.sort.join(',');
-    }
-
-    if (options.include) {
-      params.include = options.include.join(',');
-    }
-
-    if (options.page) {
-      params = _.extend(params, {
-        'page[number]': options.page.number,
-        'page[size]': options.page.size
-      });
-    }
-
-    if (options.fields) {
-      _.reduce(options.fields, (result, fields, type) => {
-        result[`fields[${type}]`] = fields.join(',');
-        return result;
-      }, params);
-    }
-
-    if (options.filter) {
-      _.reduce(options.filter, (result, filter, type) => {
-        result[`filter[${type}]`] = filter.join(',');
-        return result;
-      }, params);
-    }
-
-    params = _.omit(params, _.isUndefined);
-
     return this.sync.get(
-      this.getRemote(type, id), params
+      this.getRemote(type, id), toParams(options)
     )
     .then(response => this._saveResponseToPool(response));
   }
@@ -122,7 +90,11 @@ export default class Pool {
    * @param {boolean} [options.sync=true]
    * @return {Promise}
    */
-  remove(type, id, options={ sync: true }) {
+  remove(type, id, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!type || !id) {
       throw new Error('unenough arguments');
     }
@@ -149,7 +121,11 @@ export default class Pool {
    * @param {boolean} [options.sync=true]
    * @return {Promise}
    */
-  create(type, data, options={ sync: true }) {
+  create(type, data, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!type) {
       throw new Error('unenough arguments');
     }
@@ -176,7 +152,11 @@ export default class Pool {
    * @param {boolean} [options.sync=true]
    * @return {Promise}
    */
-  update(type, id, data, options={ sync: true }) {
+  update(type, id, data, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!type || !id) {
       throw new Error('unenough arguments');
     }
@@ -203,7 +183,11 @@ export default class Pool {
    * @param {?object} options
    * @param {boolean} [options.sync=true]
    */
-  replaceLinkage(relationship, linkage, options={ sync: true }) {
+  replaceLinkage(relationship, linkage, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!options.sync) {
       relationship.replaceLinkage(linkage);
       return Q.resolve(relationship);
@@ -241,7 +225,11 @@ export default class Pool {
    * @param {?object} options
    * @param {boolean} [options.sync=true]
    */
-  addLinkage(relationship, linkage, options={ sync: true }) {
+  addLinkage(relationship, linkage, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!_.isArray(linkage)) {
       throw new Error('linkage should be array!');
     }
@@ -287,7 +275,11 @@ export default class Pool {
    * @param {?object} options
    * @param {boolean} [options.sync=true]
    */
-  removeLinkage(relationship, linkage, options={ sync: true }) {
+  removeLinkage(relationship, linkage, options={}) {
+    _.defaults(options, {
+      sync: true
+    });
+
     if (!_.isArray(linkage)) {
       throw new Error('linkage should be array!');
     }
@@ -346,22 +338,13 @@ export default class Pool {
 
     /* Main Data */
     if (_.isArray(mainData)) {
-      if (_.isEmpty(mainData)) {
-        result = [];
-      }
-      else {
-        result = _.map(mainData, data =>
-          this._saveResourceToPool(data)
-        );
-      }
+      result = !_.isEmpty(mainData) ?
+        _.map(mainData, data =>
+          this._saveResourceToPool(data)) : [];
     }
     else {
-      if (!mainData) {
-        result = null;
-      }
-      else {
-        result = this._saveResourceToPool(mainData);
-      }
+      result = mainData ?
+        this._saveResourceToPool(mainData) : null;
     }
 
     /* Included Data */
@@ -389,11 +372,14 @@ export default class Pool {
     /* Existing Resource */
     else {
       let before = resource.serialize();
-      data = _.extend({}, data, {
-        attributes: _.extend({}, before.attributes, data.attributes),
-        relationships: _.extend({}, before.relationships, data.relationships)
-      });
-      resource.deserialize(data);
+      resource.deserialize(
+        _.extend({}, data, {
+          attributes: _.extend(
+            {}, before.attributes, data.attributes),
+          relationships: _.extend(
+            {}, before.relationships, data.relationships)
+        })
+      );
     }
 
     return resource;
