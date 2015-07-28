@@ -49,7 +49,7 @@ gulp.task('watch:lint', function() {
 });
 
 gulp.task('test:src', function() {
-  return gulp.src('tests/*.js', { read: false })
+  return gulp.src('tests/*.es6', { read: false })
     .pipe(mocha({}));
 });
 
