@@ -55,7 +55,7 @@ describe('Query', function() {
     });
   });
 
-  it('should fetch paginated resource with #page', () => {
+  it('should fetch paginated resources with #page', () => {
     sync.get.returns(
       promiseValue({
         data: [{
@@ -84,7 +84,49 @@ describe('Query', function() {
     });
   });
 
-  it('should fetch filtered, sorted, paginated resource with #filter, #sort, #page', () => {
+  it('should fetch filtered, sorted resources with #filter, #sort', () => {
+    sync.get.returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 1,
+          attribute: {
+            status: 'test'
+          }
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+
+    return Q.fcall(() =>
+      query.filter({
+          'foo.status': ['test']
+        })
+        .sort(['id'])
+        .fetch()
+    )
+    .then(resources => {
+      expect(resources[0].serialize()).to.deep.equal({
+        type: 'foo',
+        id: 1
+      });
+    })
+    .then(() => {
+      let resources = query.filter({
+          'foo.status': ['test']
+        })
+        .sort(['id'])
+        .get();
+      expect(resources[0].serialize()).to.deep.equal({
+        type: 'foo',
+        id: 1
+      });
+    });
+  });
+
+  it('should fetch filtered, sorted, paginated resources with #filter, #sort, #page', () => {
     sync.get.returns(
       promiseValue({
         data: [{

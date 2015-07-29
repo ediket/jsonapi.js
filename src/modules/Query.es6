@@ -99,6 +99,14 @@ export default class Query {
           resource.meta.context[context] = startIndex + index;
         });
       }
+      else {
+        _.each(resources, (resource) => {
+          if (!resource.meta.context) {
+            resource.meta.context = {};
+          }
+          resource.meta.context[context] = true;
+        });
+      }
       return resources;
     });
   }
