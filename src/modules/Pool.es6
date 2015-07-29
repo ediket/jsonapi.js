@@ -5,6 +5,7 @@ import toParams from 'utils/toParams';
 import DB from 'modules/DB';
 import RESTful from 'modules/RESTful';
 import Resource from 'modules/Resource';
+import Query from 'modules/Query';
 
 
 /**
@@ -61,6 +62,10 @@ export default class Pool {
   _resetAll() {
     this.remote = {};
     this.db.object = {};
+  }
+
+  query(type) {
+    return new Query(this, type);
   }
 
   /**

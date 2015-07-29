@@ -1,10 +1,10 @@
 import Pool from 'modules/Pool';
-import Pagination from 'modules/Pagination';
 import Resource from 'modules/Resource';
 import ResourceIdentifier from 'modules/ResourceIdentifier';
 import Relationship from 'modules/Relationship';
 import Link from 'modules/Link';
 import RESTful from 'modules/RESTful';
+import Query from 'modules/Query';
 
 /**
  * @see http://jsonapi.org/format/#document-meta
@@ -13,10 +13,10 @@ import RESTful from 'modules/RESTful';
 
 export default {
   Pool,
-  Pagination,
   Resource,
   ResourceIdentifier,
   Relationship,
   Link,
-  RESTful
+  RESTful,
+  Query
 };

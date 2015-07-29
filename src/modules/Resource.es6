@@ -61,11 +61,13 @@ export default class Resource extends ResourceIdentifier {
   constructor(data) {
     super(data);
     /** @type {?Object} */
-    this.attributes = null;
+    this.attributes = {};
     /** @type {?Object<string, RelationshipObject>} */
-    this.relationships = null;
+    this.relationships = {};
     /** @type {?LinksObject} */
-    this.links = null;
+    this.links = {};
+    /** @type {MetaObject} */
+    this.meta = {};
     this.deserialize(data);
   }
 
@@ -195,11 +197,12 @@ export default class Resource extends ResourceIdentifier {
    */
   deserialize(data) {
     super.deserialize(data);
-    this.attributes = data.attributes;
+    this.meta = data.meta || {};
+    this.attributes = data.attributes || {};
     this.relationships = _.mapValues(data.relationships,
-      relationship => new Relationship(relationship));
+      relationship => new Relationship(relationship)) || {};
     this.links = _.mapValues(data.links,
-      link => new Link(link));
+      link => new Link(link)) || {};
   }
 
 }
