@@ -90,12 +90,12 @@ export default class Query {
     return this.pool.fetch(this._type, null, params)
     .then((resources) => {
       if (this._page) {
+        let { startIndex } = parsePage(this._page);
+
         _.each(resources, (resource, index) => {
           if (!resource.meta.context) {
             resource.meta.context = {};
           }
-
-          let { startIndex } = parsePage(this._page);
           resource.meta.context[context] = startIndex + index;
         });
       }
