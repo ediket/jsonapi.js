@@ -78,11 +78,20 @@ export default class Query {
       return this.pool.fetch(this._type, this._id, { fields });
     }
 
+    let page;
+    if (this._page) {
+      let { startIndex, endIndex } = parsePage(this._page);
+      page = {
+        offset: startIndex,
+        limit: endIndex - startIndex
+      };
+    }
+
     let params = _.omit({
       filter: this._filter,
       sort: this._sort,
-      page: this._page,
-      fields: fields
+      fields,
+      page
     }, _.isEmpty);
 
     let context = querystring.stringify(_.pick(params, 'filter', 'sort')) || null;

@@ -52,6 +52,11 @@ describe('Query', function() {
         type: 'foo',
         id: 1
       });
+    })
+    .then(() => {
+      let getCall = sync.get.getCall(0);
+      expect(getCall).to.be.ok;
+      expect(getCall.args[0]).to.equal('/foo/1');
     });
   });
 
@@ -80,6 +85,15 @@ describe('Query', function() {
       expect(resources[0].serialize()).to.deep.equal({
         type: 'foo',
         id: 1
+      });
+    })
+    .then(() => {
+      let getCall = sync.get.getCall(0);
+      expect(getCall).to.be.ok;
+      expect(getCall.args[0]).to.equal('/foo/');
+      expect(getCall.args[1]).to.deep.equal({
+        'page[offset]': 0,
+        'page[limit]': 1
       });
     });
   });
@@ -122,6 +136,15 @@ describe('Query', function() {
       expect(resources[0].serialize()).to.deep.equal({
         type: 'foo',
         id: 1
+      });
+    })
+    .then(() => {
+      let getCall = sync.get.getCall(0);
+      expect(getCall).to.be.ok;
+      expect(getCall.args[0]).to.equal('/foo/');
+      expect(getCall.args[1]).to.deep.equal({
+        'filter[foo.status]': 'test',
+        'sort': 'id'
       });
     });
   });
@@ -166,6 +189,17 @@ describe('Query', function() {
       expect(resources[0].serialize()).to.deep.equal({
         type: 'foo',
         id: 1
+      });
+    })
+    .then(() => {
+      let getCall = sync.get.getCall(0);
+      expect(getCall).to.be.ok;
+      expect(getCall.args[0]).to.equal('/foo/');
+      expect(getCall.args[1]).to.deep.equal({
+        'page[offset]': 0,
+        'page[limit]': 1,
+        'filter[foo.status]': 'test',
+        'sort': 'id'
       });
     });
   });

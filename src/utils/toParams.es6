@@ -13,10 +13,20 @@ export default function toParams(params) {
   }
 
   if (params.page) {
-    result = _.extend(result, {
-      'page[number]': params.page.number,
-      'page[size]': params.page.size
-    });
+    if (params.page.number !== undefined &&
+        params.page.size !== undefined) {
+      result = _.extend(result, {
+        'page[number]': params.page.number,
+        'page[size]': params.page.size
+      });
+    }
+    else if (params.page.offset !== undefined &&
+        params.page.limit !== undefined) {
+      result = _.extend(result, {
+        'page[offset]': params.page.offset,
+        'page[limit]': params.page.limit
+      });
+    }
   }
 
   if (params.fields) {
