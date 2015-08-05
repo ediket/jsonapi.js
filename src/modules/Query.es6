@@ -3,6 +3,9 @@ import querystring from 'querystring';
 import parsePage from 'utils/parsePage';
 
 
+const NO_CONTEXT = '*';
+
+
 export default class Query {
 
   constructor(pool, type) {
@@ -49,7 +52,7 @@ export default class Query {
           filter: this._filter,
           sort: this._sort
         }, _.isEmpty)
-      ) || null;
+      ) || NO_CONTEXT;
 
       if (this._page) {
         query = query.filter(resource => {
@@ -94,7 +97,7 @@ export default class Query {
       page
     }, _.isEmpty);
 
-    let context = querystring.stringify(_.pick(params, 'filter', 'sort')) || null;
+    let context = querystring.stringify(_.pick(params, 'filter', 'sort')) || NO_CONTEXT;
 
     return this.pool.fetch(this._type, null, params)
     .then((resources) => {
