@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import querystring from 'querystring';
 import parsePage from 'utils/parsePage';
+import toParams from 'utils/toParams';
 
 
 const NO_CONTEXT = '*';
@@ -47,12 +48,12 @@ export default class Query {
       });
     }
     else {
-      let context = querystring.stringify(
+      let context = querystring.stringify(toParams(
         _.omit({
           filter: this._filter,
           sort: this._sort
         }, _.isEmpty)
-      ) || NO_CONTEXT;
+      )) || NO_CONTEXT;
 
       if (this._page) {
         query = query.filter(resource => {
@@ -97,7 +98,9 @@ export default class Query {
       page
     }, _.isEmpty);
 
-    let context = querystring.stringify(_.pick(params, 'filter', 'sort')) || NO_CONTEXT;
+    let context = querystring.stringify(toParams(
+      _.pick(params, 'filter', 'sort')
+    )) || NO_CONTEXT;
 
     return this.pool.fetch(this._type, null, params)
     .then((resources) => {
