@@ -77,9 +77,9 @@ export default class Query {
     return query.value();
   }
 
-  fetch(fields) {
+  fetch(options) {
     if (this._id) {
-      return this.pool.fetch(this._type, this._id, { fields });
+      return this.pool.fetch(this._type, this._id, options);
     }
 
     let page;
@@ -94,7 +94,8 @@ export default class Query {
     let params = _.omit({
       filter: this._filter,
       sort: this._sort,
-      fields,
+      fields: options.fields,
+      include: options.include,
       page
     }, _.isEmpty);
 
