@@ -57,14 +57,20 @@ export default class Query {
 
       if (this._page) {
         query = query.filter(resource => {
+          if (!resource.meta.context) {
+            return false;
+          }
           let { startIndex, endIndex } = parsePage(this._page);
           let index = resource.meta.context[context];
+          if (!_.isNumber(index)) {
+            return false;
+          }
           return startIndex <= index && endIndex > index;
         });
       }
       else {
         query = query.filter(resource => {
-          return _.has(resource.meta.context, context);
+          return _.has(resource.meta.context, context) || context === NO_CONTEXT;
         });
       }
 
@@ -77,7 +83,7 @@ export default class Query {
     return query.value();
   }
 
-  fetch(options) {
+  fetch(options={}) {
     if (this._id) {
       return this.pool.fetch(this._type, this._id, options);
     }

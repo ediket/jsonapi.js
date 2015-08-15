@@ -203,4 +203,90 @@ describe('Query', function() {
       });
     });
   });
+
+  it('should be able to get resources without paginate if fetched with paginate', () => {
+    sync.get.returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 1,
+          attribute: {
+            status: 'test'
+          }
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.page({ size: 1, number: 1 }).fetch())
+    .then(() => {
+      return query.page(undefined).get();
+    })
+    .then(resources => expect(resources).not.to.be.empty);
+  });
+
+  it('should not be able to get resources with paginate if fetched without paginate', () => {
+    sync.get.returns(
+      promiseValue({
+        data: {
+          type: 'foo',
+          id: 1,
+          attribute: {
+            status: 'test'
+          }
+        }
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.id(1).fetch())
+    .then(() =>
+      query.id(undefined).page({ size: 1, number: 1 }).get()
+    )
+    .then(resources => expect(resources).to.be.empty)
+    .then(() => query.id(undefined).page(undefined).get())
+    .then(resources => expect(resources).not.to.be.empty);
+  });
+
+  it('should be able to get resources without context if fetched with context.', () => {
+    sync.get.returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 1,
+          attribute: {
+            status: 'test'
+          }
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.sort(['id']).fetch())
+    .then(() => query.get())
+    .then(resources => expect(resources).not.to.be.empty)
+  });
+
+  it('should not be able to get resources with context if fetched without context.', () => {
+    sync.get.returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 1,
+          attribute: {
+            status: 'test'
+          }
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.fetch())
+    .then(() => query.sort(['id']).get())
+    .then(resources => expect(resources).to.be.empty)
+  });
 });
