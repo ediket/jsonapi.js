@@ -267,7 +267,7 @@ describe('Query', function() {
     let query = new Query(pool, 'foo');
     return Q.fcall(() => query.sort(['id']).fetch())
     .then(() => query.get())
-    .then(resources => expect(resources).not.to.be.empty)
+    .then(resources => expect(resources).not.to.be.empty);
   });
 
   it('should not be able to get resources with context if fetched without context.', () => {
@@ -287,6 +287,84 @@ describe('Query', function() {
     let query = new Query(pool, 'foo');
     return Q.fcall(() => query.fetch())
     .then(() => query.sort(['id']).get())
-    .then(resources => expect(resources).to.be.empty)
+    .then(resources => expect(resources).to.be.empty);
+  });
+
+  it('should be able to get sorted resources by attributes if iteratees are not given.', () => {
+    sync.get.returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 3
+        }, {
+          type: 'foo',
+          id: 1
+        }, {
+          type: 'foo',
+          id: 2
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.sort(['id']).fetch())
+    .then(() => query.sort(['id']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(1);
+      expect(resources[1].id).to.equal(2);
+      expect(resources[2].id).to.equal(3);
+    })
+    .then(() => query.sort(['-id']).fetch())
+    .then(() => query.sort(['-id']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(3);
+      expect(resources[1].id).to.equal(2);
+      expect(resources[2].id).to.equal(1);
+    });
+  });
+
+  it('should be able to get sorted resources with pagination.', () => {
+    sync.get.withArgs('/foo/', {
+      sort: '-id',
+      'page[offset]': 0,
+      'page[limit]': 2
+    }).returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 4
+        }, {
+          type: 'foo',
+          id: 3
+        }]
+      })
+    );
+    sync.get.withArgs('/foo/', {
+      sort: '-id',
+      'page[offset]': 2,
+      'page[limit]': 2
+    }).returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 2
+        }, {
+          type: 'foo',
+          id: 1
+        }]
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.page({ size: 2, number: 1 }).sort(['-id']).fetch())
+    .then(() => query.page({ size: 2, number: 2 }).sort(['-id']).fetch())
+    .then(() => query.page({ size: 3, number: 1 }).sort(['-id']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(4);
+      expect(resources[1].id).to.equal(3);
+      expect(resources[2].id).to.equal(2);
+    });
   });
 });

@@ -75,8 +75,23 @@ export default class Query {
       }
 
       if (this._sort) {
-        query = query.sortBy(resource => {
-          return resource.meta.context[context];
+        _.each(this._sort, sort => {
+          let key = sort;
+          let reverse = sort.charAt(0) === '-';
+          if (reverse) {
+            key = sort.substring(1);
+          }
+          query = query.sortBy(resource => {
+            if (_.has(resource, key)) {
+              return resource[key];
+            }
+            if (_.has(resource.attributes, key)) {
+              return resource.attributes[key];
+            }
+          });
+          if (reverse) {
+            query = query.reverse();
+          }
         });
       }
     }
