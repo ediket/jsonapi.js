@@ -291,36 +291,73 @@ describe('Query', function() {
   });
 
   it('should be able to get sorted resources by attributes if iteratees are not given.', () => {
-    sync.get.returns(
+    sync.get.withArgs('/foo/', {
+      sort: 'value'
+    }).returns(
       promiseValue({
         data: [{
+          attributes: {
+            value: 'a'
+          },
           type: 'foo',
           id: 3
         }, {
+          attributes: {
+            value: 'b'
+          },
           type: 'foo',
           id: 1
         }, {
+          attributes: {
+            value: 'c'
+          },
           type: 'foo',
           id: 2
         }]
       })
     );
 
+    sync.get.withArgs('/foo/', {
+      sort: '-value'
+    }).returns(
+      promiseValue({
+        data: [{
+          attributes: {
+            value: 'c'
+          },
+          type: 'foo',
+          id: 2
+        }, {
+          attributes: {
+            value: 'b'
+          },
+          type: 'foo',
+          id: 1
+        }, {
+          attributes: {
+            value: 'a'
+          },
+          type: 'foo',
+          id: 3
+        }]
+      })
+    );
+
     pool.addRemote('foo', '/foo/');
     let query = new Query(pool, 'foo');
-    return Q.fcall(() => query.sort(['id']).fetch())
-    .then(() => query.sort(['id']).get())
-    .then(resources => {
-      expect(resources[0].id).to.equal(1);
-      expect(resources[1].id).to.equal(2);
-      expect(resources[2].id).to.equal(3);
-    })
-    .then(() => query.sort(['-id']).fetch())
-    .then(() => query.sort(['-id']).get())
+    return Q.fcall(() => query.sort(['value']).fetch())
+    .then(() => query.sort(['value']).get())
     .then(resources => {
       expect(resources[0].id).to.equal(3);
-      expect(resources[1].id).to.equal(2);
-      expect(resources[2].id).to.equal(1);
+      expect(resources[1].id).to.equal(1);
+      expect(resources[2].id).to.equal(2);
+    })
+    .then(() => query.sort(['-value']).fetch())
+    .then(() => query.sort(['-value']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(2);
+      expect(resources[1].id).to.equal(1);
+      expect(resources[2].id).to.equal(3);
     });
   });
 
@@ -365,6 +402,51 @@ describe('Query', function() {
       expect(resources[0].id).to.equal(4);
       expect(resources[1].id).to.equal(3);
       expect(resources[2].id).to.equal(2);
+    });
+  });
+
+  it('should not override fetched collection when single resource is fetched.', () => {
+    sync.get.withArgs('/foo/', {
+      sort: 'id'
+    }).returns(
+      promiseValue({
+        data: [{
+          type: 'foo',
+          id: 1
+        }, {
+          type: 'foo',
+          id: 2
+        }, {
+          type: 'foo',
+          id: 3
+        }]
+      })
+    );
+    sync.get.withArgs('/foo/2')
+    .returns(
+      promiseValue({
+        data: {
+          type: 'foo',
+          id: 2
+        }
+      })
+    );
+
+    pool.addRemote('foo', '/foo/');
+    let query = new Query(pool, 'foo');
+    return Q.fcall(() => query.sort(['id']).fetch())
+    .then(() => query.sort(['id']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(1);
+      expect(resources[1].id).to.equal(2);
+      expect(resources[2].id).to.equal(3);
+    })
+    .then(() => query.id(2).fetch())
+    .then(() => query.id(undefined).sort(['id']).get())
+    .then(resources => {
+      expect(resources[0].id).to.equal(1);
+      expect(resources[1].id).to.equal(2);
+      expect(resources[2].id).to.equal(3);
     });
   });
 });

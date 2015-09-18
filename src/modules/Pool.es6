@@ -382,7 +382,9 @@ export default class Pool {
           attributes: _.extend(
             {}, before.attributes, data.attributes),
           relationships: _.extend(
-            {}, before.relationships, data.relationships)
+            {}, before.relationships, data.relationships),
+          meta: _.extend(
+            {}, resource.meta, data.meta)
         })
       );
     }
