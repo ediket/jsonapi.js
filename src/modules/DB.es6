@@ -7,12 +7,12 @@ import underscoreDB from 'underscore-db';
 
 
 function lowChain(_, array) {
-  let chain = _.chain(array);
+  const chain = _.chain(array);
 
   _.functions(chain)
   .forEach(function(method) {
     chain[method] = _.flow(chain[method], function(arg) {
-      let res = arg.value ? arg.value() : arg;
+      const res = arg.value ? arg.value() : arg;
       return res;
     });
   });
@@ -29,12 +29,12 @@ function lowChain(_, array) {
  * db('comment').insert({ content: 'hello' });
  */
 function DB() {
-  let _ = lodash.runInContext();
+  const _ = lodash.runInContext();
   _.mixin(underscoreDB);
 
-  let value = _.prototype.value;
+  const value = _.prototype.value;
   _.prototype.value = function() {
-    let res = value.apply(this, arguments);
+    const res = value.apply(this, arguments);
     return res;
   };
 
@@ -47,7 +47,7 @@ function DB() {
       array = db.object[key] = [];
     }
 
-    let short = lowChain(_, array);
+    const short = lowChain(_, array);
     short.chain = function() {
       return _.chain(array);
     };

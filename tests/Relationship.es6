@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Relationship } from '../';
+import { Relationship } from '../src/jsonapi';
 
 
 describe('Relationship', function() {

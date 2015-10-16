@@ -34,26 +34,26 @@ function _parseErrors(xhr) {
   if (!(xhr.responseJSON && xhr.responseJSON.errors )) {
     if (_isResponseError(xhr.status)) {
       return [{
-        status: '' + xhr.status
+        status: '' + xhr.status,
       }];
     }
     return null;
   }
 
-  let errors = xhr.responseJSON.errors;
+  const errors = xhr.responseJSON.errors;
 
   return _.map(errors, function(error) {
     return _.extend({
-      status: '' + xhr.status
+      status: '' + xhr.status,
     }, error);
   });
 }
 
 function _parseHeaders(xhr) {
-  let result = [];
+  const result = [];
 
-  let headerRegex = /^(.*?):[ \t]*([^\r\n]*)$/mg;
-  let headersString = xhr.getAllResponseHeaders();
+  const headerRegex = /^(.*?):[ \t]*([^\r\n]*)$/mg;
+  const headersString = xhr.getAllResponseHeaders();
   let findResult;
 
   do {
@@ -77,7 +77,7 @@ export default class Response {
    * @param {jqXHR} jqXHR
    */
   constructor(jqXHR) {
-    let body = jqXHR.responseJSON || {};
+    const body = jqXHR.responseJSON || {};
     /** @type {?(ResourceObject|ResourceObject[]|ResourceIdentifierObject|ResourceIdentifierObject[]|null)} */
     this.data = body.data || null;
     /** @type {?ErrorObject[]} */

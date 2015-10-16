@@ -40,7 +40,7 @@ export default class Link {
   serialize() {
     return _.omit({
       href: this.href,
-      meta: this.meta
+      meta: this.meta,
     }, _.isEmpty);
   }
 

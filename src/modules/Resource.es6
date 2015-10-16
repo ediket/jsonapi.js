@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Link from 'modules/Link';
-import Relationship from 'modules/Relationship';
-import ResourceIdentifier from 'modules/ResourceIdentifier';
+import Link from './Link';
+import Relationship from './Relationship';
+import ResourceIdentifier from './ResourceIdentifier';
 
 /**
  * @external {Fields} http://jsonapi.org/format/#document-resource-object-fields
@@ -87,8 +87,8 @@ export default class Resource extends ResourceIdentifier {
       this.relationships[key] = new Relationship({
         data: _.map(resource, resource => ({
           type: resource.type,
-          id: resource.id
-        }))
+          id: resource.id,
+        })),
       });
     }
     else {
@@ -96,8 +96,8 @@ export default class Resource extends ResourceIdentifier {
         links: resource.links,
         data: {
           type: resource.type,
-          id: resource.id
-        }
+          id: resource.id,
+        },
       });
     }
   }
@@ -184,7 +184,7 @@ export default class Resource extends ResourceIdentifier {
     return _.chain({
       attributes: this.attributes,
       links: _.mapValues(this.links, link => link.serialize()),
-      relationships: _.mapValues(this.relationships, relationship => relationship.serialize())
+      relationships: _.mapValues(this.relationships, relationship => relationship.serialize()),
     })
     .extend(this.getIdentifier())
     .omit(attribute => _.isObject(attribute) ?
@@ -203,6 +203,15 @@ export default class Resource extends ResourceIdentifier {
       relationship => new Relationship(relationship)) || {};
     this.links = _.mapValues(data.links,
       link => new Link(link)) || {};
+  }
+
+  /**
+   * @param {Resource} one
+   * @param {Resource} two
+   */
+  static
+  isEqual(one, two) {
+    return _.isEqual(one.serialize(), two.serialize());
   }
 
 }

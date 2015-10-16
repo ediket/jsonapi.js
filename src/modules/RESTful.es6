@@ -1,13 +1,13 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import Q from 'q';
-import Response from 'modules/Response';
+import Response from './Response';
 
 
-let stringifyRequiredMethod = function(method) {
+function stringifyRequiredMethod(method) {
   // these HTTP methods requires JSON.stringify
   return (/^(POST|PUT|PATCH|DELETE)$/.test(method.toUpperCase()));
-};
+}
 
 function makeAjaxRequest(options) {
   options = options || {};
@@ -25,12 +25,12 @@ function makeAjaxRequest(options) {
     $.ajax(options)
       .then(function(data, textStatus, jqXHR) {
         delete jqXHR.then; // treat xhr as a non-promise
-        let response = new Response(jqXHR);
+        const response = new Response(jqXHR);
         resolve(response);
       })
       .fail(function(jqXHR) {
         delete jqXHR.then; // treat xhr as a non-promise
-        let response = new Response(jqXHR);
+        const response = new Response(jqXHR);
         reject(response);
       });
   });
@@ -81,7 +81,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'HEAD',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -97,7 +97,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'GET',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -113,7 +113,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'POST',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -129,7 +129,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'PUT',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -145,7 +145,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'PATCH',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -161,7 +161,7 @@ class RESTful {
     options = _.extend({
       url: url,
       type: 'DELETE',
-      data: data
+      data: data,
     }, this.defaultOptions, options);
     return makeAjaxRequest(options);
   }
@@ -178,7 +178,7 @@ class RESTful {
 
 RESTful.defaultOptions = {
   contentType: 'application/json',
-  processData: true
+  processData: true,
 };
 
 

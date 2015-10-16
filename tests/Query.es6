@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Q from 'q';
 import stubPromise from './libs/stubPromise';
 import promiseValue from './libs/promiseValue';
-import { Query, Pool } from '../';
+import { Query, Pool } from '../src/jsonapi';
 
 
 describe('Query', function() {

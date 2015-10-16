@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Resource } from '../';
+import { Resource } from '../src/jsonapi';
 
 
 describe('Resource', function() {

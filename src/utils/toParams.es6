@@ -17,14 +17,14 @@ export default function toParams(params) {
         params.page.size !== undefined) {
       result = _.extend(result, {
         'page[number]': params.page.number,
-        'page[size]': params.page.size
+        'page[size]': params.page.size,
       });
     }
     else if (params.page.offset !== undefined &&
         params.page.limit !== undefined) {
       result = _.extend(result, {
         'page[offset]': params.page.offset,
-        'page[limit]': params.page.limit
+        'page[limit]': params.page.limit,
       });
     }
   }

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import Q from 'q';
 import urljoin from 'url-join';
-import toParams from 'utils/toParams';
-import DB from 'modules/DB';
-import RESTful from 'modules/RESTful';
-import Resource from 'modules/Resource';
-import Query from 'modules/Query';
+import toParams from '../utils/toParams';
+import DB from './DB';
+import RESTful from './RESTful';
+import Resource from './Resource';
+import Query from './Query';
 
 
 /**

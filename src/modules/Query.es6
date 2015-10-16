@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import querystring from 'querystring';
-import parsePage from 'utils/parsePage';
-import toParams from 'utils/toParams';
+import parsePage from '../utils/parsePage';
+import toParams from '../utils/toParams';
 
 
 const NO_CONTEXT = '*';

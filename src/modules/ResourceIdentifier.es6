@@ -32,7 +32,7 @@ export default class ResourceIdentifier {
   serialize() {
     return _.omit({
       type: this.type,
-      id: this.id
+      id: this.id,
     }, _.isUndefined);
   }
 

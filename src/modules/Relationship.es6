@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Link from 'modules/Link';
-import ResourceIdentifier from 'modules/ResourceIdentifier';
+import Link from './Link';
+import ResourceIdentifier from './ResourceIdentifier';
 
 /**
  * @see http://jsonapi.org/format/#document-resource-object-relationships
@@ -156,13 +156,13 @@ export default class Relationship {
   serialize() {
     return _.chain({
       links: _.mapValues(this.links, link => link.serialize()),
-      meta: this.meta
+      meta: this.meta,
     })
     .omit(_.isEmpty)
     .extend({
       data: _.isArray(this.data) ?
         _.map(this.data, identifier => identifier.serialize()) :
-        this.data && this.data.serialize()
+        this.data && this.data.serialize(),
     })
     .omit(_.isUndefined)
     .value();
