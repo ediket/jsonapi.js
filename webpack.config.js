@@ -1,19 +1,5 @@
-'use strict';
-
-
 var _ = require('lodash');
-
-
-function transformUMDExternal(externals) {
-  return _.mapValues(externals, function(externalKey, requireKey) {
-    return {
-      'root': externalKey,
-      'amd': requireKey,
-      'commonjs': requireKey,
-      'commonjs2': requireKey
-    };
-  });
-}
+var webpackUMDExternal = require('webpack-umd-external');
 
 
 module.exports = {
@@ -31,7 +17,7 @@ module.exports = {
     library: ['JSONAPI'],
     libraryTarget: 'umd'
   },
-  externals: transformUMDExternal({
+  externals: webpackUMDExternal({
     'backbone': 'Backbone',
     'jquery': '$',
     'lodash': '_',
